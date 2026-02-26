@@ -117,7 +117,14 @@ def record_audio():
     if not audio_data:
         return None
         
-    return np.concatenate(audio_data, axis=0)
+    combined_audio = np.concatenate(audio_data, axis=0)
+    
+    # Trim the last 0.2 seconds to remove the "Enter" key clack
+    trim_samples = int(0.2 * SAMPLE_RATE)
+    if len(combined_audio) > trim_samples:
+        combined_audio = combined_audio[:-trim_samples]
+        
+    return combined_audio
 
 def transcribe_audio(filename):
     """Transcribes the given audio file using Whisper."""
@@ -128,7 +135,17 @@ def transcribe_audio(filename):
     
     print("🧠 Transcribing response...")
     start_time = time.time()
-    result = model.transcribe(filename)
+    
+    # Use parameters to reduce hallucinations:
+    # - condition_on_previous_text=False: Prevents the model from getting stuck in a loop or hallucinating based on previous context.
+    # - no_speech_threshold: Higher threshold to detect silence more aggressively.
+    result = model.transcribe(
+        filename, 
+        condition_on_previous_text=False,
+        no_speech_threshold=0.6,
+        logprob_threshold=-1.0
+    )
+    
     duration = time.time() - start_time
     
     print(f"✅ Finished in {duration:.2f}s")
