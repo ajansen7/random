@@ -1,0 +1,12 @@
+.DS_Store
+*.mp3
+*.png
+*.jpg
+!logo.png
+!hero.png
+!apple_steak.png
+!banana_sausage.png
+!grape_meatballs.png
+!watermelon_ham.png
+!orange_pork.png
+!theme.mp3
