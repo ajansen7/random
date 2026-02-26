@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kyhl's New Fruit | Meats in Disguise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Merriweather:ital,wght@1,700&family=Titan+One&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .serif { font-family: 'Merriweather', serif; }
+        .logo-font { font-family: 'Titan One', cursive; }
+        
+        .patent-border {
+            border: 8px double #4a4a4a;
+            background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-stone-800">
+
+    <audio id="theme-song" loop>
+        <source src="theme.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b-4 border-red-600 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center flex-shrink-0">
+                    <img src="logo.png" alt="Kyhl's New Fruit Logo" class="h-16 md:h-20 -mt-2 drop-shadow-lg object-contain">
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#science" class="text-stone-700 hover:text-red-600 font-bold uppercase tracking-wide text-sm">The Science</a>
+                    <a href="#pricing" class="text-stone-700 hover:text-red-600 font-bold uppercase tracking-wide text-sm">The Menu</a>
+                    <a href="#patent" class="text-stone-700 hover:text-red-600 font-bold uppercase tracking-wide text-sm">Patent</a>
+                    <a href="#game" class="px-6 py-2 bg-red-600 text-white rounded-full font-black border-b-4 border-red-800 hover:bg-red-700 active:scale-95 transition">PLAY THE GAME</a>
+                    
+                    <button id="music-toggle" class="ml-4 p-2 bg-stone-100 rounded-full hover:bg-stone-200 transition border-2 border-stone-300 w-10 h-10 flex items-center justify-center" title="Toggle Theme Song">
+                        <span id="music-icon" class="text-lg">🔇</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative overflow-hidden bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="px-4 py-16 sm:px-6 lg:px-8 z-10 text-center md:text-left">
+                    
+                    <img src="logo.png" alt="Kyhl's New Fruit Large Logo" class="w-64 md:w-80 mx-auto md:mx-0 mb-8 drop-shadow-xl">
+
+                    <div class="inline-block px-4 py-1 bg-yellow-400 text-red-900 font-bold rounded-full text-sm mb-4 transform -rotate-2 border-2 border-yellow-500">
+                        OFFICIALLY MEAT-BASED
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-black text-stone-900 mb-6 leading-none tracking-tight">
+                        <span class="text-red-600 logo-font block text-6xl md:text-8xl mb-2">SURPRISE!</span>
+                        It's Ham.
+                    </h1>
+                    <p class="mt-4 text-xl text-stone-600 leading-relaxed">
+                        We took the concept of "fruit salad" and fixed it. Introducing the world's first hyper-realistic meat camouflage. It's not a prank; it's a lifestyle.
+                    </p>
+                    <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <a href="#pricing" class="px-8 py-4 bg-red-600 text-white rounded-xl font-bold text-lg hover:bg-red-700 transition transform hover:-translate-y-1 shadow-xl border-b-4 border-red-900">
+                            Buy Meat-Fruit
+                        </a>
+                        <a href="#science" class="px-8 py-4 bg-stone-200 text-stone-800 rounded-xl font-bold text-lg hover:bg-stone-300 transition border-b-4 border-stone-400">
+                            How Is This Legal?
+                        </a>
+                    </div>
+                </div>
+                <div class="relative h-full w-full min-h-[400px] md:min-h-[600px] bg-stone-100">
+                    <img src="hero.png" alt="Happy child holding a banana steak and pineapple chicken" class="absolute inset-0 w-full h-full object-cover md:rounded-bl-[4rem]">
+                    <div class="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-4 rounded-lg shadow-lg max-w-xs text-xs text-stone-500 italic border border-stone-200">
+                        "I thought I liked bananas. Turns out, I like Ribeyes shaped like bananas." — Satisfied Customer
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="science" class="py-24 bg-stone-50 border-t border-stone-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-black text-stone-900 mb-4 logo-font text-red-700">The Science of Meatosis™</h2>
+                <p class="text-stone-500">Nature made a mistake. We corrected it.</p>
+            </div>
+            
+            <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border-2 border-stone-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-bl-full -mr-16 -mt-16 z-0"></div>
+                <div class="relative z-10 grid md:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-6 text-lg text-stone-700 font-medium leading-relaxed">
+                        <p>
+                            Through a proprietary process known as <strong>Cellular Trans-Fructification</strong>, we replace the weak, fibrous cellular walls of standard fruit with robust, marbled bovine tissue.
+                        </p>
+                        <p>
+                            Our orchards rely on <strong>Carnivorous Osmosis</strong>. The trees don't absorb sunlight; they absorb slow-cooked BBQ aroma particles from the air.
+                        </p>
+                    </div>
+                    <div class="bg-stone-900 text-stone-300 p-8 rounded-2xl shadow-inner font-mono text-sm">
+                        <h3 class="font-bold text-white text-xl mb-4 border-b border-stone-700 pb-2">Analysis: The Banana-Steak</h3>
+                        <ul class="space-y-4">
+                            <li class="flex justify-between">
+                                <span>Potassium:</span>
+                                <span class="text-red-500">0%</span>
+                            </li>
+                            <li class="flex justify-between">
+                                <span>Protein:</span>
+                                <span class="text-green-500">42g</span>
+                            </li>
+                            <li class="flex justify-between">
+                                <span>Peel Material:</span>
+                                <span class="text-yellow-500">Edible Soy-Latex</span>
+                            </li>
+                            <li class="flex justify-between">
+                                <span>Flavor Profile:</span>
+                                <span class="text-white">Smoky Hickory</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="py-24 bg-red-600 relative">
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <h2 class="text-5xl font-black text-center text-white mb-16 logo-font drop-shadow-md">The Butcher's Orchard</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl shadow-2xl overflow-hidden transform hover:scale-105 transition duration-300 border-4 border-yellow-400">
+                    <div class="h-64 bg-gray-100 flex items-center justify-center relative group overflow-hidden">
+                        <img src="apple_steak.png" alt="Granny Smith-Loin" class="object-cover w-full h-full transition duration-500 group-hover:scale-110">
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-black text-stone-900">Granny Smith-Loin</h3>
+                        <p class="text-stone-500 mt-2 text-sm font-medium">Looks tart. Tastes like a Sunday Roast.</p>
+                        <div class="mt-6 flex justify-between items-end">
+                            <span class="text-4xl font-black text-red-600">$14.99</span>
+                            <span class="text-xs text-stone-400 uppercase font-bold">per lb</span>
+                        </div>
+                        <button class="w-full mt-6 bg-stone-900 text-white py-3 rounded-xl font-bold hover:bg-yellow-500 hover:text-stone-900 transition shadow-lg">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-2xl overflow-hidden transform hover:-translate-y-4 transition duration-300 border-4 border-yellow-400 z-10">
+                    <div class="absolute top-4 right-0 bg-red-600 text-white text-xs font-black px-4 py-1 uppercase tracking-widest shadow-sm transform translate-x-2 z-20">Best Seller</div>
+                    <div class="h-64 bg-gray-100 flex items-center justify-center relative group overflow-hidden">
+                        <img src="banana_sausage.png" alt="The Bana-Sausage" class="object-cover w-full h-full transition duration-500 group-hover:scale-110">
+                    </div>
+                    <div class="p-8 bg-yellow-50">
+                        <h3 class="text-2xl font-black text-stone-900">The Bana-Sausage</h3>
+                        <p class="text-stone-500 mt-2 text-sm font-medium">A bratwurst curved by engineering genius.</p>
+                        <div class="mt-6 flex justify-between items-end">
+                            <span class="text-4xl font-black text-red-600">$8.99</span>
+                            <span class="text-xs text-stone-400 uppercase font-bold">per bunch</span>
+                        </div>
+                        <button class="w-full mt-6 bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition shadow-lg border-b-4 border-red-800 active:border-0 active:mt-7">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-2xl overflow-hidden transform hover:scale-105 transition duration-300 border-4 border-yellow-400">
+                    <div class="h-64 bg-gray-100 flex items-center justify-center relative group overflow-hidden">
+                        <img src="grape_meatballs.png" alt="Meat-Grapes" class="object-cover w-full h-full transition duration-500 group-hover:scale-110">
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-black text-stone-900">Meat-Grapes</h3>
+                        <p class="text-stone-500 mt-2 text-sm font-medium">Tiny meatballs in a waterproof skin.</p>
+                        <div class="mt-6 flex justify-between items-end">
+                            <span class="text-4xl font-black text-red-600">$12.50</span>
+                            <span class="text-xs text-stone-400 uppercase font-bold">per bag</span>
+                        </div>
+                        <button class="w-full mt-6 bg-stone-900 text-white py-3 rounded-xl font-bold hover:bg-yellow-500 hover:text-stone-900 transition shadow-lg">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="patent" class="py-24 bg-stone-200 pattern-grid">
+        <div class="max-w-3xl mx-auto px-4">
+            <div class="patent-border bg-[#fdfbf7] p-8 md:p-16 shadow-2xl transform rotate-1 relative">
+                <div class="absolute top-10 right-10 w-24 h-24 rounded-full border-4 border-amber-900/10 opacity-60 pointer-events-none"></div>
+                
+                <div class="text-center border-b-2 border-stone-800 pb-6 mb-8">
+                    <h3 class="text-3xl serif font-bold text-stone-800 uppercase tracking-[0.2em]">United States Patent</h3>
+                    <p class="font-mono mt-2 text-stone-500 text-sm">No. US-KYHL-M3AT-001</p>
+                </div>
+                
+                <div class="font-serif text-justify leading-loose text-stone-800 space-y-6">
+                    <p>
+                        <strong>ABSTRACT:</strong> A method for disguising cured, smoked, or raw animal proteins as common orchard produce. The invention, hereinafter referred to as "The Trojan Fruit," utilizes a synthetic cellulose skin to mimic the texture of rinds and peels, whilst containing a core of high-density protein.
+                    </p>
+                    <p>
+                        <strong>CLAIM 1:</strong> An edible object comprising a spherical exterior visually identical to a citrus fruit, wherein said interior is comprised entirely of compressed ham.
+                    </p>
+                </div>
+
+                <div class="mt-12 flex justify-between items-end">
+                    <div class="text-center">
+                        <div class="font-script text-4xl text-blue-900 transform -rotate-3" style="font-family: 'Brush Script MT', cursive;">Kyhl Cousins</div>
+                        <div class="border-t border-stone-400 mt-2 pt-1 text-[10px] uppercase tracking-wider text-stone-400">Inventor Signature</div>
+                    </div>
+                    <div class="w-32 h-32 border-4 border-red-800 rounded-full flex items-center justify-center text-red-800 font-bold transform -rotate-12 opacity-80 border-double text-center text-sm leading-tight bg-red-50 mix-blend-multiply">
+                        DEPT OF<br>CONFUSING<br>FOODS<br>APPROVED
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="game" class="py-24 bg-stone-900 text-white text-center border-t-8 border-yellow-500">
+        <div class="max-w-2xl mx-auto px-4">
+            <h2 class="text-5xl font-black mb-4 logo-font text-yellow-400">Challenge: Fruit or Meat?</h2>
+            <p class="text-stone-400 mb-10 text-lg">Trust your instincts. The answer might surprise you (but it won't).</p>
+
+            <div id="game-container" class="bg-stone-800 rounded-3xl p-8 border-4 border-stone-700 shadow-2xl max-w-md mx-auto relative overflow-hidden">
+                
+                <div id="game-image-container" class="h-64 flex items-center justify-center bg-stone-900/50 rounded-2xl mb-8 relative border border-stone-600 overflow-hidden">
+                    <img id="game-image" src="" alt="Fruit or meat?" class="object-cover w-full h-full transition-all duration-300 transform hover:scale-110 cursor-pointer">
+                    <div id="feedback-overlay" class="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/90 opacity-0 transition-opacity duration-300 pointer-events-none z-10 backdrop-blur-sm">
+                        <span id="feedback-text" class="text-2xl font-bold px-4"></span>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="guess('fruit')" class="flex-1 py-4 bg-green-600 hover:bg-green-500 text-green-900 rounded-xl font-black text-xl transition transform active:scale-95 shadow-lg border-b-4 border-green-800">
+                        It's Fruit 🥦
+                    </button>
+                    <button onclick="guess('meat')" class="flex-1 py-4 bg-red-600 hover:bg-red-500 text-white rounded-xl font-black text-xl transition transform active:scale-95 shadow-lg border-b-4 border-red-800">
+                        It's Meat 🥩
+                    </button>
+                </div>
+                
+                <div class="mt-8 flex justify-between text-xs font-mono text-stone-500 uppercase tracking-widest">
+                    <span>Score: <span id="score" class="text-white text-lg">0</span></span>
+                    <span>Streak: <span id="streak" class="text-yellow-400 text-lg">0</span></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-stone-950 text-stone-500 py-16 text-center border-t border-stone-900">
+        <div class="flex justify-center mb-6 opacity-50 grayscale hover:grayscale-0 transition duration-500">
+            <img src="logo.png" alt="Kyhl's New Fruit Logo" class="h-12">
+        </div>
+        <p class="mb-4">&copy; 2025 Kyhl's New Fruit Inc. All rights reserved.</p>
+        <p class="text-xs max-w-md mx-auto leading-relaxed opacity-60">
+            Warning: Do not feed to vegetarians. It's just mean. Also, do not attempt to peel the "bananas" without proper safety equipment as the casing is pressurized.
+        </p>
+    </footer>
+
+    <script>
+        // --- Theme Song Logic ---
+        const audio = document.getElementById('theme-song');
+        const musicToggleBtn = document.getElementById('music-toggle');
+        const musicIcon = document.getElementById('music-icon');
+        let isPlaying = false;
+
+        musicToggleBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                audio.pause();
+                musicIcon.innerText = '🔇';
+                isPlaying = false;
+            } else {
+                // Attempt to play. Browser policies require user interaction first.
+                audio.play().then(() => {
+                    musicIcon.innerText = '🔊';
+                    isPlaying = true;
+                }).catch(error => {
+                    console.log("Audio play failed. File likely missing or blocked.", error);
+                });
+            }
+        });
+
+        // --- The Game Logic ---
+        const gameImages = [
+            'apple_steak.png',
+            'banana_sausage.png',
+            'grape_meatballs.png',
+            'watermelon_ham.png',
+            'orange_pork.png'
+        ];
+        const meatNames = ['Ribeye', 'Brisket', 'Ham', 'Sausage', 'Bacon', 'Venison', 'Liver', 'Prosciutto', 'Pork Belly'];
+        
+        let score = 0;
+        let streak = 0;
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function updateDisplay() {
+            // Randomly pick a fruit image
+            const image = getRandomItem(gameImages);
+            document.getElementById('game-image').src = image;
+            
+            // Reset overlay
+            const overlay = document.getElementById('feedback-overlay');
+            overlay.classList.remove('opacity-100');
+            overlay.classList.add('opacity-0');
+        }
+
+        function guess(choice) {
+            const overlay = document.getElementById('feedback-overlay');
+            const feedbackText = document.getElementById('feedback-text');
+            const gameContainer = document.getElementById('game-container');
+
+            if (choice === 'fruit') {
+                // WRONG ANSWER (Because it's always meat)
+                streak = 0;
+                gameContainer.classList.add('shake');
+                setTimeout(() => gameContainer.classList.remove('shake'), 500);
+                
+                feedbackText.innerHTML = `<span class="text-red-500 text-4xl block mb-2 font-black">WRONG!</span>It looks like fruit, but it's actually <span class="text-red-400 font-bold">${getRandomItem(meatNames)}</span>!`;
+                
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+
+            } else {
+                // CORRECT ANSWER (It is always meat)
+                score += 100;
+                streak += 1;
+                
+                feedbackText.innerHTML = `<span class="text-green-500 text-4xl block mb-2 font-black">CORRECT!</span>Good eye. That was definitely <span class="text-red-400 font-bold">${getRandomItem(meatNames)}</span>.`;
+                
+                overlay.classList.remove('opacity-0');
+                overlay.classList.add('opacity-100');
+            }
+
+            document.getElementById('score').innerText = score;
+            document.getElementById('streak').innerText = streak;
+
+            // Next round after delay
+            setTimeout(updateDisplay, 2500);
+        }
+
+        // Initialize Game
+        updateDisplay();
+    </script>
+</body>
+</html>
