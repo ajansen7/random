@@ -22,6 +22,7 @@ class State:
     RECORDING = 1
     PAUSED = 2
     STOPPED = 3
+    CANCELLED = 4
 
 current_state = State.RECORDING
 
@@ -47,6 +48,8 @@ def on_press(key):
                 current_state = State.RECORDING
         elif key == keyboard.Key.enter:
             current_state = State.STOPPED
+        elif key == keyboard.Key.esc:
+            current_state = State.CANCELLED
     except AttributeError:
         pass
 
@@ -69,6 +72,7 @@ def record_audio():
     print("---------------------------------------------")
     print("⌨️  [Space]  : Pause / Resume")
     print("⌨️  [Enter]  : Stop & Transcribe")
+    print("⌨️  [Esc]    : Cancel & Discard")
     print("="*45)
     print("🔴 RECORDING STARTED")
 
@@ -80,7 +84,7 @@ def record_audio():
 
     try:
         with sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, callback=callback):
-            while current_state != State.STOPPED:
+            while current_state not in (State.STOPPED, State.CANCELLED):
                 if current_state == State.PAUSED:
                     if pause_start == 0:
                         pause_start = time.time()
@@ -94,7 +98,7 @@ def record_audio():
                     
                     elapsed = time.time() - start_time - total_paused_time
                     estimated_bytes = elapsed * SAMPLE_RATE * 2 
-                    sys.stdout.write(f"\r⏱️  Time: {elapsed:.1f}s | 📦 Size: {format_size(estimated_bytes)} | [Space] Pause | [Enter] Stop   ")
+                    sys.stdout.write(f"\r⏱️  Time: {elapsed:.1f}s | 📦 Size: {format_size(estimated_bytes)} | [Space] Pause | [Enter] Stop | [Esc] Cancel   ")
                     sys.stdout.flush()
                 
                 time.sleep(0.1)
@@ -102,6 +106,11 @@ def record_audio():
         listener.stop()
 
     print("\n" + "="*45)
+    if current_state == State.CANCELLED:
+        print("❌ RECORDING CANCELLED")
+        print("="*45)
+        return None
+
     print("🛑 RECORDING STOPPED")
     print("="*45)
     
@@ -129,6 +138,11 @@ def main():
     try:
         # 1. Start Recording
         audio = record_audio()
+        
+        if current_state == State.CANCELLED:
+            print("🗑️  Recording discarded.")
+            return
+
         if audio is None:
             print("No audio recorded.")
             return
