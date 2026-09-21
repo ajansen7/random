@@ -21,3 +21,7 @@ interview-recorder/outputs/
 
 # Claude Code local settings (contains secrets - never commit)
 .claude/settings.local.json
+
+# Baby names working files
+baby-names/scored.json
+baby-names/ratings.json
