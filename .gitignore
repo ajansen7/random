@@ -18,3 +18,6 @@ Thumbs.db
 # Project Specific
 *.log
 interview-recorder/outputs/
+
+# Claude Code local settings (contains secrets - never commit)
+.claude/settings.local.json
