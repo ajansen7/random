@@ -77,6 +77,7 @@ def main() -> int:
     ap.add_argument("--scored", default=str(HERE / "scored.json"))
     ap.add_argument("--ratings", default=str(HERE / "ratings.json"))
     ap.add_argument("--confounds", default=str(HERE / "confounds.json"))
+    ap.add_argument("--unavailable", default=str(HERE / "unavailable.json"))
     ap.add_argument("--top", type=int, default=15)
     args = ap.parse_args()
 
@@ -90,6 +91,13 @@ def main() -> int:
     # neither and is kept out of the fit entirely.
     confound_path = pathlib.Path(args.confounds)
     confounds = json.loads(confound_path.read_text()) if confound_path.exists() else {}
+
+    # Accurately rated, but not choosable - the older sister's own name above
+    # all. These STAY in the fit: Theresa is the purest example of the target
+    # taste on record, and dropping it would throw away the best evidence of
+    # what they like. They are only withheld from the recommendations.
+    unavail_path = pathlib.Path(args.unavailable)
+    unavailable = json.loads(unavail_path.read_text()) if unavail_path.exists() else {}
 
     X, ids = design_matrix(scored)
     mean_rating = {n: sum(v.values()) / len(v) for n, v in ratings.items()}
@@ -165,7 +173,7 @@ def main() -> int:
     # the question a confounded rating cannot answer.
     unrated = [
         i for i, nid in enumerate(ids)
-        if nid not in mean_rating or nid in confounds
+        if (nid not in mean_rating or nid in confounds) and nid not in unavailable
     ]
     if unrated:
         preds = np.column_stack([X[unrated], np.ones(len(unrated))]) @ w

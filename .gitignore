@@ -25,3 +25,8 @@ interview-recorder/outputs/
 # Baby names working files
 baby-names/scored.json
 baby-names/ratings.json
+
+# corpus build cache and API outputs
+baby-names/.cache/
+baby-names/corpus.json
+baby-names/named.json
