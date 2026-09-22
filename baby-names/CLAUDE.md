@@ -500,6 +500,36 @@ rated by anyone, and it now offers Maggie.
 over the new candidate lists, which is an API stage, and the TypeSafe account
 is out of credits. The corpus is rebuilt and correct; the run is pending.
 
+## Elyse, and a second way the nickname stage loses names
+
+Alex suggested Elyse. It was already in the pool and had been scored all
+along as **"Ely"** - the Choice stage picked that at 0.36 confidence with
+Ellie second, while the near-identical Elise and Elyssia both got Ellie
+outright (0.53, 0.51). A coin-flip that went the other way, and every number
+on file for Elyse is therefore about a short form nobody would use.
+
+This is a different failure from the Maggie one. Maggie was never *offered*
+to 14 of its 16 family names - a coverage gap, fixed in the generator. Ellie
+was offered to Elyse and lost narrowly - a **near-miss**, and no amount of
+widening the candidate list fixes it.
+
+The runners-up have been stored since the first commit, so the fix is free:
+the roads lists now include names whose target short form was the runner-up,
+marked with what the scores actually describe. It recovers Elyse and Eliora
+into Ellie, and Eliza (scored as Liza at 0.72).
+
+**What it does not do is re-score them.** Elyse-as-Ellie has no score; what
+is shown is Elyse-as-Ely. Getting a real number needs `second_look.py`, which
+is the blocked re-pairing run. This is now the third finding waiting on the
+same thing.
+
+**A measurement not to trust.** A first pass claimed 21.8% of names took a
+bare stem over an available -ie form. The detector was wrong: it counts
+Isadora -> Dora and Adelina -> Lina, which are correct picks, because a short
+bare stem that is a real name is not an error. Distinguishing the two is
+exactly what `no_real_nickname` is for, and it rates "Ely" as fine. There is
+no clean count of this failure without re-asking.
+
 ## Environment note
 
 This project was started in a Claude Code web session where `api.typesafe.ai`
