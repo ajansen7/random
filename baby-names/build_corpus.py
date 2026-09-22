@@ -46,13 +46,35 @@ SISTER = "Tessa"
 # Short forms that no mechanical rule would ever produce. Only the ones that
 # are genuinely established in English - this is not a place to invent.
 IRREGULAR_NICKNAMES = {
+    # The Margaret and Magdalena spelling families all reach Maggie in
+    # ordinary English use, but only these two exact spellings were listed,
+    # so 14 of the 16 family names in the corpus never had Maggie offered and
+    # the Choice stage could not pick what it was not shown. Maggie is the
+    # only short form that scored for both raters every time it was tried, so
+    # this was the most expensive gap in the generator.
     "Margaret": ["Maggie", "Meg", "Greta", "Daisy", "Peggy"],
+    "Margarete": ["Maggie", "Greta", "Margie"],
+    "Margaretha": ["Maggie", "Greta", "Margie"],
+    "Margarett": ["Maggie", "Margie", "Meg"],
+    "Margaretta": ["Maggie", "Greta", "Retta"],
+    "Margarette": ["Maggie", "Margie", "Meg"],
+    "Margarida": ["Maggie", "Rita", "Margo"],
+    "Margarita": ["Maggie", "Rita", "Margo"],
+    "Margarite": ["Maggie", "Rita", "Margie"],
+    "Margret": ["Maggie", "Meg", "Greta"],
+    "Margrett": ["Maggie", "Meg", "Margie"],
+    "Margueritta": ["Maggie", "Rita", "Margo"],
+    "Magdalen": ["Maggie", "Lena", "Magda"],
+    "Magdalene": ["Maggie", "Lena", "Magda"],
     "Eleanor": ["Nell", "Nellie", "Ellie"],
     "Elizabeth": ["Libby", "Bess", "Betsy", "Eliza", "Beth"],
     "Theresa": ["Tessa", "Tess", "Terry"],
     "Teresa": ["Tessa", "Tess"],
     "Magdalena": ["Maggie", "Lena", "Magda"],
-    "Marguerite": ["Daisy", "Margo", "Rita"],
+    # Daisy is in confounds.json because it belongs to Tessa's best friend -
+    # but that confound attaches to the PAIR, not to the name. Marguerite
+    # under Maggie or Margo has never been rated at all.
+    "Marguerite": ["Maggie", "Daisy", "Margo", "Rita"],
     "Katherine": ["Kitty", "Kate", "Katie"],
     "Catherine": ["Kitty", "Kate", "Katie"],
     "Henrietta": ["Etta", "Hettie", "Retta"],

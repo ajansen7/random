@@ -472,6 +472,34 @@ z = +1.72 on fifteen names, which is not significant, and flat for Alex (44%
 against 47%). It is the right shape for the next rating batch to test
 deliberately. It is not established and must not be filtered on.
 
+## Maggie had almost no roads, and that was a generator bug
+
+Alex confirmed Maggie via Margaret is still the front-runner. Checking what
+else reaches Maggie turned up the most expensive gap in the pipeline.
+
+The corpus offered Maggie as a candidate short form to **six** names, two of
+which are Margaret and Magdalena themselves. `IRREGULAR_NICKNAMES` listed
+those two exact spellings and nothing else, so 14 of the 16 names in the
+Margaret and Magdalena spelling families never had Maggie on the menu and the
+Choice stage could not pick what it was not shown:
+
+    Magdalene -> Magda     Margarita -> Rita      Marguerite -> Margo
+    Magdalen  -> Magdie    Margaretha -> Margie   Margarette -> Margie
+
+This is the `Ntine`-for-Clementine failure in the place it costs most, since
+Maggie is the only short form that scored for both raters every time it was
+tried. Fixed: the families are listed, and 20 names can now be offered
+Maggie.
+
+**Marguerite is not actually confounded under Maggie.** `confounds.json`
+holds it because Daisy belongs to Tessa's best friend - but a confound
+attaches to the *pair*, not the name. Marguerite under Maggie has never been
+rated by anyone, and it now offers Maggie.
+
+**Both need re-running and cannot be:** `pick_nicknames.py` has to re-choose
+over the new candidate lists, which is an API stage, and the TypeSafe account
+is out of credits. The corpus is rebuilt and correct; the run is pending.
+
 ## Environment note
 
 This project was started in a Claude Code web session where `api.typesafe.ai`
