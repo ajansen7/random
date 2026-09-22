@@ -438,9 +438,33 @@ highest-scoring road to Allie (Alex 1.93) and a completely clean name
 sum. Ranking on the minimum is right for a joint shortlist and wrong for
 finding anything; do not use it twice in the same pipeline.
 
-**Roads to Allie**, none of them yet rated: Alice, Alessandra, Alia, Alyce,
-Alesia, Allegra, Allyson. Roads to Ellie, the other name in the same
-position: Ellodie, Elea, Ellora, Elayne.
+## The short form is the unit, so count evidence per short form
+
+Margaret and Magdalena are unrelated names that scored identically for both
+raters because they share Maggie. That makes the short form a candidate in
+its own right, and the useful question is how much evidence sits behind each.
+
+| short form | tried | Alex total | Hannah total | still live |
+| --- | --- | --- | --- | --- |
+| **Maggie** | 2 | 6 | 4 | Margaret, Magdalena |
+| **Ellie** | 3 | 5 | 1 | Elodie |
+| **Allie** | 1 | 2 | 1 | Alivia |
+| Becca | 1 | 2 | 1 | Rebecca |
+| Addie | 2 | 1 | 1 | Adelaide |
+
+Read the columns against each other. **Ellie is better tested and Allie is
+better confirmed**: Ellie was tried three times and took 1 of a possible 9
+from Hannah (Elodie 1, Elianna 0, Elisabeth 0), while Allie went 1 of 3 on
+its single try. Ellie is Alex's short form; Allie is the one that landed for
+both. Maggie, tried twice and scoring for both every time, is still in a
+class of its own.
+
+**Alivia and Elodie are already-rated names sitting joint 4th and 5th**, and
+every other view hides them because a rated name is not a recommendation.
+They are still candidates and the artifact now says so.
+
+Unrated roads: to Allie - Alice, Alessandra, Alia, Alyce, Alesia, Allegra,
+Allyson. To Ellie - Ellodie, Elea, Ellora, Elayne, Elyssia, Eleia.
 
 **A hint that is not a finding.** 10 of Hannah's 15 non-zero names have a
 short form ending in -ie or -y, against 43% among the ones she rejected -
