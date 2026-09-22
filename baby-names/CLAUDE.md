@@ -418,6 +418,36 @@ at exactly 0.00 and the *highest*-confidence names are the obvious rejections
 (Stormi 0.97). Confidence here reports "certainly no", not "uncertain", so it
 cannot find the interesting middle. Do not reach for it again.
 
+## Allie, and the bug in ranking on the minimum
+
+Alex spotted by eye that Allie was missing. He was right, and the reason is a
+flaw worth keeping in mind.
+
+**Alivia -> Allie is joint 4th of the 122**, behind only Theresa and the two
+roads to Maggie, and one of only fifteen names Hannah did not rate zero. It
+never appeared because `narrow.py` ranks on `fit_both`, the **weaker** of the
+two percentiles, and Jev puts every road to Allie squarely in Hannah's middle
+(~1.05-1.20). That is defensible on the evidence - Allie has one example to
+learn from, Alivia at H1, against Maggie's two at H2 - but the effect is that
+a real signal with thin support is invisible next to one with thick support.
+
+The same mistake then repeated one level down: the first "roads to Allie"
+list sorted by the minimum too, which buried **Alice** - the single
+highest-scoring road to Allie (Alex 1.93) and a completely clean name
+(is_respelling 0.09, no_real_nickname 0.01). The roads lists now sort on the
+sum. Ranking on the minimum is right for a joint shortlist and wrong for
+finding anything; do not use it twice in the same pipeline.
+
+**Roads to Allie**, none of them yet rated: Alice, Alessandra, Alia, Alyce,
+Alesia, Allegra, Allyson. Roads to Ellie, the other name in the same
+position: Ellodie, Elea, Ellora, Elayne.
+
+**A hint that is not a finding.** 10 of Hannah's 15 non-zero names have a
+short form ending in -ie or -y, against 43% among the ones she rejected -
+z = +1.72 on fifteen names, which is not significant, and flat for Alex (44%
+against 47%). It is the right shape for the next rating batch to test
+deliberately. It is not established and must not be filtered on.
+
 ## Environment note
 
 This project was started in a Claude Code web session where `api.typesafe.ai`
