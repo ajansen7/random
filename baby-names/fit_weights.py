@@ -78,6 +78,15 @@ def main() -> int:
     ap.add_argument("--ratings", default=str(HERE / "ratings.json"))
     ap.add_argument("--confounds", default=str(HERE / "confounds.json"))
     ap.add_argument("--unavailable", default=str(HERE / "unavailable.json"))
+    # The weights are fitted on --scored, where every row carries the exact
+    # formal/nickname pair that was rated. --rank then applies them to a
+    # different file, normally the scored corpus. The two have to stay
+    # separate: pick_nicknames.py chose a different short form for 13 of the
+    # 43 rated names it also saw (Flossie -> Flo, Nell -> Ellie, Tessa ->
+    # Tess), and the ratings belong to the pair that was actually shown.
+    ap.add_argument("--rank", default=None,
+                    help="score file to rank with the fitted weights "
+                         "(default: rank the unrated names inside --scored)")
     ap.add_argument("--top", type=int, default=15)
     args = ap.parse_args()
 
@@ -167,23 +176,46 @@ def main() -> int:
     for trait, weight in sorted(zip(TRAITS, w[:-1]), key=lambda p: -abs(p[1])):
         print(f"  {trait:<26} {weight:+.2f}")
 
-    # --- ranking of what we have not rated -------------------------------
-    # Confounded names get a prediction too: what the traits say the name
-    # would be worth if the association were not in the way. That is exactly
-    # the question a confounded rating cannot answer.
+    # --- ranking ---------------------------------------------------------
+    # Either the unrated remainder of --scored, or a separate pool given with
+    # --rank. Confounded names get a prediction too: what the traits say the
+    # name would be worth if the association were not in the way. That is
+    # exactly the question a confounded rating cannot answer.
+    pool = scored
+    if args.rank:
+        pool = json.loads(pathlib.Path(args.rank).read_text())
+        X, ids = design_matrix(pool)
+        by_id = {r["id"]: r for r in pool}
+
     unrated = [
         i for i, nid in enumerate(ids)
         if (nid not in mean_rating or nid in confounds) and nid not in unavailable
     ]
-    if unrated:
-        preds = np.column_stack([X[unrated], np.ones(len(unrated))]) @ w
-        order = np.argsort(-preds)
-        print(f"\nPredicted best of the {len(unrated)} unrated names")
-        for k in order[: args.top]:
-            row = by_id[ids[unrated[k]]]
-            print(f"  {preds[k]:4.2f}  {row['nickname']:<10} {row['formal']}")
-    else:
+    if not unrated:
         print("\nEverything scored has been rated - add more names to names.json.")
+        return 0
+
+    preds = np.column_stack([X[unrated], np.ones(len(unrated))]) @ w
+    order = np.argsort(-preds)
+    print(f"\nPredicted best of the {len(unrated)} unrated names")
+    for k in order[: args.top]:
+        row = by_id[ids[unrated[k]]]
+        print(f"  {preds[k]:4.2f}  {row['nickname']:<10} {row['formal']}")
+
+    # Where the already-rated names land in the same ranking. The model never
+    # saw the ratings when scoring the corpus, so this is the cheapest check
+    # that the weights transfer: the 3s should sit near the top and the 0s
+    # should not. If they are interleaved, the ranking is noise.
+    known = [(nid, mean_rating[nid]) for nid in mean_rating if nid in by_id]
+    if args.rank and known:
+        allpred = np.column_stack([X, np.ones(len(X))]) @ w
+        rank_of = {nid: r + 1 for r, nid in
+                   enumerate([ids[i] for i in np.argsort(-allpred)])}
+        print(f"\nWhere the rated names land in these {len(ids)}")
+        for nid, got in sorted(known, key=lambda p: -p[1])[:12]:
+            flag = "  (confounded)" if nid in confounds else ""
+            print(f"  rated {got:.0f}   rank {rank_of[nid]:>5}   "
+                  f"{by_id[nid]['nickname']:<10} {by_id[nid]['formal']}{flag}")
     return 0
 
 

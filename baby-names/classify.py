@@ -31,14 +31,9 @@ import os
 import pathlib
 import sys
 
-from typesafe_sdk import (
-    Noul,
-    Score,
-    TypeSafeClient,
-    TypeSafeError,
-    TypeSafeAPIConnectionError,
-    TypeSafeAPIError,
-)
+from typesafe_sdk import Noul, Score
+
+from parallel import run_all
 
 HERE = pathlib.Path(__file__).parent
 SIBLING = {"nickname": "Tessa", "formal": "Theresa"}
@@ -216,6 +211,8 @@ def main() -> int:
     ap.add_argument("--out", default=str(HERE / "scored.json"))
     ap.add_argument("--limit", type=int, default=0, help="score only the first N names")
     ap.add_argument("--model", default=None, help="override the default model")
+    ap.add_argument("--concurrency", type=int, default=16,
+                    help="requests in flight at once")
     args = ap.parse_args()
 
     if not os.environ.get("TYPESAFE_API_KEY"):
@@ -226,20 +223,15 @@ def main() -> int:
     if args.limit:
         names = names[: args.limit]
 
-    rows, failures = [], []
-    with TypeSafeClient(model=args.model) as client:
-        for i, name in enumerate(names, 1):
-            label = f"{name['nickname']} ({name['formal']})"
-            try:
-                response = client.system_one(
-                    state=state_for(name), questions=QUESTIONS
-                )
-            except (TypeSafeAPIConnectionError, TypeSafeAPIError, TypeSafeError) as exc:
-                print(f"  [{i}/{len(names)}] {label}: {type(exc).__name__}: {exc}", file=sys.stderr)
-                failures.append({"id": name["id"], "error": str(exc)})
-                continue
-            rows.append(answers_to_row(name, response))
-            print(f"  [{i}/{len(names)}] {label}")
+    answered, failures = run_all(
+        names,
+        state_for=state_for,
+        questions_for=lambda _name: QUESTIONS,
+        concurrency=args.concurrency,
+        model=args.model,
+        label=lambda n: f"{n['nickname']} ({n['formal']})",
+    )
+    rows = [answers_to_row(name, resp) for name, resp in answered]
 
     pathlib.Path(args.out).write_text(json.dumps(rows, indent=2))
     print(f"\nwrote {len(rows)} scored names to {args.out}")

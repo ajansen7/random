@@ -31,13 +31,9 @@ import os
 import pathlib
 import sys
 
-from typesafe_sdk import (
-    Choice,
-    TypeSafeClient,
-    TypeSafeError,
-    TypeSafeAPIConnectionError,
-    TypeSafeAPIError,
-)
+from typesafe_sdk import Choice
+
+from parallel import run_all
 
 HERE = pathlib.Path(__file__).parent
 NO_MATCH = "none_of_these"
@@ -75,6 +71,8 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--min-confidence", type=float, default=0.0,
                     help="drop picks below this confidence instead of keeping them")
+    ap.add_argument("--concurrency", type=int, default=16,
+                    help="requests in flight at once")
     args = ap.parse_args()
 
     if not os.environ.get("TYPESAFE_API_KEY"):
@@ -85,49 +83,50 @@ def main() -> int:
     if args.limit:
         records = records[: args.limit]
 
-    kept, no_match, low_conf, failed = [], 0, 0, 0
-    with TypeSafeClient() as client:
-        for i, rec in enumerate(records, 1):
-            try:
-                resp = client.system_one(
-                    state={"candidate": {"formal_name": rec["formal"]}},
-                    questions=question_for(rec),
-                )
-            except (TypeSafeAPIConnectionError, TypeSafeAPIError, TypeSafeError) as exc:
-                print(f"  [{i}/{len(records)}] {rec['formal']}: {exc}", file=sys.stderr)
-                failed += 1
-                continue
+    answered, failures = run_all(
+        records,
+        state_for=lambda rec: {"candidate": {"formal_name": rec["formal"]}},
+        questions_for=question_for,
+        concurrency=args.concurrency,
+    )
 
-            ans = resp.answers["nickname"]
-            if ans.choice == NO_MATCH:
-                no_match += 1
-                continue
-            if ans.confidence < args.min_confidence:
-                low_conf += 1
-                continue
+    kept, no_match, low_conf = [], 0, 0
+    for rec, resp in answered:
+        ans = resp.answers["nickname"]
+        if ans.choice == NO_MATCH:
+            no_match += 1
+            continue
+        if ans.confidence < args.min_confidence:
+            low_conf += 1
+            continue
 
-            out = dict(rec)
-            out["nickname"] = ans.choice
-            out["nickname_confidence"] = round(ans.confidence, 4)
-            # Keep the runners-up: a name can be worth rescoring under its
-            # second-best short form, which is exactly the Marguerite case.
-            out["nickname_alternatives"] = [
-                c for c, _ in sorted(
-                    ((c, p) for c, p in ans.probabilities.items() if c != ans.choice),
-                    key=lambda kv: -kv[1],
-                )[:3]
-            ]
-            kept.append(out)
-            if i % 100 == 0:
-                print(f"  [{i}/{len(records)}] {len(kept)} named so far")
+        out = dict(rec)
+        out["nickname"] = ans.choice
+        out["nickname_confidence"] = round(ans.confidence, 4)
+        # The probability mass left on the no-match outcome even though a
+        # real option won. This is NOT the same as low confidence: Magdalena
+        # spreads 0.42 across Maggie, Magda and Lena, which are all real, and
+        # must not be filtered. Meredith splits between Mer and "none of
+        # these are real words", which is the case worth dropping. Kept as a
+        # number so the threshold can be set from the ratings downstream.
+        out["no_real_nickname"] = round(ans.probabilities.get(NO_MATCH, 0.0), 4)
+        # Keep the runners-up: a name can be worth rescoring under its
+        # second-best short form, which is exactly the Marguerite case.
+        out["nickname_alternatives"] = [
+            c for c, _ in sorted(
+                ((c, p) for c, p in ans.probabilities.items() if c != NO_MATCH and c != ans.choice),
+                key=lambda kv: -kv[1],
+            )[:3]
+        ]
+        kept.append(out)
 
     pathlib.Path(args.out).write_text(json.dumps(kept, indent=2))
     print(f"\n{len(kept)} names written to {args.out}")
     print(f"  {no_match} had no real short form and were dropped")
     if low_conf:
         print(f"  {low_conf} dropped below confidence {args.min_confidence}")
-    if failed:
-        print(f"  {failed} failed; rerun to fill them in", file=sys.stderr)
+    if failures:
+        print(f"  {len(failures)} failed; rerun to fill them in", file=sys.stderr)
     return 0
 
 

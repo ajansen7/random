@@ -30,3 +30,9 @@ baby-names/ratings.json
 baby-names/.cache/
 baby-names/corpus.json
 baby-names/named.json
+
+# baby-names outputs
+baby-names/taste.json
+baby-names/shortlist.json
+baby-names/scored_corpus.json
+baby-names/.venv/
