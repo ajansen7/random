@@ -234,6 +234,78 @@ about 20 seconds a stage, not the twenty minutes the scale warning assumed.
 the traits are the diagnostic that showed why the fit fails - but they are no
 longer the path to a recommendation.
 
+## Both raters are in. 244 ratings, and the search is over.
+
+Hannah rated all 122 on 2026-09-21, so the held-out test finally ran.
+
+**`sound_texture` is dead, and this is the clean kill.** Against Hannah's
+ratings on the original fifty - the pure held-out test, a hypothesis formed
+on Alex's ratings meeting data it never saw - it scores **r = -0.15**. The
+wrong sign. Remove Theresa, whose 3 distorts everything, and it is -0.08. It
+never worked on Alex's either (+0.03). The theory that "what the winners
+share is sound, long and vowel-led and soft-consonanted" is finished: the
+model says Georgiana and Magdalena have the same sound, and one is a 3 and
+the other a 0.
+
+**`nickname_transformation` was right all along.** It is the strongest
+surviving trait - +0.21 against Hannah's held-out fifty, +0.33 across her
+122, +0.27 joint. That is the README's *original* second hypothesis, the one
+abandoned when the era theory collapsed and `sound_texture` was invented to
+replace it. Theresa to Tessa and Margaret to Maggie reshape the sound;
+Rebecca to Becca clips it. That was the answer.
+
+**Confirmed on both raters independently:** `era` is noise (+0.09 / -0.05).
+`currently_common` is *positively* correlated with liking (+0.37 Hannah,
++0.33 Alex) - popularity is a feature, and now twice measured.
+`clashes_with_sibling` reads +0.37 until Theresa is removed and then -0.15,
+which is the correct sign and a reminder to always drop her first.
+
+**Margaret and Magdalena scored identically for both raters, separately**
+(Alex 3, Hannah 2, both). The nickname-carries-the-decision finding now
+replicates on a rater who had never seen it.
+
+## Hannah is the constraint, and she is harsh
+
+Mean rating 0.16 against Alex's 0.48. She gave one 3 and two 2s in 122
+names; he gave three 3s and fourteen 2s. Agreement is r = +0.49, 68% exact,
+91% within a point.
+
+Averaging the two is the wrong move and was tried: it squashes her 0s
+against his 2s and predicts a scale neither used. `taste_match.py --rater`
+models them separately. Alex is predictable (Spearman +0.53, 4 of his 16
+liked names in the top 12 against 1.6 by chance). Hannah is barely
+modellable - Spearman +0.39 but only **three** positive examples, so treat
+any claim about her taste as provisional.
+
+## The answer
+
+Of 1,646 filtered corpus candidates, **zero clear both held-out bars**
+(Alex's best 3 scored 2.61 held out, Hannah's best 2 scored 1.88). The best
+joint candidate is Katherine/Kate at 1.74, short of Hannah's bar. The
+corpus - SSA top-1000, known gap #1 - has been searched and does not
+contain a better name than the one they already have.
+
+What the ratings say on their own:
+
+| | Alex | Hannah | |
+| --- | --- | --- | --- |
+| Theresa / Tessa | 3 | 3 | the older sister's name, unpickable |
+| **Magdalena / Maggie** | **3** | **2** | |
+| **Margaret / Maggie** | **3** | **2** | |
+| Alivia / Allie | 2 | 1 | the only others Hannah did not reject |
+| Elodie / Ellie | 2 | 1 | |
+| Rebecca / Becca | 2 | 1 | |
+
+Two names clear a joint 2.0, and they are the same name twice: **Maggie**,
+reached through Margaret or through Magdalena. The remaining decision is
+which formal name to put on the certificate, which is a question about
+Margaret's popularity (US #126 in 2024) against Magdalena's rarity - not a
+question any of this machinery can answer.
+
+If they want more options, the move is not more modelling. It is a British,
+literary or European name list, which is the one thing that would put names
+like Verity - rated 2, absent from the corpus - back in play.
+
 ## Environment note
 
 This project was started in a Claude Code web session where `api.typesafe.ai`

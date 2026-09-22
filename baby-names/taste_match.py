@@ -160,7 +160,7 @@ QUESTIONS = {
 
 
 def load_rated(scored_path: pathlib.Path, ratings_path: pathlib.Path,
-               confounds: dict) -> list[dict]:
+               confounds: dict, rater: str | None = None) -> list[dict]:
     """The rated names with the exact formal/nickname pair that was shown.
 
     Confounded ratings are about a dog or a friend rather than the name, so
@@ -168,17 +168,34 @@ def load_rated(scored_path: pathlib.Path, ratings_path: pathlib.Path,
     """
     import fit_weights as fw
 
-    scored = {r["id"]: r for r in json.loads(scored_path.read_text())}
+    # The formal/nickname pair exactly as the artifact showed it. Both name
+    # files are needed now: names.json is batch one, names_v2.json batch two
+    # plus the repeats. Taking the pair from a scored file instead would
+    # silently substitute whatever short form pick_nicknames.py chose, which
+    # is not what anyone rated.
+    scored = {}
+    for f in ("names.json", "names_v2.json"):
+        q = scored_path.parent / f
+        if q.exists():
+            scored.update({r["id"]: r for r in json.loads(q.read_text())})
+    scored.update({r["id"]: r for r in json.loads(scored_path.read_text())
+                   if r["id"] not in scored})
     ratings = fw.load_ratings(ratings_path)
     out = []
     for nid, per_rater in ratings.items():
         if nid in confounds or nid not in scored:
             continue
+        if rater:
+            if rater not in per_rater:
+                continue
+            value = per_rater[rater]
+        else:
+            value = sum(per_rater.values()) / len(per_rater)
         out.append({
             "id": nid,
             "formal": scored[nid]["formal"],
             "nickname": scored[nid]["nickname"],
-            "rating": sum(per_rater.values()) / len(per_rater),
+            "rating": value,
         })
     return out
 
@@ -197,6 +214,14 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--concurrency", type=int, default=24)
     ap.add_argument("--top", type=int, default=25)
+    # Whose taste to model. Averaging the two raters looked natural and is
+    # not: Hannah rejects 88% of the pool and Alex 68%, so the mean squashes
+    # her 0s against his 2s and predicts a scale nobody actually used. It
+    # also hides which of them is the constraint. Modelling each separately
+    # and intersecting afterwards is both sharper and more useful, because
+    # the scarce thing is a name Hannah likes.
+    ap.add_argument("--rater", default=None,
+                    help="model one rater (Alex / Hannah); default averages them")
     args = ap.parse_args()
 
     if not os.environ.get("TYPESAFE_API_KEY"):
@@ -205,7 +230,8 @@ def main() -> int:
 
     confounds = json.loads(pathlib.Path(args.confounds).read_text())
     unavailable = json.loads(pathlib.Path(args.unavailable).read_text())
-    rated = load_rated(pathlib.Path(args.scored), pathlib.Path(args.ratings), confounds)
+    rated = load_rated(pathlib.Path(args.scored), pathlib.Path(args.ratings),
+                       confounds, rater=args.rater)
     print(f"{len(rated)} usable ratings as exemplars "
           f"({sum(1 for r in rated if r['rating'] >= 3)} loved, "
           f"{sum(1 for r in rated if r['rating'] == 0)} rejected)")
@@ -269,11 +295,19 @@ def main() -> int:
         print(f"  correlation       r={r:+.2f}")
         print(f"  {'BEATS' if rmse < base else 'DOES NOT BEAT'} the mean baseline")
         print("\n  by what they actually said")
-        for band in (3.0, 2.0, 1.0, 0.0):
+        for band in sorted(set(true.tolist()), reverse=True):
             v = pred[true == band]
-            if len(v):
-                print(f"    rated {band:.0f}  n={len(v):>2}  predicted "
-                      f"{v.mean():.2f}  (range {v.min():.2f}-{v.max():.2f})")
+            print(f"    rated {band:>4.1f}  n={len(v):>3}  predicted "
+                  f"{v.mean():.2f}  (range {v.min():.2f}-{v.max():.2f})")
+        order = np.argsort(-pred)
+        top = int(max(1, len(rows) // 10))
+        hits = sum(1 for i in order[:top] if true[i] >= 2)
+        tot = int((true >= 2).sum())
+        rk = np.argsort(np.argsort(pred))
+        sp = float(np.corrcoef(rk, np.argsort(np.argsort(true)))[0, 1])
+        print(f"\n  spearman          {sp:+.2f}")
+        print(f"  top {top}: {hits} of the {tot} names rated >= 2"
+              f"   (chance {top * tot / len(rows):.1f})")
         print("\n  worst misses")
         for row in sorted(rows, key=lambda x: -abs(x["taste_fit"] - x["rating"]))[:6]:
             print(f"    rated {row['rating']:.0f}  predicted {row['taste_fit']:.2f}   "
