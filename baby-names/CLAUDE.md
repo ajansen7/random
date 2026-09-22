@@ -306,6 +306,79 @@ If they want more options, the move is not more modelling. It is a British,
 literary or European name list, which is the one thing that would put names
 like Verity - rated 2, absent from the corpus - back in play.
 
+## Second source: ONS England and Wales
+
+Known gap #1 is closed. `build_corpus_uk.py` pulls ONS Table 6 - every name
+given to at least three girls in England and Wales in a year, 7,617 of them -
+and merges it with the SSA corpus. It reaches exactly the register the SSA
+top-1000 truncates:
+
+    Verity 92   Millicent 33   Isadora 34   Genevieve 83   Leonora 71
+    Cordelia 59   Araminta 11   Perdita 5   Clemency 3
+
+Verity, rated 2 and previously impossible to find, is now in the corpus.
+Merged: 3,725 SSA + 4,929 new = 8,654, with 1,537 in both.
+
+Two facts handled in code because both are lookups. England and Wales
+register hyphenated double names as single entries and there are 905 of them
+(Gracie-Mae, Lillie-Grace, Ivy-May); they swamped two of the eight sets on
+the first run and are dropped. And Table 6's floor of three is thin enough
+to admit registration one-offs, so `narrow.py` requires a name to appear in
+SSA at all **or** reach ten girls in England and Wales - checked against the
+17 names rated >= 2, all of which clear it, Verity included.
+
+## The output is sets, not a ranking
+
+Two corrections from Alex, both right.
+
+**A bar is the wrong instrument.** The previous run reported "zero of 1,646
+candidates clear both held-out bars" and stopped. That is a decision rule
+pretending to be a search, and it is especially wrong here: Hannah rated 107
+of 122 names zero, so a bar set by her two 2s rejects everything, and a name
+she would call a 1 - already her top 12% - dies alongside names she hated.
+Nothing is thresholded now. `narrow.py` puts the two raters on a common
+scale by **percentile**, because their scales genuinely differ (he averages
+0.48, she 0.16, and her 1 means about what his 2 does), then keeps the top
+slice on the weaker of the two. A funnel, not a verdict.
+
+**One ranked column hides the useful question.** `facets.py` asks nine wider
+facets per name - all independent, so all nine ride in the single request
+each name already costs - then clusters the pool in facet space and labels
+each cluster by whatever it is most extreme on. The labels are computed, not
+written: a set exists because its names share something measurable, and the
+label reports what. The facets were chosen from what the 244 ratings
+established, so `era` and `sound_texture` are absent and four of the nine are
+about the short form.
+
+This surfaces things no ranking would. The clearest is a 35-name cluster
+labelled *sits awkwardly beside Tessa* - Tabitha, Talia, Tamsin, Tamar,
+Talya, Tiana - every one of which scores high on its own and is a trap next
+to the sister. A second cluster, *drags one loud association*, collects
+Amelie, Aretha, Mercedes, Ophelia, Madonna, Zelda: the Daniel Tiger problem
+generalised and made per-name.
+
+The set to read first is **the short form reshapes the name, warm to say
+every day** - Madeleine, Grace, Mercy, Letitia, Lucile, Domenica - because
+`nickname_reshapes` is the descendant of the one trait that survived the
+held-out test.
+
+## Where TypeSafe actually does the work
+
+Worth stating plainly, because from the outside this looks like statistics.
+Every judgment in the pipeline is a Jev call and none of the ranking is
+Python:
+
+| stage | questions per name | what code does |
+| --- | --- | --- |
+| `pick_nicknames.py` | 1 Choice over generated short forms + a no-match | generates candidates, tallies |
+| `taste_match.py` | 1 Score + 3 Nouls + 1 Choice | assembles state from the ratings |
+| `facets.py` | 5 Scores + 4 Nouls | clusters the answers, labels the clusters |
+| `classify.py` | 4 Scores + 4 Nouls | now a diagnostic only |
+
+A full run is roughly 30,000 Jev calls and about two minutes. Code fetches
+data, computes lookups (syllables, peak decade, counts, hyphens) and does
+arithmetic on the answers. It never decides whether a name is any good.
+
 ## Environment note
 
 This project was started in a Claude Code web session where `api.typesafe.ai`
