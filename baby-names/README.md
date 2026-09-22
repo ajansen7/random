@@ -59,19 +59,20 @@ The order matters: the ratings come *first* and are what the trait scores get
 validated against. Without them the seven weights would just be my opinion
 wearing a number.
 
-## The seven traits
+## The eight traits
 
 | Trait | Kind | Want |
 | --- | --- | --- |
 | `era` | Score, 5 levels | high — inherited, not our generation |
 | `nickname_transformation` | Score, 5 levels | high — reshaped, not clipped |
+| `sound_texture` | Score, 5 levels | high — flowing, not clipped |
 | `child_adult_range` | Score, 5 levels | high |
 | `currently_common` | Noul | low |
 | `recognisable` | Noul | high |
 | `clashes_with_sibling` | Noul | low — it has to work next to Tessa |
 | `register_match` | Noul | high |
 
-Each is one narrow judgment, and all seven are independent, so they go in a
+Each is one narrow judgment, and all eight are independent, so they go in a
 single request per name and run in parallel. The raw scores are stored
 un-flipped; direction and weighting are applied later in `fit_weights.py`, so
 changing our minds about what we want costs no inference.
@@ -95,7 +96,7 @@ the Claude Code web sandbox — run it somewhere with open egress.
 ## Reading the output
 
 `fit_weights.py` prints the leave-one-out error next to the in-sample error.
-Seven traits fitted to fifty names will happily fit noise, so if those two
+Eight traits fitted to fifty names will happily fit noise, so if those two
 numbers diverge, believe the per-trait correlations and ignore the ranking.
 The correlations are the actual deliverable — they're the answer to "what do
 we like" — and the ranking is a convenience on top.
@@ -104,3 +105,23 @@ The anchor check is the circuit breaker. Theresa, Margaret and Rebecca were
 rated blind, and we already know roughly where they should land. If the fitted
 model disagrees with them, the traits are wrong and nothing else on the page
 is worth reading.
+
+## What Alex's 50 ratings already showed
+
+Before any classifying, the ratings alone settled two things.
+
+**The Daniel Tiger worry is dead.** Margaret → Maggie scored 3, Magdalena →
+Maggie scored 3, Marguerite → Daisy scored 0. Both roads to Maggie landed
+identically and the Margaret variant with a different nickname was rejected,
+so the appeal is attached to the nickname, not to the formal name and not to
+the television.
+
+**The era hypothesis is wrong.** The archetypal grandmother names averaged
+0.21 — 28 of 33 scored zero, including Hattie, Winnie, Nell, Etta and Josie.
+The longer flowing Latinate names averaged 1.17, and Rebecca, the control that
+was supposed to be too recent, scored 2. `era` stays in the question set so the
+fit can show this explicitly rather than have it silently assumed.
+
+`sound_texture` was added in response. It was derived from these ratings, so
+fitting it back to them proves nothing — Hannah's independent ratings are the
+held-out test.

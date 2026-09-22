@@ -38,6 +38,7 @@ HERE = pathlib.Path(__file__).parent
 TRAITS = [
     "era",
     "nickname_transformation",
+    "sound_texture",
     "child_adult_range",
     "currently_common",
     "recognisable",

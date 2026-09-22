@@ -84,6 +84,25 @@ QUESTIONS = {
             "The short form is a substantially different word, linked to the formal name by naming tradition rather than by spelling.",
         ],
     ),
+    # Added after Alex's 50 ratings came in, and the single largest effect in
+    # them: the flowing Latinate formal names averaged 1.17 while the clipped
+    # Anglo-Germanic ones averaged 0.21. NOTE this trait was invented by
+    # looking at those ratings, so it will flatter itself when fitted back to
+    # them. Hannah's ratings are the honest test of it.
+    "sound_texture": Score(
+        instructions=(
+            "Consider the sound of `candidate.formal_name` said aloud, ignoring "
+            "how old or fashionable it is. Where does it sit between clipped and "
+            "flowing?"
+        ),
+        criteria=[
+            "Short and hard: one or two syllables built on stops and clustered consonants.",
+            "Compact and consonant-led, with a blunt ending.",
+            "Balanced - neither notably clipped nor notably flowing.",
+            "Longer and vowel-led, running smoothly across three or more syllables.",
+            "Unmistakably flowing: several syllables of open vowels and soft consonants, ending on a vowel.",
+        ],
+    ),
     "child_adult_range": Score(
         instructions=(
             "Consider `candidate.formal_name` and `candidate.nickname` together "
@@ -149,6 +168,7 @@ QUESTIONS = {
 HIGHER_IS_BETTER = {
     "era": True,
     "nickname_transformation": True,
+    "sound_texture": True,
     "child_adult_range": True,
     "currently_common": False,
     "recognisable": True,
