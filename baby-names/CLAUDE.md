@@ -11,6 +11,14 @@ ratings are the held-out test for a hypothesis formed on Alex's (see
 
 The rating tool is an artifact:
 https://claude.ai/artifact/YDJY6apBPXZpE7SuKZCkUn
+
+It now holds **122 names in two batches**. Batch one is the original fifty,
+in their original order, so the fifty ratings already collected still key
+correctly and Hannah rates them first - they are the held-out test of
+everything fitted to Alex's. Batch two is the 72 from `spanning_set.py`,
+shuffled and appended. The names live in the page source, not the db, so
+adding more means republishing the artifact; ratings key off `nameId`, so
+that is safe as long as existing ids do not change.
 Ratings live in its `db` under the `ratings` collection and are read back with
 the `ArtifactData` tool. `ratings.json` is gitignored — if it is missing, pull
 it from the artifact rather than reconstructing it.
