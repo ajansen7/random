@@ -125,3 +125,17 @@ fit can show this explicitly rather than have it silently assumed.
 `sound_texture` was added in response. It was derived from these ratings, so
 fitting it back to them proves nothing — Hannah's independent ratings are the
 held-out test.
+
+## Confounded ratings
+
+`confounds.json` lists names whose rating is about a real-world association
+rather than the name: a nickname that already belongs to a friend, a pet, a
+relative. The model cannot see any of that, so the rating is evidence about
+neither the name nor the traits, and `fit_weights.py` keeps it out of the fit
+entirely — then predicts it alongside the unrated names, which is the one
+question a confounded rating cannot answer: what would this be worth if the
+association weren't in the way?
+
+Add to it whenever a name turns out to be taken. Trying to rate around an
+association is not reliable — the effect is not introspectable, so the fix is
+to exclude, not to concentrate harder.

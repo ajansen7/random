@@ -76,6 +76,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--scored", default=str(HERE / "scored.json"))
     ap.add_argument("--ratings", default=str(HERE / "ratings.json"))
+    ap.add_argument("--confounds", default=str(HERE / "confounds.json"))
     ap.add_argument("--top", type=int, default=15)
     args = ap.parse_args()
 
@@ -83,10 +84,28 @@ def main() -> int:
     ratings = load_ratings(pathlib.Path(args.ratings))
     by_id = {r["id"]: r for r in scored}
 
+    # Names whose rating reflects a real-world association the model cannot
+    # see - a nickname already belonging to a friend, a pet, a relative. The
+    # rating is about the association, not the name, so it is evidence about
+    # neither and is kept out of the fit entirely.
+    confound_path = pathlib.Path(args.confounds)
+    confounds = json.loads(confound_path.read_text()) if confound_path.exists() else {}
+
     X, ids = design_matrix(scored)
     mean_rating = {n: sum(v.values()) / len(v) for n, v in ratings.items()}
 
-    labelled = [i for i, nid in enumerate(ids) if nid in mean_rating]
+    if confounds:
+        print("Held out as confounded")
+        for nid, why in confounds.items():
+            row, got = by_id.get(nid), mean_rating.get(nid)
+            label = row["nickname"] if row else nid
+            print(f"  {label:<10} rated {got if got is not None else '--':>4}   {why}")
+        print()
+
+    labelled = [
+        i for i, nid in enumerate(ids)
+        if nid in mean_rating and nid not in confounds
+    ]
     if len(labelled) < len(TRAITS) + 2:
         print(f"Only {len(labelled)} rated names. Rate more before fitting.")
         return 1
@@ -141,7 +160,13 @@ def main() -> int:
         print(f"  {trait:<26} {weight:+.2f}")
 
     # --- ranking of what we have not rated -------------------------------
-    unrated = [i for i, nid in enumerate(ids) if nid not in mean_rating]
+    # Confounded names get a prediction too: what the traits say the name
+    # would be worth if the association were not in the way. That is exactly
+    # the question a confounded rating cannot answer.
+    unrated = [
+        i for i, nid in enumerate(ids)
+        if nid not in mean_rating or nid in confounds
+    ]
     if unrated:
         preds = np.column_stack([X[unrated], np.ones(len(unrated))]) @ w
         order = np.argsort(-preds)
