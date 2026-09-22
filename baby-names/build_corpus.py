@@ -163,11 +163,16 @@ def nickname_candidates(name: str) -> list[str]:
         if not 2 <= len(stem) <= 6:
             continue
         out.append(stem.capitalize())
-        # -ie / -y only off a SHORT consonant-ending stem, doubling the final
-        # consonant the way English does: Mil -> Millie, not Milie.
+        # -ie / -y off a short consonant-ending stem. English doubles the
+        # consonant after a short vowel (Mil -> Millie) and does not after a
+        # long one (Grac -> Gracie, never Graccie), and no rule here can tell
+        # those apart from spelling. So offer both and let pick_nicknames.py
+        # choose - over-generating is what that stage exists to clean up, and
+        # a wrong option costs nothing while a missing one cannot be picked.
         if 2 <= len(stem) <= 4 and stem[-1] not in VOWELS:
-            base = stem if stem[-1] == stem[-2:-1] else stem + stem[-1]
-            out.append((base + "ie").capitalize())
+            out.append((stem + "ie").capitalize())
+            if stem[-1] != stem[-2:-1]:
+                out.append((stem + stem[-1] + "ie").capitalize())
 
     # Trailing element of a long name: Isadora -> Dora, Leonora -> Nora.
     if len(groups) >= 3:
@@ -180,10 +185,13 @@ def nickname_candidates(name: str) -> list[str]:
 
     seen, uniq = set(), []
     for c in out:
-        if c.lower() != low and c.lower() not in seen and 2 <= len(c) <= 8:
+        # Three letters minimum: "Mi" for Migdalia and "Mo" for Monica are
+        # truncations the generator makes, not short forms anyone uses, and
+        # every short form of a name they rated 2 or 3 is four or more.
+        if c.lower() != low and c.lower() not in seen and 3 <= len(c) <= 8:
             seen.add(c.lower())
             uniq.append(c)
-    return uniq[:8]
+    return uniq[:10]
 
 
 def fetch(url: str) -> bytes:

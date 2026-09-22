@@ -129,10 +129,18 @@ it was derived from.
 **What replaced it.** `taste_match.py` puts the 48 ratings into the *state*
 and asks for a direct comparison, instead of compressing them into eight
 numbers. Validated leave-one-out, with each name judged against the other 47:
-Spearman +0.57, and Margaret and Magdalena - the only two 3s - come back at
-ranks 1 and 2 of 47. RMSE is still above the mean baseline because the model
-over-predicts the level, but a shortlist only needs the ordering, and one
-linear recalibration puts RMSE at 0.73 against 0.85.
+**Spearman +0.48**, and Margaret and Magdalena - the only two 3s - come back
+at ranks 1 and 2 of 47. RMSE stays above the mean baseline because the model
+over-predicts the level, but a shortlist only needs the ordering.
+
+That number was first reported as +0.57, which was wrong and worth recording
+why. The instructions had been given a calibration paragraph naming Eleanor,
+Charlotte, Beatrice, Philippa and Josephine as names they rejected - written
+after reading the first validation's worst misses. The exemplar list excluded
+the held-out name, but the *instructions* did not, so five of the forty-seven
+had their answers in the prompt. Nothing in the leave-one-out machinery can
+catch that; the only defence is that no rated name appears anywhere in a
+question. It does not now.
 
 **The corpus is the binding constraint, and now it is measured.** Held out,
 the names rated 3 score 2.64 and 2.79. The best of the 179 filtered corpus
@@ -141,28 +149,63 @@ candidates is Honora at 2.01, nothing reaches either 3, and only 16 of the
 is known gap #1 - SSA top-1000-only - quantified. The next real move is a
 British, literary or European name list, not more modelling.
 
-## Filters added, and the two that were refused
+## Rules were the wrong instinct - ask instead
 
-`shortlist.py` holds them, and each prints its check against the names rated
->= 2 before it is applied.
+`shortlist.py` first grew a syllable floor on the formal name, a required
+shape for the short form, and a spelling-key plus edit-distance plus
+union-find family grouper. Every one of them was written by looking at bad
+output and inventing a rule, and every one was fitted to the nine names
+rated 2 or 3 - the same overfitting as the weight fit, in a place where the
+project's own "check it against the names rated >= 2" ritual waved it
+through, because a rule tuned on nine names trivially passes a check
+against those nine names.
 
-- **Formal name >= 3 syllables.** All nine names rated >= 2 clear it; every
-  name that drops to two was rated 0 or 1. Removes the 1,943 SSA entries that
-  are short forms on a birth certificate - Maggie, Meg, Tess, Trudy.
-- **Short form is two syllables ending in a vowel.** 9 of 9 liked names have
-  it. So do 29 of 33 rejected ones, so it predicts nothing and must not be
-  used to rank - it is a requirement only, and what it removes is Mel, Mo,
-  Lu, Marj, Mer.
-- **One spelling per name family.** SSA lists every spelling that ever made
-  the top 1000; Margaret arrives with six others.
-- **REFUSED: any floor on nickname confidence.** Magdalena -> Maggie came
-  back at 0.44 and is a rated 3; Genevieve -> Evie at 0.49 and a rated 2.
-  Even a 0.5 floor deletes a favourite. Low confidence there is probability
-  spread across several *real* short forms, which is not the failure worth
-  filtering.
-- **The signal that is safe instead** is `no_real_nickname`, the mass the
-  Choice leaves on its no-match outcome. It tops out at 0.01 across the
-  liked names and catches Meredith -> "Mer" at 0.30.
+The syllable floor deleted **1,485 names the model considers perfectly good
+formal names** - Vera, Grace, Miriam, Marian, Talia - to remove Maggie and
+Meg.
+
+All of it is gone, replaced by three Nouls in `taste_match.py` that ride in
+the request each name already costs:
+
+| question | catches | highest among the names rated >= 2 |
+| --- | --- | --- |
+| `is_short_form` | Maggie, Meg, Tess, Trudy as formal names | 0.19 |
+| `is_respelling` | Margarett, Elizbeth, Madelyn | 0.38 |
+| `is_boys_name` | John, Timothy, Kyle in the girls' file | 0.03 |
+
+Cut at 0.5, none of them can delete a favourite, and `is_respelling` alone
+reproduces the whole family grouper - it keeps exactly one canonical
+spelling of Margaret, Rebecca and Elizabeth. `shortlist.py` went from 254
+lines to 110 and from 179 candidates to 1,804.
+
+**Still refused: any floor on nickname confidence.** Magdalena -> Maggie
+comes back at 0.44 and is a rated 3; Genevieve -> Evie at 0.49 and a rated
+2. Low confidence there is probability spread across several *real* short
+forms. The safe signal is `no_real_nickname`, the mass the Choice leaves on
+its no-match outcome, which tops out at 0.01 across the liked names.
+
+## The ground truth is the real bottleneck
+
+`spanning_set.py` builds the next rating batch. The fifty in `names.json`
+were each picked by hand as plausible, so they all came out of one corner:
+mean trait sd 0.13, and a trait that does not vary cannot explain a rating
+that does.
+
+Two wrong turns worth not repeating. Farthest-point sampling in trait space
+maximises distance, so it returns outliers - the first batch was John,
+Timothy, Princess, Diamond and Treasure, all of which would be rated 0,
+which swaps no variance in the traits for no variance in the ratings. And
+the first batch offered **Hannah**, the mother's name.
+
+What it does now: cut the pool into six bands by predicted reaction, draw
+twelve from each, spreading within the band. Mean trait sd 0.17 against
+0.13, with the two that matter most roughly doubled - `era` 0.10 -> 0.24,
+`sound_texture` 0.11 -> 0.20. 72 new names plus 17 repeats, the repeats
+being the anchors, everything rated >= 2, and a spread of others so drift
+between sessions is measurable.
+
+`nickname_transformation` will not move: its sd across the whole 3,050-name
+corpus is 0.07. That is the rubric, not the sample.
 
 ## Running it now
 

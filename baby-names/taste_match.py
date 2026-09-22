@@ -35,7 +35,7 @@ import os
 import pathlib
 import sys
 
-from typesafe_sdk import Choice, Score
+from typesafe_sdk import Choice, Noul, Score
 
 from parallel import run_all
 
@@ -86,17 +86,58 @@ QUESTIONS = {
             "`sibling.nickname`. Judge `candidate.formal_name`, which they would "
             "call `candidate.nickname`, against that record. How would these "
             "parents react to it?\n\n"
-            "These are hard raters and the lists show it. Every name in "
-            "`ratings` was hand-picked as a plausible choice for them, and they "
-            "still rejected two thirds of them outright: `rejected_rated_0` is "
-            "far longer than the other three lists together. Names that merely "
-            "resemble their favourites in length, age or style are in that "
-            "rejected list in numbers - Eleanor, Charlotte, Beatrice, Philippa "
-            "and Josephine are all there. Treat the top two bands as rare, and "
-            "reach for them only when the candidate does what "
-            "`loved_rated_3` does rather than merely looking like it."
+            "Every name in `ratings` was hand-picked as a plausible choice "
+            "for them before being rated, and `rejected_rated_0` is still "
+            "longer than the other three lists together. Resembling their "
+            "favourites in length, age or style is therefore not enough to "
+            "earn the top bands, since most of what they rejected does that "
+            "too. Weigh the rejected list as heavily as the loved one."
         ),
         criteria=BANDS,
+    ),
+    # The two things shortlist.py currently handles with hand-written rules,
+    # asked instead. Both are independent of the score and of each other, so
+    # all four questions ride in the one request the name already costs -
+    # which is the test: if these work, the rules are dead weight and worse,
+    # since a rule derived from nine liked names is fitted to nine points.
+    "is_short_form": Noul(
+        instructions=(
+            "The SSA lists record whatever was written on a birth "
+            "certificate, so pet names appear alongside full given names. Is "
+            "`candidate.formal_name` itself a diminutive or short form rather "
+            "than a full formal name?"
+        ),
+        criteria={
+            "true": "A nickname or pet form that happens to get registered as "
+                    "a legal name - Maggie, Meg, Tess, Trudy, Betty, Sadie.",
+            "false": "A full given name in its own right, whatever its length, "
+                     "and whether or not it has short forms of its own.",
+        },
+    ),
+    "is_boys_name": Noul(
+        instructions=(
+            "The source data records a name under every sex it was registered "
+            "under, so a handful of boys' names appear in the girls' file from "
+            "rare cross-registrations. Is `candidate.formal_name` "
+            "predominantly a boy's name in the English-speaking world?"
+        ),
+        criteria={
+            "true": "Overwhelmingly given to boys - John, Timothy, Joseph, "
+                    "Kyle - whatever a few records say.",
+            "false": "Given to girls, or genuinely used for both.",
+        },
+    ),
+    "is_respelling": Noul(
+        instructions=(
+            "Is `candidate.formal_name` a variant or misspelling of a more "
+            "standard English given name, rather than the standard form?"
+        ),
+        criteria={
+            "true": "A rarer respelling of a name whose usual spelling is "
+                    "different - Elizbeth, Margarett, Madelyn, Rebeka.",
+            "false": "The standard spelling of the name, or a distinct name in "
+                     "its own right rather than a variant of another.",
+        },
     ),
     # Independent of the score and asked in the same request: which of their
     # favourites this is nearest to. It costs nothing extra and it is what
@@ -205,6 +246,9 @@ def main() -> int:
             "taste_top_band": max(fit.probabilities, key=fit.probabilities.get),
             "taste_confidence": round(fit.confidence, 3),
             "nearest_favourite": near.choice,
+            "is_short_form": round(resp.answers["is_short_form"].noul, 3),
+            "is_respelling": round(resp.answers["is_respelling"].noul, 3),
+            "is_boys_name": round(resp.answers["is_boys_name"].noul, 3),
             **({"rating": rec["rating"]} if "rating" in rec else {}),
         })
     rows.sort(key=lambda r: -r["taste_fit"])
