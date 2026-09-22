@@ -530,6 +530,41 @@ bare stem that is a real name is not an error. Distinguishing the two is
 exactly what `no_real_nickname` is for, and it rates "Ely" as fine. There is
 no clean count of this failure without re-asking.
 
+## Ella: untested, not refuted - and a third generator gap
+
+Alex suggested Ella. The honest reading is that the data does not support it
+and does not refute it either, because it has never been properly asked.
+
+**What exists against it** is one rating: Ellamae called Ella, Alex 1 and
+Hannah 0. That is a weak test - Ellamae is a mashup formal name that could
+fail on its own account, so it says little about Ella. Eleanor (0/0) and
+Isabella (0/0) are sometimes cited nearby but neither was rated *as* Ella;
+they were Nell and Bella. Ella as a formal name in its own right scores badly
+for Hannah (0.53) and sits below the pool cut.
+
+**Why it was never asked properly:** not one `-ella` name was ever offered
+Ella as a candidate. `nickname_candidates` cuts its trailing element at a
+consonant boundary, so Estella produced "Tella" and never "Ella". Estella,
+Isabella, Arabella, Luella, Marcella, Fenella and Novella all went to
+something else - Estella to "Est" at 0.39 confidence.
+
+This is the **third** distinct way the nickname stage loses names, and all
+three are different:
+
+| | failure | fix |
+| --- | --- | --- |
+| Maggie | never offered to 14 of 16 family spellings | widen the hand-list |
+| Elyse | Ellie offered, lost 0.36 to "Ely" | use the stored runner-up |
+| Ella | no rule could generate it from `-ella` | a suffix rule |
+
+Fixed with a general suffix rule rather than more hand-listing: a name ending
+`-ella`, `-etta`, `-ette`, `-elle`, `-ina` or `-issa` now offers that ending
+as a short form. Ella reaches 77 names, Etta 83, Elle 81, Ina 147.
+
+**Pending, like the other two, on TypeSafe credits.** `pick_nicknames.py`
+must re-choose over the new lists. Three findings now wait on the same
+blocked run.
+
 ## Environment note
 
 This project was started in a Claude Code web session where `api.typesafe.ai`

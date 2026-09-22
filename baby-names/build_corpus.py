@@ -196,6 +196,16 @@ def nickname_candidates(name: str) -> list[str]:
             if stem[-1] != stem[-2:-1]:
                 out.append((stem + stem[-1] + "ie").capitalize())
 
+    # Established endings that are themselves names. The trailing-element
+    # rule below cuts at a consonant boundary, so Estella yields "Tella" and
+    # never Ella - which meant not one of Estella, Isabella, Arabella,
+    # Luella, Marcella, Fenella or Novella was ever offered the obvious short
+    # form, and the Choice stage cannot pick what it is not shown.
+    for suffix, short in (("ella", "Ella"), ("etta", "Etta"), ("ette", "Etta"),
+                          ("elle", "Elle"), ("ina", "Ina"), ("issa", "Issa")):
+        if low.endswith(suffix) and len(low) > len(suffix) + 1:
+            out.append(short)
+
     # Trailing element of a long name: Isadora -> Dora, Leonora -> Nora.
     if len(groups) >= 3:
         start = groups[-2].start()
