@@ -1,0 +1,608 @@
+<title>Seven Kinds of Name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&display=swap">
+
+<style>
+  :root {
+    --paper:      #EDF0EF;
+    --surface:    #FFFFFF;
+    --surface-2:  #E3E8E7;
+    --ink:        #16201F;
+    --ink-soft:   #55635F;
+    --ink-faint:  #8695918F;
+    --ink-mute:   #869591;
+    --line:       #D2DAD8;
+    --line-soft:  #E1E7E5;
+    --accent:     #2F5D62;
+    --accent-ink: #FFFFFF;
+    --accent-wash:#DCE8E8;
+    --brass:      #8A6212;
+    --brass-wash: #F0E7D2;
+    --yes:        #2E6A5E;
+    --yes-wash:   #D9EAE4;
+    --maybe:      #8A6212;
+    --maybe-wash: #F0E7D2;
+    --no:         #8A5A4A;
+    --no-wash:    #EFE1DB;
+    --shadow:     0 1px 2px rgba(22,32,31,.05), 0 6px 20px rgba(22,32,31,.06);
+    --shadow-sm:  0 1px 2px rgba(22,32,31,.07);
+    --radius:     13px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #101716;
+      --surface:    #19221F;
+      --surface-2:  #222C29;
+      --ink:        #E6EBE9;
+      --ink-soft:   #9BA9A5;
+      --ink-faint:  #75858180;
+      --ink-mute:   #758581;
+      --line:       #2A3532;
+      --line-soft:  #212B28;
+      --accent:     #86C0C2;
+      --accent-ink: #0F1B1C;
+      --accent-wash:#1E2E30;
+      --brass:      #D9AE5A;
+      --brass-wash: #2C2415;
+      --yes:        #6FC0A9;
+      --yes-wash:   #17332D;
+      --maybe:      #D9AE5A;
+      --maybe-wash: #2C2415;
+      --no:         #C08C77;
+      --no-wash:    #2E211B;
+      --shadow:     0 1px 2px rgba(0,0,0,.44), 0 6px 20px rgba(0,0,0,.34);
+      --shadow-sm:  0 1px 2px rgba(0,0,0,.44);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #101716;
+    --surface:    #19221F;
+    --surface-2:  #222C29;
+    --ink:        #E6EBE9;
+    --ink-soft:   #9BA9A5;
+    --ink-faint:  #75858180;
+    --ink-mute:   #758581;
+    --line:       #2A3532;
+    --line-soft:  #212B28;
+    --accent:     #86C0C2;
+    --accent-ink: #0F1B1C;
+    --accent-wash:#1E2E30;
+    --brass:      #D9AE5A;
+    --brass-wash: #2C2415;
+    --yes:        #6FC0A9;
+    --yes-wash:   #17332D;
+    --maybe:      #D9AE5A;
+    --maybe-wash: #2C2415;
+    --no:         #C08C77;
+    --no-wash:    #2E211B;
+    --shadow:     0 1px 2px rgba(0,0,0,.44), 0 6px 20px rgba(0,0,0,.34);
+    --shadow-sm:  0 1px 2px rgba(0,0,0,.44);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Karla", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-inline: 16px;
+    padding-block: 0 56px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  /* masthead */
+  .masthead { padding-block: 24px 8px; }
+  .wordmark {
+    font-family: "Fraunces", Georgia, "Times New Roman", serif;
+    font-optical-sizing: auto; font-weight: 600;
+    font-size: clamp(25px, 5.4vw, 33px); letter-spacing: -.02em;
+    margin: 0; text-wrap: balance;
+  }
+  .wordmark em { font-style: italic; color: var(--accent); }
+  .standfirst {
+    color: var(--ink-soft); font-size: 15px; margin: 9px 0 0; max-width: 62ch;
+  }
+  .standfirst b { color: var(--ink); font-weight: 600; }
+
+  .whobar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-top: 16px; font-size: 13px; color: var(--ink-soft);
+  }
+  .whobar input {
+    font: inherit; font-size: 14px; padding: 7px 11px; width: 150px;
+    color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .chip {
+    appearance: none; cursor: pointer; font: inherit; font-size: 13px;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--ink); }
+  .chip[aria-pressed="true"] {
+    border-color: var(--accent); background: var(--accent-wash); color: var(--accent); font-weight: 600;
+  }
+
+  /* tabs */
+  .tabs {
+    display: flex; gap: 2px; margin: 20px 0 22px;
+    border-bottom: 1px solid var(--line); overflow-x: auto;
+  }
+  .tab {
+    appearance: none; background: none; border: 0; cursor: pointer; white-space: nowrap;
+    font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-mute);
+    padding: 9px 13px; margin-bottom: -1px;
+    border-bottom: 2px solid transparent; border-radius: 6px 6px 0 0;
+  }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab:hover { color: var(--ink); }
+  .tab .count { color: var(--ink-mute); font-weight: 500; }
+
+  /* set sections */
+  .setsec { margin-bottom: 34px; }
+  .sethead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .seth {
+    font-family: "Fraunces", Georgia, serif; font-weight: 600;
+    font-size: 19px; letter-spacing: -.012em; margin: 0; text-wrap: balance;
+  }
+  .setn {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--ink-mute); font-variant-numeric: tabular-nums;
+  }
+  .setwhy { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 13px; max-width: 64ch; }
+
+  .grid {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 13px 10px;
+    box-shadow: var(--shadow-sm); text-align: left;
+    appearance: none; font: inherit; color: inherit; cursor: pointer; width: 100%;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card[data-mark="3"] { border-color: var(--yes); background: var(--yes-wash); }
+  .card[data-mark="2"] { border-color: var(--maybe); background: var(--maybe-wash); }
+  .card[data-mark="0"] { opacity: .5; }
+  .card-nick {
+    font-family: "Fraunces", Georgia, serif; font-weight: 600;
+    font-size: 23px; line-height: 1.1; letter-spacing: -.02em;
+  }
+  .card-formal { font-size: 12.5px; color: var(--ink-soft); }
+  .card-meta {
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    margin-top: 7px; font-size: 11px; color: var(--ink-mute);
+    font-variant-numeric: tabular-nums;
+  }
+  .src {
+    border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px;
+    font-size: 10.5px; letter-spacing: .02em;
+  }
+  .src.uk { border-color: var(--brass); color: var(--brass); }
+  .marks { display: flex; gap: 3px; margin-left: auto; }
+  .mk {
+    width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center;
+    font-size: 10px; font-weight: 700; background: var(--surface-2); color: var(--ink-mute);
+  }
+  .mk[data-v="3"] { background: var(--yes-wash); color: var(--yes); }
+  .mk[data-v="2"] { background: var(--maybe-wash); color: var(--maybe); }
+  .mk[data-v="0"] { background: var(--no-wash); color: var(--no); }
+
+  /* detail */
+  .detail {
+    grid-column: 1 / -1;
+    background: var(--surface); border: 1px solid var(--accent);
+    border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+  }
+  .dhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 3px; }
+  .dnick { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 30px; letter-spacing: -.02em; }
+  .dformal { font-size: 14px; color: var(--ink-soft); }
+  .dfacts { font-size: 13px; color: var(--ink-soft); margin: 4px 0 15px; }
+  .verdicts { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 17px; }
+  .vb {
+    appearance: none; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600;
+    padding: 8px 15px; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+  }
+  .vb:hover { border-color: var(--ink-mute); color: var(--ink); }
+  .vb[aria-pressed="true"][data-v="3"] { border-color: var(--yes); background: var(--yes-wash); color: var(--yes); }
+  .vb[aria-pressed="true"][data-v="2"] { border-color: var(--maybe); background: var(--maybe-wash); color: var(--maybe); }
+  .vb[aria-pressed="true"][data-v="0"] { border-color: var(--no); background: var(--no-wash); color: var(--no); }
+
+  .flabel {
+    font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 9px;
+  }
+  .frow { display: grid; grid-template-columns: 1fr 96px; gap: 8px; align-items: center; margin-bottom: 5px; }
+  .fname { font-size: 13px; color: var(--ink-soft); }
+  .fbar { height: 7px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .fbar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+
+  .note {
+    font-size: 13px; color: var(--ink-soft); background: var(--surface-2);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+  }
+  .note b { color: var(--ink); font-weight: 600; }
+  .note.brass { background: var(--brass-wash); }
+
+  .empty { color: var(--ink-soft); font-size: 14.5px; }
+  .tallyrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tally { flex: 1 1 120px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; }
+  .tally-n { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 24px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .tally-l { font-size: 11px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: .06em; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <h1 class="wordmark">Seven kinds of name for <em>Tessa's</em> sister</h1>
+    <p class="standfirst">
+      6,385 candidates from the US Social Security lists and the ONS register of England
+      and Wales, scored by Jev against your 244 ratings, then <b>clustered by what kind of
+      name they are</b> — the group headings are computed from the facets each set is most
+      extreme on, not written by hand.
+    </p>
+    <div class="whobar">
+      <span>Marking as</span>
+      <input type="text" id="who" placeholder="your name" autocomplete="off" spellcheck="false">
+      <span id="whochips" style="display:flex;gap:6px;flex-wrap:wrap"></span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <main id="view"></main>
+</div>
+
+<script id="data" type="application/json">{"facetKeys":["nickname_reshapes","nickname_bench","formal_gravity","everyday_warmth","pairs_with_sibling","one_loud_association","spelling_friction","short_form_stands_alone","travels"],"sets":[{"label":"a deep bench of short forms, travels outside English","n":151,"names":[{"id":"margot","f":"Margot","n":"Margo","a":100,"h":100,"src":"both","uk":1230,"us":126,"fx":[0.2,0.49,0.69,0.73,0.66,0.22,0.26,0.61,0.75]},{"id":"margaux","f":"Margaux","n":"Marg","a":99,"h":99,"src":"ons","uk":88,"us":null,"fx":[0.17,0.23,0.74,0.68,0.65,0.2,0.34,0.42,0.82]},{"id":"megan","f":"Megan","n":"Meg","a":100,"h":98,"src":"both","uk":44,"us":761,"fx":[0.22,0.62,0.61,0.7,0.65,0.12,0.19,0.36,0.67]},{"id":"katherine","f":"Katherine","n":"Kate","a":96,"h":100,"src":"both","uk":40,"us":175,"fx":[0.21,0.71,0.69,0.67,0.7,0.15,0.2,0.47,0.73]},{"id":"marjorie","f":"Marjorie","n":"Marj","a":96,"h":98,"src":"both","uk":7,"us":822,"fx":[0.28,0.6,0.73,0.68,0.64,0.13,0.27,0.48,0.54]},{"id":"monica","f":"Monica","n":"Mon","a":96,"h":97,"src":"both","uk":26,"us":726,"fx":[0.13,0.59,0.64,0.68,0.64,0.32,0.18,0.44,0.8]},{"id":"leah","f":"Leah","n":"Lea","a":95,"h":97,"src":"both","uk":273,"us":53,"fx":[0.09,0.47,0.62,0.73,0.65,0.2,0.23,0.58,0.7]},{"id":"gianna","f":"Gianna","n":"Gia","a":95,"h":96,"src":"both","uk":139,"us":23,"fx":[0.25,0.48,0.66,0.79,0.66,0.17,0.28,0.47,0.74]},{"id":"marcella","f":"Marcella","n":"Marcie","a":95,"h":94,"src":"both","uk":23,"us":null,"fx":[0.49,0.49,0.71,0.68,0.63,0.16,0.29,0.44,0.75]},{"id":"marion","f":"Marion","n":"Mar","a":95,"h":94,"src":"both","uk":7,"us":null,"fx":[0.2,0.59,0.65,0.64,0.61,0.17,0.25,0.41,0.68]},{"id":"marjory","f":"Marjory","n":"Marj","a":94,"h":96,"src":"ssa","uk":null,"us":null,"fx":[0.29,0.55,0.73,0.68,0.66,0.14,0.28,0.45,0.47]},{"id":"tomasa","f":"Tomasa","n":"Masa","a":94,"h":99,"src":"ssa","uk":null,"us":null,"fx":[0.23,0.38,0.71,0.71,0.56,0.12,0.33,0.37,0.83]},{"id":"katerina","f":"Katerina","n":"Kate","a":93,"h":99,"src":"both","uk":18,"us":null,"fx":[0.44,0.62,0.72,0.62,0.67,0.15,0.32,0.47,0.81]},{"id":"deborah","f":"Deborah","n":"Debbie","a":93,"h":98,"src":"both","uk":68,"us":852,"fx":[0.49,0.58,0.66,0.71,0.63,0.14,0.21,0.53,0.66]},{"id":"rachelle","f":"Rachelle","n":"Rach","a":94,"h":93,"src":"ssa","uk":null,"us":null,"fx":[0.16,0.52,0.62,0.7,0.66,0.11,0.27,0.38,0.52]},{"id":"marcela","f":"Marcela","n":"Marcie","a":93,"h":98,"src":"both","uk":5,"us":null,"fx":[0.5,0.46,0.69,0.7,0.62,0.12,0.29,0.42,0.84]},{"id":"michele","f":"Michele","n":"Chele","a":93,"h":95,"src":"ssa","uk":null,"us":null,"fx":[0.42,0.54,0.65,0.72,0.6,0.14,0.31,0.39,0.79]},{"id":"rachael","f":"Rachael","n":"Rach","a":92,"h":93,"src":"both","uk":6,"us":null,"fx":[0.15,0.61,0.62,0.69,0.67,0.16,0.21,0.37,0.61]},{"id":"martina","f":"Martina","n":"Marti","a":92,"h":94,"src":"both","uk":26,"us":null,"fx":[0.3,0.62,0.69,0.71,0.64,0.17,0.24,0.37,0.81]},{"id":"monika","f":"Monika","n":"Mon","a":92,"h":95,"src":"both","uk":6,"us":null,"fx":[0.15,0.56,0.66,0.68,0.62,0.12,0.26,0.36,0.84]},{"id":"felicitas","f":"Felicitas","n":"Fel","a":92,"h":97,"src":"ssa","uk":null,"us":null,"fx":[0.25,0.4,0.72,0.73,0.66,0.15,0.39,0.43,0.8]},{"id":"viola","f":"Viola","n":"Vio","a":92,"h":91,"src":"both","uk":32,"us":null,"fx":[0.24,0.36,0.65,0.74,0.66,0.21,0.22,0.41,0.74]},{"id":"catherine","f":"Catherine","n":"Kate","a":96,"h":91,"src":"both","uk":66,"us":320,"fx":[0.32,0.72,0.73,0.69,0.68,0.26,0.18,0.46,0.78]},{"id":"rachel","f":"Rachel","n":"Rach","a":91,"h":94,"src":"both","uk":106,"us":247,"fx":[0.19,0.63,0.59,0.69,0.64,0.21,0.18,0.35,0.7]},{"id":"valerie","f":"Valerie","n":"Val","a":91,"h":91,"src":"both","uk":54,"us":147,"fx":[0.22,0.58,0.66,0.66,0.66,0.15,0.21,0.4,0.71]},{"id":"marian","f":"Marian","n":"Mar","a":91,"h":99,"src":"both","uk":10,"us":null,"fx":[0.22,0.61,0.67,0.68,0.64,0.2,0.27,0.45,0.75]},{"id":"marie","f":"Marie","n":"Mar","a":91,"h":94,"src":"both","uk":47,"us":639,"fx":[0.17,0.7,0.64,0.68,0.64,0.18,0.22,0.37,0.83]},{"id":"mara","f":"Mara","n":"Mar","a":90,"h":96,"src":"both","uk":74,"us":588,"fx":[0.08,0.54,0.62,0.69,0.62,0.17,0.26,0.47,0.77]},{"id":"maja","f":"Maja","n":"Maj","a":94,"h":90,"src":"ons","uk":85,"us":null,"fx":[0.11,0.39,0.56,0.7,0.6,0.2,0.33,0.42,0.81]},{"id":"maribel","f":"Maribel","n":"Mar","a":90,"h":91,"src":"both","uk":3,"us":null,"fx":[0.18,0.44,0.64,0.73,0.58,0.13,0.29,0.44,0.84]}]},{"label":"drags one loud association, the short form reshapes the name","n":13,"names":[{"id":"amelie","f":"Amelie","n":"Amie","a":96,"h":93,"src":"both","uk":398,"us":711,"fx":[0.51,0.42,0.69,0.8,0.59,0.45,0.27,0.41,0.84]},{"id":"aretha","f":"Aretha","n":"Retha","a":91,"h":99,"src":"ssa","uk":null,"us":null,"fx":[0.4,0.47,0.75,0.74,0.58,0.8,0.23,0.45,0.6]},{"id":"mercedes","f":"Mercedes","n":"Mercie","a":96,"h":91,"src":"both","uk":15,"us":null,"fx":[0.56,0.3,0.75,0.8,0.64,0.71,0.24,0.44,0.79]},{"id":"eugenie","f":"Eugenie","n":"Genie","a":90,"h":84,"src":"both","uk":4,"us":null,"fx":[0.53,0.46,0.76,0.79,0.62,0.39,0.26,0.36,0.78]},{"id":"madonna","f":"Madonna","n":"Donna","a":86,"h":84,"src":"both","uk":3,"us":null,"fx":[0.71,0.37,0.73,0.74,0.61,0.94,0.16,0.39,0.76]},{"id":"ophelia","f":"Ophelia","n":"Ophie","a":80,"h":84,"src":"both","uk":578,"us":261,"fx":[0.52,0.36,0.74,0.79,0.64,0.66,0.36,0.44,0.61]},{"id":"zelda","f":"Zelda","n":"Zeldie","a":79,"h":96,"src":"both","uk":38,"us":748,"fx":[0.49,0.36,0.67,0.81,0.6,0.73,0.22,0.37,0.69]},{"id":"golda","f":"Golda","n":"Goldie","a":79,"h":99,"src":"both","uk":9,"us":null,"fx":[0.48,0.39,0.7,0.8,0.61,0.37,0.24,0.37,0.64]},{"id":"juno","f":"Juno","n":"Junie","a":84,"h":78,"src":"ons","uk":104,"us":null,"fx":[0.49,0.28,0.68,0.8,0.64,0.47,0.24,0.37,0.76]},{"id":"aurora","f":"Aurora","n":"Rora","a":74,"h":75,"src":"both","uk":1030,"us":16,"fx":[0.41,0.4,0.69,0.83,0.67,0.47,0.26,0.37,0.76]},{"id":"elsa","f":"Elsa","n":"Elsie","a":83,"h":72,"src":"both","uk":54,"us":938,"fx":[0.57,0.48,0.67,0.78,0.65,0.72,0.22,0.58,0.78]},{"id":"hillary","f":"Hillary","n":"Hillie","a":70,"h":83,"src":"both","uk":3,"us":null,"fx":[0.51,0.56,0.77,0.77,0.66,0.59,0.18,0.37,0.61]},{"id":"elvira","f":"Elvira","n":"Elvie","a":95,"h":68,"src":"both","uk":8,"us":null,"fx":[0.52,0.44,0.69,0.77,0.64,0.6,0.26,0.48,0.8]}]},{"label":"the short form reshapes the name, warm to say every day","n":123,"names":[{"id":"madeleine","f":"Madeleine","n":"Maddie","a":100,"h":100,"src":"both","uk":179,"us":437,"fx":[0.51,0.27,0.63,0.77,0.67,0.22,0.25,0.38,0.76]},{"id":"montserrat","f":"Montserrat","n":"Montse","a":99,"h":99,"src":"ssa","uk":null,"us":null,"fx":[0.33,0.35,0.71,0.76,0.59,0.25,0.43,0.42,0.75]},{"id":"gracia","f":"Gracia","n":"Gracie","a":98,"h":100,"src":"ssa","uk":null,"us":null,"fx":[0.5,0.38,0.64,0.87,0.69,0.17,0.28,0.59,0.79]},{"id":"abbigail","f":"Abbigail","n":"Abbie","a":97,"h":99,"src":"ssa","uk":null,"us":null,"fx":[0.48,0.56,0.71,0.76,0.67,0.15,0.34,0.53,0.4]},{"id":"domenica","f":"Domenica","n":"Nica","a":97,"h":96,"src":"ssa","uk":null,"us":null,"fx":[0.47,0.48,0.69,0.73,0.64,0.13,0.33,0.42,0.81]},{"id":"grace","f":"Grace","n":"Gracie","a":96,"h":100,"src":"both","uk":1309,"us":40,"fx":[0.5,0.56,0.64,0.88,0.67,0.16,0.19,0.49,0.72]},{"id":"mercy","f":"Mercy","n":"Mercie","a":96,"h":100,"src":"both","uk":27,"us":849,"fx":[0.54,0.35,0.63,0.79,0.61,0.16,0.26,0.54,0.59]},{"id":"abbey","f":"Abbey","n":"Abbie","a":94,"h":100,"src":"ssa","uk":null,"us":null,"fx":[0.44,0.36,0.66,0.77,0.65,0.18,0.21,0.52,0.5]},{"id":"lucile","f":"Lucile","n":"Lucie","a":94,"h":99,"src":"ssa","uk":null,"us":null,"fx":[0.48,0.44,0.71,0.76,0.64,0.13,0.37,0.72,0.73]},{"id":"letitia","f":"Letitia","n":"Lettie","a":93,"h":99,"src":"ssa","uk":null,"us":null,"fx":[0.46,0.52,0.71,0.76,0.62,0.15,0.35,0.52,0.53]},{"id":"marcy","f":"Marcy","n":"Marcie","a":93,"h":96,"src":"both","uk":14,"us":null,"fx":[0.48,0.47,0.59,0.7,0.6,0.14,0.28,0.59,0.54]},{"id":"medina","f":"Medina","n":"Dina","a":96,"h":93,"src":"ons","uk":39,"us":null,"fx":[0.42,0.26,0.7,0.71,0.64,0.19,0.34,0.48,0.79]},{"id":"ruth","f":"Ruth","n":"Ruthie","a":92,"h":100,"src":"both","uk":73,"us":172,"fx":[0.49,0.55,0.65,0.8,0.7,0.17,0.19,0.39,0.73]},{"id":"gracelyn","f":"Gracelyn","n":"Gracie","a":90,"h":97,"src":"both","uk":7,"us":467,"fx":[0.5,0.34,0.67,0.88,0.68,0.12,0.35,0.49,0.33]},{"id":"oliwia","f":"Oliwia","n":"Oli","a":90,"h":96,"src":"ons","uk":46,"us":null,"fx":[0.35,0.49,0.68,0.76,0.65,0.11,0.42,0.39,0.75]},{"id":"marcelle","f":"Marcelle","n":"Marcie","a":91,"h":89,"src":"ssa","uk":null,"us":null,"fx":[0.54,0.4,0.72,0.67,0.62,0.15,0.31,0.61,0.79]},{"id":"amy","f":"Amy","n":"Amie","a":89,"h":90,"src":"both","uk":117,"us":228,"fx":[0.53,0.59,0.56,0.79,0.62,0.13,0.26,0.56,0.63]},{"id":"lucia","f":"Lucia","n":"Lucie","a":89,"h":97,"src":"both","uk":284,"us":98,"fx":[0.49,0.61,0.66,0.76,0.68,0.16,0.29,0.63,0.85]},{"id":"iva","f":"Iva","n":"Ivie","a":88,"h":92,"src":"both","uk":9,"us":null,"fx":[0.51,0.38,0.53,0.81,0.64,0.14,0.34,0.42,0.62]},{"id":"olevia","f":"Olevia","n":"Ollie","a":94,"h":88,"src":"ssa","uk":null,"us":null,"fx":[0.61,0.33,0.65,0.77,0.69,0.13,0.4,0.48,0.41]},{"id":"katelyn","f":"Katelyn","n":"Katie","a":88,"h":98,"src":"both","uk":12,"us":931,"fx":[0.48,0.53,0.66,0.74,0.69,0.11,0.28,0.51,0.5]},{"id":"sylvia","f":"Sylvia","n":"Sylvie","a":90,"h":88,"src":"both","uk":95,"us":361,"fx":[0.53,0.56,0.68,0.78,0.68,0.2,0.22,0.52,0.73]},{"id":"debora","f":"Debora","n":"Debbie","a":88,"h":98,"src":"both","uk":11,"us":null,"fx":[0.52,0.46,0.69,0.7,0.64,0.15,0.3,0.53,0.72]},{"id":"kate","f":"Kate","n":"Katie","a":94,"h":88,"src":"both","uk":31,"us":535,"fx":[0.49,0.54,0.52,0.77,0.67,0.14,0.18,0.54,0.65]},{"id":"graciela","f":"Graciela","n":"Gracie","a":88,"h":98,"src":"ssa","uk":null,"us":null,"fx":[0.52,0.5,0.69,0.85,0.66,0.14,0.27,0.46,0.83]},{"id":"abigail","f":"Abigail","n":"Abbie","a":87,"h":91,"src":"both","uk":283,"us":32,"fx":[0.48,0.63,0.69,0.76,0.67,0.15,0.23,0.5,0.57]},{"id":"rhoda","f":"Rhoda","n":"Rhodie","a":87,"h":98,"src":"both","uk":9,"us":null,"fx":[0.5,0.48,0.64,0.8,0.64,0.15,0.23,0.46,0.57]},{"id":"madison","f":"Madison","n":"Maddie","a":87,"h":90,"src":"both","uk":280,"us":46,"fx":[0.49,0.52,0.7,0.78,0.68,0.2,0.21,0.49,0.47]},{"id":"loretto","f":"Loretto","n":"Lorrie","a":87,"h":98,"src":"ssa","uk":null,"us":null,"fx":[0.52,0.34,0.76,0.73,0.66,0.15,0.27,0.48,0.68]},{"id":"joycelyn","f":"Joycelyn","n":"Joyce","a":87,"h":93,"src":"ssa","uk":null,"us":null,"fx":[0.42,0.35,0.72,0.74,0.65,0.17,0.34,0.62,0.5]}]},{"label":"sits awkwardly beside Tessa, one short form or none","n":35,"names":[{"id":"tamera","f":"Tamera","n":"Tammie","a":92,"h":100,"src":"ssa","uk":null,"us":null,"fx":[0.48,0.37,0.57,0.74,0.44,0.2,0.29,0.59,0.44]},{"id":"tabitha","f":"Tabitha","n":"Tabbie","a":92,"h":100,"src":"both","uk":143,"us":null,"fx":[0.49,0.38,0.69,0.75,0.53,0.15,0.3,0.38,0.44]},{"id":"talya","f":"Talya","n":"Tal","a":92,"h":98,"src":"ons","uk":11,"us":null,"fx":[0.15,0.41,0.65,0.68,0.51,0.14,0.34,0.55,0.69]},{"id":"talia","f":"Talia","n":"Tallie","a":91,"h":99,"src":"both","uk":260,"us":270,"fx":[0.48,0.44,0.58,0.78,0.47,0.13,0.31,0.4,0.56]},{"id":"atalia","f":"Atalia","n":"Talia","a":90,"h":98,"src":"ons","uk":13,"us":null,"fx":[0.18,0.18,0.69,0.75,0.53,0.16,0.36,0.71,0.59]},{"id":"twila","f":"Twila","n":"Twi","a":87,"h":90,"src":"ssa","uk":null,"us":null,"fx":[0.26,0.26,0.56,0.76,0.44,0.15,0.34,0.4,0.28]},{"id":"taliyah","f":"Taliyah","n":"Tal","a":87,"h":98,"src":"both","uk":34,"us":null,"fx":[0.24,0.27,0.7,0.68,0.51,0.25,0.46,0.48,0.41]},{"id":"metta","f":"Metta","n":"Mettie","a":87,"h":95,"src":"ssa","uk":null,"us":null,"fx":[0.49,0.35,0.56,0.78,0.52,0.17,0.39,0.58,0.59]},{"id":"celesta","f":"Celesta","n":"Cele","a":86,"h":87,"src":"ssa","uk":null,"us":null,"fx":[0.24,0.21,0.74,0.76,0.55,0.29,0.43,0.44,0.71]},{"id":"tiana","f":"Tiana","n":"Tia","a":91,"h":86,"src":"both","uk":55,"us":611,"fx":[0.24,0.37,0.63,0.77,0.47,0.46,0.28,0.48,0.64]},{"id":"tamara","f":"Tamara","n":"Tammie","a":85,"h":99,"src":"both","uk":39,"us":null,"fx":[0.52,0.52,0.65,0.74,0.47,0.12,0.28,0.55,0.68]},{"id":"taliah","f":"Taliah","n":"Talia","a":85,"h":99,"src":"ons","uk":30,"us":null,"fx":[0.35,0.33,0.66,0.75,0.45,0.15,0.4,0.59,0.4]},{"id":"taliya","f":"Taliya","n":"Tal","a":92,"h":83,"src":"ons","uk":13,"us":null,"fx":[0.15,0.34,0.65,0.7,0.49,0.2,0.42,0.52,0.52]},{"id":"tracey","f":"Tracey","n":"Tracie","a":82,"h":96,"src":"both","uk":4,"us":null,"fx":[0.47,0.46,0.56,0.73,0.52,0.11,0.27,0.53,0.43]},{"id":"tianna","f":"Tianna","n":"Tia","a":81,"h":98,"src":"both","uk":12,"us":null,"fx":[0.3,0.32,0.6,0.75,0.45,0.12,0.34,0.44,0.41]},{"id":"terra","f":"Terra","n":"Terrie","a":79,"h":90,"src":"ssa","uk":null,"us":null,"fx":[0.51,0.32,0.59,0.73,0.37,0.22,0.25,0.38,0.68]},{"id":"tracee","f":"Tracee","n":"Tracie","a":79,"h":93,"src":"ssa","uk":null,"us":null,"fx":[0.48,0.33,0.6,0.72,0.53,0.24,0.37,0.54,0.3]},{"id":"tabetha","f":"Tabetha","n":"Tab","a":78,"h":100,"src":"ssa","uk":null,"us":null,"fx":[0.24,0.41,0.67,0.65,0.5,0.12,0.42,0.42,0.46]},{"id":"thursa","f":"Thursa","n":"Thu","a":77,"h":98,"src":"ssa","uk":null,"us":null,"fx":[0.13,0.15,0.62,0.64,0.46,0.16,0.53,0.36,0.44]},{"id":"tennille","f":"Tennille","n":"Tennie","a":76,"h":92,"src":"ssa","uk":null,"us":null,"fx":[0.49,0.23,0.49,0.76,0.54,0.46,0.34,0.42,0.34]},{"id":"taleen","f":"Taleen","n":"Talee","a":82,"h":76,"src":"ons","uk":14,"us":null,"fx":[0.48,0.14,0.58,0.77,0.5,0.1,0.49,0.43,0.44]},{"id":"teela","f":"Teela","n":"Tee","a":75,"h":90,"src":"ssa","uk":null,"us":null,"fx":[0.23,0.22,0.47,0.67,0.38,0.4,0.33,0.34,0.36]},{"id":"tula","f":"Tula","n":"Tullie","a":74,"h":81,"src":"both","uk":10,"us":null,"fx":[0.55,0.3,0.53,0.78,0.5,0.19,0.35,0.49,0.53]},{"id":"leesa","f":"Leesa","n":"Leesie","a":76,"h":73,"src":"ssa","uk":null,"us":null,"fx":[0.49,0.28,0.55,0.79,0.56,0.19,0.29,0.4,0.39]},{"id":"tawnya","f":"Tawnya","n":"Tawnie","a":80,"h":73,"src":"ssa","uk":null,"us":null,"fx":[0.47,0.3,0.58,0.76,0.49,0.16,0.36,0.59,0.34]},{"id":"taja","f":"Taja","n":"Taj","a":73,"h":84,"src":"ssa","uk":null,"us":null,"fx":[0.11,0.26,0.56,0.64,0.51,0.17,0.41,0.48,0.43]},{"id":"twyla","f":"Twyla","n":"Twy","a":73,"h":85,"src":"both","uk":8,"us":null,"fx":[0.4,0.3,0.57,0.73,0.51,0.23,0.33,0.44,0.28]},{"id":"tallulah","f":"Tallulah","n":"Tallie","a":70,"h":94,"src":"ons","uk":185,"us":null,"fx":[0.49,0.23,0.75,0.78,0.56,0.4,0.44,0.53,0.31]},{"id":"tatia","f":"Tatia","n":"Tat","a":73,"h":70,"src":"ssa","uk":null,"us":null,"fx":[0.15,0.42,0.5,0.66,0.43,0.16,0.39,0.36,0.68]},{"id":"tiarra","f":"Tiarra","n":"Tia","a":71,"h":69,"src":"ssa","uk":null,"us":null,"fx":[0.33,0.19,0.52,0.74,0.47,0.13,0.46,0.49,0.25]}]},{"label":"drags one loud association, travels outside English","n":25,"names":[{"id":"coretta","f":"Coretta","n":"Retta","a":93,"h":97,"src":"ssa","uk":null,"us":null,"fx":[0.29,0.3,0.75,0.75,0.6,0.47,0.26,0.48,0.48]},{"id":"maybell","f":"Maybell","n":"May","a":91,"h":98,"src":"ssa","uk":null,"us":null,"fx":[0.34,0.45,0.62,0.74,0.66,0.37,0.31,0.55,0.44]},{"id":"marceline","f":"Marceline","n":"Marcie","a":91,"h":95,"src":"both","uk":27,"us":505,"fx":[0.52,0.43,0.66,0.7,0.62,0.53,0.28,0.5,0.7]},{"id":"margarita","f":"Margarita","n":"Rita","a":97,"h":89,"src":"both","uk":9,"us":null,"fx":[0.48,0.47,0.69,0.75,0.6,0.45,0.23,0.55,0.84]},{"id":"ofelia","f":"Ofelia","n":"Felia","a":87,"h":87,"src":"both","uk":6,"us":null,"fx":[0.42,0.38,0.73,0.75,0.61,0.46,0.36,0.4,0.81]},{"id":"lyanna","f":"Lyanna","n":"Lya","a":85,"h":92,"src":"ons","uk":18,"us":null,"fx":[0.28,0.35,0.65,0.74,0.64,0.45,0.31,0.46,0.56]},{"id":"mariah","f":"Mariah","n":"Maria","a":84,"h":93,"src":"both","uk":28,"us":413,"fx":[0.28,0.42,0.72,0.72,0.65,0.57,0.37,0.69,0.55]},{"id":"esmeralda","f":"Esmeralda","n":"Esme","a":80,"h":82,"src":"both","uk":40,"us":350,"fx":[0.46,0.33,0.72,0.82,0.63,0.39,0.34,0.51,0.8]},{"id":"alexa","f":"Alexa","n":"Alex","a":88,"h":80,"src":"both","uk":5,"us":806,"fx":[0.23,0.35,0.64,0.59,0.69,0.74,0.18,0.53,0.59]},{"id":"giada","f":"Giada","n":"Gia","a":80,"h":81,"src":"both","uk":4,"us":null,"fx":[0.2,0.39,0.68,0.78,0.65,0.42,0.27,0.49,0.78]},{"id":"cherelle","f":"Cherelle","n":"Cher","a":79,"h":89,"src":"ssa","uk":null,"us":null,"fx":[0.23,0.28,0.63,0.78,0.63,0.45,0.35,0.54,0.34]},{"id":"madinah","f":"Madinah","n":"Madi","a":79,"h":78,"src":"ons","uk":31,"us":null,"fx":[0.26,0.31,0.7,0.71,0.57,0.34,0.3,0.43,0.76]},{"id":"jasmine","f":"Jasmine","n":"Jasmie","a":78,"h":77,"src":"both","uk":455,"us":199,"fx":[0.5,0.5,0.64,0.77,0.6,0.51,0.27,0.59,0.72]},{"id":"liara","f":"Liara","n":"Lia","a":77,"h":97,"src":"ons","uk":26,"us":null,"fx":[0.28,0.32,0.6,0.75,0.66,0.39,0.29,0.39,0.7]},{"id":"salome","f":"Salome","n":"Sal","a":76,"h":82,"src":"both","uk":15,"us":952,"fx":[0.24,0.39,0.82,0.65,0.64,0.54,0.35,0.43,0.82]},{"id":"giselle","f":"Giselle","n":"Gis","a":76,"h":82,"src":"both","uk":14,"us":356,"fx":[0.21,0.4,0.67,0.7,0.63,0.38,0.26,0.39,0.84]},{"id":"gisele","f":"Gisele","n":"Gis","a":80,"h":76,"src":"ssa","uk":null,"us":null,"fx":[0.22,0.39,0.68,0.69,0.61,0.53,0.25,0.42,0.81]},{"id":"lorelei","f":"Lorelei","n":"Lorel","a":90,"h":75,"src":"both","uk":28,"us":456,"fx":[0.27,0.3,0.75,0.76,0.65,0.58,0.42,0.51,0.72]},{"id":"mahalia","f":"Mahalia","n":"Halia","a":73,"h":76,"src":"both","uk":6,"us":null,"fx":[0.24,0.33,0.74,0.77,0.6,0.61,0.35,0.46,0.53]},{"id":"mirabel","f":"Mirabel","n":"Mira","a":86,"h":73,"src":"ons","uk":30,"us":null,"fx":[0.14,0.29,0.62,0.79,0.67,0.42,0.29,0.51,0.74]},{"id":"hosanna","f":"Hosanna","n":"Sanna","a":72,"h":96,"src":"ons","uk":12,"us":null,"fx":[0.21,0.16,0.64,0.77,0.61,0.4,0.43,0.45,0.67]},{"id":"trinity","f":"Trinity","n":"Tri","a":75,"h":72,"src":"both","uk":29,"us":407,"fx":[0.4,0.33,0.7,0.68,0.58,0.37,0.27,0.38,0.69]},{"id":"allegra","f":"Allegra","n":"Allie","a":97,"h":70,"src":"ons","uk":49,"us":null,"fx":[0.55,0.32,0.59,0.76,0.68,0.4,0.26,0.49,0.67]},{"id":"cheryl","f":"Cheryl","n":"Cher","a":70,"h":88,"src":"both","uk":5,"us":null,"fx":[0.33,0.53,0.58,0.76,0.57,0.7,0.25,0.51,0.63]},{"id":"selena","f":"Selena","n":"Lena","a":79,"h":68,"src":"both","uk":134,"us":245,"fx":[0.28,0.52,0.68,0.73,0.67,0.72,0.29,0.52,0.75]}]},{"label":"the short form only clips it, stays Anglophone","n":81,"names":[{"id":"marlena","f":"Marlena","n":"Marlen","a":100,"h":98,"src":"both","uk":7,"us":null,"fx":[0.07,0.38,0.68,0.68,0.61,0.15,0.31,0.6,0.7]},{"id":"esta","f":"Esta","n":"Est","a":95,"h":94,"src":"both","uk":3,"us":null,"fx":[0.09,0.41,0.56,0.51,0.55,0.15,0.46,0.31,0.7]},{"id":"lynne","f":"Lynne","n":"Lynn","a":94,"h":93,"src":"ssa","uk":null,"us":null,"fx":[0.11,0.47,0.64,0.68,0.6,0.12,0.27,0.71,0.56]},{"id":"meabh","f":"Meabh","n":"Mea","a":93,"h":99,"src":"ons","uk":26,"us":null,"fx":[0.22,0.3,0.64,0.73,0.64,0.12,0.53,0.39,0.3]},{"id":"mazie","f":"Mazie","n":"Maz","a":95,"h":92,"src":"both","uk":7,"us":967,"fx":[0.14,0.35,0.55,0.72,0.67,0.17,0.28,0.44,0.4]},{"id":"salena","f":"Salena","n":"Lena","a":93,"h":89,"src":"ssa","uk":null,"us":null,"fx":[0.29,0.33,0.61,0.73,0.66,0.14,0.35,0.55,0.49]},{"id":"maymie","f":"Maymie","n":"May","a":90,"h":89,"src":"ssa","uk":null,"us":null,"fx":[0.28,0.35,0.59,0.74,0.66,0.12,0.41,0.53,0.36]},{"id":"vicie","f":"Vicie","n":"Vic","a":89,"h":90,"src":"ssa","uk":null,"us":null,"fx":[0.24,0.23,0.5,0.58,0.62,0.13,0.46,0.34,0.49]},{"id":"merilyn","f":"Merilyn","n":"Meri","a":88,"h":98,"src":"ssa","uk":null,"us":null,"fx":[0.29,0.39,0.62,0.73,0.63,0.22,0.38,0.41,0.39]},{"id":"merryn","f":"Merryn","n":"Merr","a":89,"h":88,"src":"ons","uk":34,"us":null,"fx":[0.17,0.28,0.63,0.75,0.64,0.14,0.39,0.44,0.33]},{"id":"ethelene","f":"Ethelene","n":"Ethel","a":88,"h":90,"src":"ssa","uk":null,"us":null,"fx":[0.5,0.28,0.75,0.67,0.65,0.14,0.5,0.58,0.32]},{"id":"ethelyn","f":"Ethelyn","n":"Ethel","a":87,"h":96,"src":"ssa","uk":null,"us":null,"fx":[0.2,0.38,0.77,0.64,0.64,0.14,0.4,0.68,0.28]},{"id":"maude","f":"Maude","n":"Maud","a":87,"h":87,"src":"both","uk":5,"us":null,"fx":[0.17,0.34,0.75,0.68,0.64,0.2,0.36,0.64,0.43]},{"id":"maeve","f":"Maeve","n":"Mae","a":86,"h":99,"src":"both","uk":1330,"us":75,"fx":[0.19,0.27,0.69,0.77,0.67,0.25,0.31,0.49,0.43]},{"id":"mayme","f":"Mayme","n":"May","a":89,"h":86,"src":"ssa","uk":null,"us":null,"fx":[0.22,0.36,0.51,0.73,0.65,0.13,0.34,0.51,0.44]},{"id":"estera","f":"Estera","n":"Ester","a":93,"h":86,"src":"ons","uk":14,"us":null,"fx":[0.14,0.34,0.66,0.68,0.58,0.18,0.42,0.76,0.76]},{"id":"mahala","f":"Mahala","n":"Hala","a":90,"h":86,"src":"ssa","uk":null,"us":null,"fx":[0.2,0.32,0.68,0.76,0.57,0.15,0.35,0.53,0.61]},{"id":"maevie","f":"Maevie","n":"Mae","a":92,"h":85,"src":"ons","uk":17,"us":null,"fx":[0.22,0.29,0.59,0.78,0.69,0.14,0.38,0.5,0.41]},{"id":"bethan","f":"Bethan","n":"Beth","a":88,"h":85,"src":"ons","uk":11,"us":null,"fx":[0.18,0.46,0.64,0.71,0.69,0.12,0.35,0.52,0.38]},{"id":"joanne","f":"Joanne","n":"Joann","a":90,"h":85,"src":"both","uk":17,"us":null,"fx":[0.1,0.55,0.58,0.64,0.6,0.1,0.32,0.73,0.53]},{"id":"novie","f":"Novie","n":"Nov","a":85,"h":90,"src":"ons","uk":79,"us":null,"fx":[0.1,0.24,0.54,0.68,0.6,0.13,0.4,0.4,0.52]},{"id":"deanna","f":"Deanna","n":"Deann","a":89,"h":85,"src":"both","uk":5,"us":null,"fx":[0.09,0.4,0.6,0.68,0.63,0.09,0.27,0.56,0.48]},{"id":"ivah","f":"Ivah","n":"Iva","a":83,"h":89,"src":"ssa","uk":null,"us":null,"fx":[0.09,0.22,0.47,0.7,0.65,0.13,0.43,0.53,0.47]},{"id":"mari","f":"Mari","n":"Mar","a":83,"h":86,"src":"both","uk":32,"us":null,"fx":[0.07,0.46,0.51,0.69,0.59,0.14,0.32,0.52,0.75]},{"id":"lyda","f":"Lyda","n":"Lyd","a":82,"h":86,"src":"ssa","uk":null,"us":null,"fx":[0.24,0.39,0.56,0.67,0.62,0.14,0.28,0.44,0.57]},{"id":"kezia","f":"Kezia","n":"Kez","a":81,"h":97,"src":"ons","uk":13,"us":null,"fx":[0.32,0.19,0.66,0.7,0.65,0.15,0.43,0.35,0.38]},{"id":"esme","f":"Esme","n":"Esm","a":83,"h":81,"src":"ons","uk":933,"us":null,"fx":[0.17,0.25,0.63,0.68,0.64,0.18,0.34,0.34,0.5]},{"id":"madina","f":"Madina","n":"Madi","a":99,"h":81,"src":"ons","uk":37,"us":null,"fx":[0.26,0.24,0.68,0.73,0.58,0.22,0.34,0.42,0.7]},{"id":"leanne","f":"Leanne","n":"Leann","a":81,"h":93,"src":"both","uk":14,"us":null,"fx":[0.09,0.36,0.57,0.7,0.59,0.14,0.26,0.61,0.46]},{"id":"jerilynn","f":"Jerilynn","n":"Jeri","a":81,"h":99,"src":"ssa","uk":null,"us":null,"fx":[0.38,0.36,0.73,0.65,0.63,0.12,0.45,0.41,0.28]}]},{"label":"the short form is a whole name, the full name is light","n":72,"names":[{"id":"magi","f":"Magi","n":"Maggie","a":100,"h":100,"src":"ons","uk":11,"us":null,"fx":[0.52,0.31,0.58,0.76,0.66,0.24,0.43,0.53,0.54]},{"id":"truly","f":"Truly","n":"Tru","a":94,"h":98,"src":"ons","uk":10,"us":null,"fx":[0.23,0.18,0.43,0.74,0.6,0.24,0.27,0.52,0.43]},{"id":"lowenna","f":"Lowenna","n":"Wenna","a":91,"h":89,"src":"ons","uk":26,"us":null,"fx":[0.2,0.17,0.49,0.78,0.6,0.1,0.48,0.49,0.23]},{"id":"lyrah","f":"Lyrah","n":"Lyra","a":89,"h":97,"src":"ons","uk":11,"us":null,"fx":[0.32,0.14,0.52,0.83,0.65,0.45,0.38,0.74,0.36]},{"id":"macy","f":"Macy","n":"Macie","a":90,"h":88,"src":"both","uk":18,"us":662,"fx":[0.51,0.36,0.64,0.77,0.62,0.27,0.31,0.69,0.47]},{"id":"ayleen","f":"Ayleen","n":"Aylee","a":88,"h":91,"src":"ons","uk":29,"us":null,"fx":[0.47,0.25,0.61,0.8,0.63,0.1,0.36,0.57,0.32]},{"id":"maisa","f":"Maisa","n":"Maisie","a":87,"h":99,"src":"ons","uk":13,"us":null,"fx":[0.53,0.23,0.57,0.83,0.69,0.2,0.3,0.54,0.55]},{"id":"calla","f":"Calla","n":"Callie","a":86,"h":97,"src":"both","uk":12,"us":null,"fx":[0.5,0.22,0.52,0.78,0.67,0.16,0.27,0.6,0.53]},{"id":"lillis","f":"Lillis","n":"Lillie","a":86,"h":87,"src":"ssa","uk":null,"us":null,"fx":[0.53,0.29,0.48,0.84,0.67,0.16,0.42,0.64,0.37]},{"id":"letta","f":"Letta","n":"Lettie","a":86,"h":94,"src":"ssa","uk":null,"us":null,"fx":[0.5,0.3,0.48,0.77,0.64,0.19,0.32,0.46,0.58]},{"id":"kelsea","f":"Kelsea","n":"Kelsie","a":85,"h":85,"src":"ssa","uk":null,"us":null,"fx":[0.51,0.3,0.54,0.75,0.62,0.19,0.31,0.59,0.33]},{"id":"milah","f":"Milah","n":"Mila","a":85,"h":90,"src":"ons","uk":15,"us":null,"fx":[0.21,0.18,0.5,0.85,0.68,0.2,0.3,0.76,0.55]},{"id":"milani","f":"Milani","n":"Mila","a":85,"h":85,"src":"ons","uk":31,"us":null,"fx":[0.22,0.21,0.58,0.8,0.69,0.34,0.29,0.62,0.77]},{"id":"mayar","f":"Mayar","n":"Maya","a":89,"h":84,"src":"ons","uk":18,"us":null,"fx":[0.54,0.29,0.58,0.79,0.61,0.22,0.39,0.72,0.61]},{"id":"maisy","f":"Maisy","n":"Maisie","a":84,"h":95,"src":"ons","uk":81,"us":null,"fx":[0.51,0.32,0.32,0.83,0.66,0.2,0.32,0.66,0.37]},{"id":"jolette","f":"Jolette","n":"Jolie","a":84,"h":97,"src":"ssa","uk":null,"us":null,"fx":[0.52,0.19,0.56,0.82,0.57,0.51,0.44,0.61,0.53]},{"id":"stacey","f":"Stacey","n":"Stacie","a":84,"h":90,"src":"both","uk":13,"us":null,"fx":[0.46,0.36,0.56,0.72,0.6,0.1,0.25,0.59,0.47]},{"id":"orah","f":"Orah","n":"Ora","a":84,"h":95,"src":"ssa","uk":null,"us":null,"fx":[0.15,0.24,0.48,0.78,0.62,0.14,0.31,0.54,0.56]},{"id":"keeley","f":"Keeley","n":"Keelie","a":82,"h":97,"src":"both","uk":7,"us":null,"fx":[0.47,0.35,0.58,0.78,0.64,0.24,0.3,0.52,0.39]},{"id":"misti","f":"Misti","n":"Mistie","a":82,"h":86,"src":"ssa","uk":null,"us":null,"fx":[0.5,0.16,0.46,0.79,0.59,0.2,0.35,0.63,0.42]},{"id":"fenna","f":"Fenna","n":"Fennie","a":81,"h":95,"src":"ons","uk":26,"us":null,"fx":[0.49,0.35,0.49,0.79,0.6,0.16,0.35,0.41,0.62]},{"id":"marni","f":"Marni","n":"Marnie","a":84,"h":81,"src":"both","uk":21,"us":null,"fx":[0.46,0.3,0.56,0.75,0.68,0.22,0.29,0.63,0.52]},{"id":"lilly","f":"Lilly","n":"Lillie","a":95,"h":80,"src":"both","uk":382,"us":259,"fx":[0.47,0.55,0.56,0.84,0.66,0.17,0.27,0.69,0.59]},{"id":"halie","f":"Halie","n":"Hallie","a":80,"h":93,"src":"ssa","uk":null,"us":null,"fx":[0.47,0.42,0.62,0.77,0.66,0.12,0.39,0.69,0.39]},{"id":"lexis","f":"Lexis","n":"Lexi","a":81,"h":80,"src":"ssa","uk":null,"us":null,"fx":[0.41,0.28,0.6,0.75,0.62,0.16,0.29,0.52,0.45]},{"id":"haleigh","f":"Haleigh","n":"Hallie","a":79,"h":95,"src":"ssa","uk":null,"us":null,"fx":[0.48,0.41,0.57,0.78,0.63,0.11,0.33,0.52,0.33]},{"id":"halle","f":"Halle","n":"Hallie","a":78,"h":95,"src":"both","uk":138,"us":575,"fx":[0.49,0.35,0.63,0.77,0.64,0.24,0.27,0.69,0.62]},{"id":"merrily","f":"Merrily","n":"Merrie","a":77,"h":98,"src":"ssa","uk":null,"us":null,"fx":[0.41,0.2,0.24,0.86,0.63,0.28,0.32,0.55,0.26]},{"id":"haley","f":"Haley","n":"Hallie","a":77,"h":89,"src":"both","uk":4,"us":779,"fx":[0.48,0.48,0.58,0.78,0.64,0.16,0.28,0.61,0.48]},{"id":"pearla","f":"Pearla","n":"Pearl","a":76,"h":95,"src":"ssa","uk":null,"us":null,"fx":[0.12,0.3,0.61,0.78,0.64,0.24,0.25,0.76,0.5]}]}],"second":{"too_common_to_have_considered":[{"id":"margot","f":"Margot","n":"Margo","a":100,"h":100,"src":"both","uk":1230,"us":126,"fx":[0.2,0.49,0.69,0.73,0.66,0.22,0.26,0.61,0.75]},{"id":"katherine","f":"Katherine","n":"Kate","a":96,"h":100,"src":"both","uk":40,"us":175,"fx":[0.21,0.71,0.69,0.67,0.7,0.15,0.2,0.47,0.73]},{"id":"grace","f":"Grace","n":"Gracie","a":96,"h":100,"src":"both","uk":1309,"us":40,"fx":[0.5,0.56,0.64,0.88,0.67,0.16,0.19,0.49,0.72]},{"id":"leah","f":"Leah","n":"Lea","a":95,"h":97,"src":"both","uk":273,"us":53,"fx":[0.09,0.47,0.62,0.73,0.65,0.2,0.23,0.58,0.7]},{"id":"gianna","f":"Gianna","n":"Gia","a":95,"h":96,"src":"both","uk":139,"us":23,"fx":[0.25,0.48,0.66,0.79,0.66,0.17,0.28,0.47,0.74]},{"id":"ruth","f":"Ruth","n":"Ruthie","a":92,"h":100,"src":"both","uk":73,"us":172,"fx":[0.49,0.55,0.65,0.8,0.7,0.17,0.19,0.39,0.73]},{"id":"talia","f":"Talia","n":"Tallie","a":91,"h":99,"src":"both","uk":260,"us":270,"fx":[0.48,0.44,0.58,0.78,0.47,0.13,0.31,0.4,0.56]},{"id":"catherine","f":"Catherine","n":"Kate","a":96,"h":91,"src":"both","uk":66,"us":320,"fx":[0.32,0.72,0.73,0.69,0.68,0.26,0.18,0.46,0.78]},{"id":"rachel","f":"Rachel","n":"Rach","a":91,"h":94,"src":"both","uk":106,"us":247,"fx":[0.19,0.63,0.59,0.69,0.64,0.21,0.18,0.35,0.7]},{"id":"valerie","f":"Valerie","n":"Val","a":91,"h":91,"src":"both","uk":54,"us":147,"fx":[0.22,0.58,0.66,0.66,0.66,0.15,0.21,0.4,0.71]},{"id":"amy","f":"Amy","n":"Amie","a":89,"h":90,"src":"both","uk":117,"us":228,"fx":[0.53,0.59,0.56,0.79,0.62,0.13,0.26,0.56,0.63]},{"id":"lucia","f":"Lucia","n":"Lucie","a":89,"h":97,"src":"both","uk":284,"us":98,"fx":[0.49,0.61,0.66,0.76,0.68,0.16,0.29,0.63,0.85]},{"id":"joanna","f":"Joanna","n":"Joann","a":94,"h":89,"src":"both","uk":78,"us":329,"fx":[0.11,0.57,0.61,0.63,0.63,0.12,0.27,0.7,0.66]},{"id":"camille","f":"Camille","n":"Cami","a":88,"h":91,"src":"both","uk":71,"us":239,"fx":[0.34,0.53,0.67,0.76,0.63,0.16,0.28,0.42,0.83]},{"id":"stella","f":"Stella","n":"Stell","a":88,"h":98,"src":"both","uk":130,"us":49,"fx":[0.18,0.49,0.66,0.74,0.58,0.22,0.21,0.4,0.73]},{"id":"sylvia","f":"Sylvia","n":"Sylvie","a":90,"h":88,"src":"both","uk":95,"us":361,"fx":[0.53,0.56,0.68,0.78,0.68,0.2,0.22,0.52,0.73]},{"id":"abigail","f":"Abigail","n":"Abbie","a":87,"h":91,"src":"both","uk":283,"us":32,"fx":[0.48,0.63,0.69,0.76,0.67,0.15,0.23,0.5,0.57]},{"id":"penelope","f":"Penelope","n":"Pen","a":88,"h":87,"src":"both","uk":1174,"us":28,"fx":[0.28,0.47,0.77,0.63,0.63,0.3,0.27,0.35,0.69]},{"id":"viviana","f":"Viviana","n":"Viv","a":88,"h":87,"src":"both","uk":11,"us":368,"fx":[0.27,0.56,0.72,0.71,0.67,0.15,0.28,0.38,0.83]},{"id":"madison","f":"Madison","n":"Maddie","a":87,"h":90,"src":"both","uk":280,"us":46,"fx":[0.49,0.52,0.7,0.78,0.68,0.2,0.21,0.49,0.47]},{"id":"nicole","f":"Nicole","n":"Nic","a":86,"h":94,"src":"both","uk":99,"us":318,"fx":[0.19,0.68,0.65,0.63,0.65,0.14,0.19,0.38,0.78]},{"id":"maeve","f":"Maeve","n":"Mae","a":86,"h":99,"src":"both","uk":1330,"us":75,"fx":[0.19,0.27,0.69,0.77,0.67,0.25,0.31,0.49,0.43]},{"id":"camilla","f":"Camilla","n":"Cami","a":93,"h":86,"src":"both","uk":66,"us":324,"fx":[0.39,0.53,0.75,0.76,0.67,0.29,0.26,0.37,0.78]},{"id":"alexandra","f":"Alexandra","n":"Alex","a":86,"h":88,"src":"both","uk":202,"us":221,"fx":[0.26,0.68,0.74,0.59,0.69,0.16,0.23,0.49,0.76]},{"id":"vivian","f":"Vivian","n":"Viv","a":86,"h":96,"src":"both","uk":43,"us":77,"fx":[0.2,0.59,0.69,0.72,0.67,0.16,0.22,0.4,0.73]}],"you_two_disagree":[{"id":"alethea","f":"Alethea","n":"Allie","a":97,"h":66,"src":"both","uk":9,"us":null,"fx":[0.54,0.3,0.81,0.75,0.66,0.15,0.47,0.49,0.44]},{"id":"ivie","f":"Ivie","n":"Ivvie","a":95,"h":66,"src":"both","uk":23,"us":null,"fx":[0.44,0.21,0.56,0.79,0.62,0.13,0.44,0.55,0.29]},{"id":"elyse","f":"Elyse","n":"Ely","a":94,"h":66,"src":"both","uk":15,"us":745,"fx":[0.32,0.47,0.63,0.73,0.66,0.13,0.26,0.37,0.57]},{"id":"raegan","f":"Raegan","n":"Rae","a":66,"h":94,"src":"both","uk":14,"us":458,"fx":[0.23,0.36,0.66,0.72,0.66,0.24,0.32,0.37,0.36]},{"id":"talulah","f":"Talulah","n":"Lulah","a":67,"h":94,"src":"ons","uk":14,"us":null,"fx":[0.37,0.23,0.7,0.83,0.57,0.32,0.47,0.59,0.27]},{"id":"elvira","f":"Elvira","n":"Elvie","a":95,"h":68,"src":"both","uk":8,"us":null,"fx":[0.52,0.44,0.69,0.77,0.64,0.6,0.26,0.48,0.8]},{"id":"allegra","f":"Allegra","n":"Allie","a":97,"h":70,"src":"ons","uk":49,"us":null,"fx":[0.55,0.32,0.59,0.76,0.68,0.4,0.26,0.49,0.67]},{"id":"stacy","f":"Stacy","n":"Stacie","a":69,"h":96,"src":"ssa","uk":null,"us":null,"fx":[0.47,0.47,0.53,0.72,0.6,0.11,0.24,0.62,0.49]},{"id":"roisin","f":"Roisin","n":"Roisie","a":68,"h":94,"src":"ons","uk":28,"us":null,"fx":[0.51,0.32,0.67,0.81,0.61,0.17,0.48,0.43,0.32]},{"id":"lynn","f":"Lynn","n":"Lynnie","a":66,"h":92,"src":"both","uk":5,"us":null,"fx":[0.49,0.51,0.54,0.8,0.65,0.12,0.25,0.37,0.52]},{"id":"honor","f":"Honor","n":"Honnie","a":71,"h":96,"src":"ons","uk":15,"us":null,"fx":[0.52,0.27,0.69,0.82,0.64,0.17,0.23,0.41,0.54]},{"id":"adah","f":"Adah","n":"Ada","a":71,"h":95,"src":"both","uk":10,"us":null,"fx":[0.17,0.36,0.57,0.73,0.64,0.31,0.3,0.68,0.55]},{"id":"tallulah","f":"Tallulah","n":"Tallie","a":70,"h":94,"src":"ons","uk":185,"us":null,"fx":[0.49,0.23,0.75,0.78,0.56,0.4,0.44,0.53,0.31]},{"id":"kalene","f":"Kalene","n":"Kallie","a":68,"h":93,"src":"ssa","uk":null,"us":null,"fx":[0.52,0.28,0.58,0.79,0.67,0.1,0.35,0.52,0.31]},{"id":"siana","f":"Siana","n":"Sian","a":68,"h":92,"src":"ons","uk":15,"us":null,"fx":[0.13,0.26,0.6,0.7,0.66,0.14,0.36,0.53,0.39]},{"id":"tana","f":"Tana","n":"Tan","a":66,"h":89,"src":"ssa","uk":null,"us":null,"fx":[0.07,0.32,0.56,0.63,0.52,0.16,0.35,0.44,0.54]},{"id":"hosanna","f":"Hosanna","n":"Sanna","a":72,"h":96,"src":"ons","uk":12,"us":null,"fx":[0.21,0.16,0.64,0.77,0.61,0.4,0.43,0.45,0.67]},{"id":"mariann","f":"Mariann","n":"Mar","a":72,"h":94,"src":"ssa","uk":null,"us":null,"fx":[0.22,0.44,0.64,0.67,0.64,0.11,0.31,0.41,0.6]},{"id":"jerilyn","f":"Jerilyn","n":"Jeri","a":70,"h":93,"src":"ssa","uk":null,"us":null,"fx":[0.41,0.34,0.67,0.66,0.61,0.1,0.38,0.47,0.31]},{"id":"indianna","f":"Indianna","n":"Indie","a":73,"h":96,"src":"ons","uk":11,"us":null,"fx":[0.52,0.38,0.71,0.73,0.6,0.23,0.32,0.47,0.49]},{"id":"kiera","f":"Kiera","n":"Kie","a":72,"h":95,"src":"both","uk":37,"us":981,"fx":[0.4,0.45,0.61,0.71,0.66,0.18,0.34,0.43,0.44]},{"id":"ivette","f":"Ivette","n":"Ivie","a":89,"h":67,"src":"ssa","uk":null,"us":null,"fx":[0.53,0.4,0.67,0.78,0.59,0.12,0.35,0.38,0.77]},{"id":"tabetha","f":"Tabetha","n":"Tab","a":78,"h":100,"src":"ssa","uk":null,"us":null,"fx":[0.24,0.41,0.67,0.65,0.5,0.12,0.42,0.42,0.46]},{"id":"elowen","f":"Elowen","n":"Elowie","a":89,"h":69,"src":"ons","uk":82,"us":null,"fx":[0.5,0.18,0.55,0.9,0.68,0.16,0.45,0.59,0.31]},{"id":"evara","f":"Evara","n":"Eva","a":87,"h":66,"src":"ons","uk":20,"us":null,"fx":[0.11,0.12,0.6,0.72,0.7,0.3,0.36,0.64,0.49]}],"british_not_american":[{"id":"margaux","f":"Margaux","n":"Marg","a":99,"h":99,"src":"ons","uk":88,"us":null,"fx":[0.17,0.23,0.74,0.68,0.65,0.2,0.34,0.42,0.82]},{"id":"meabh","f":"Meabh","n":"Mea","a":93,"h":99,"src":"ons","uk":26,"us":null,"fx":[0.22,0.3,0.64,0.73,0.64,0.12,0.53,0.39,0.3]},{"id":"medina","f":"Medina","n":"Dina","a":96,"h":93,"src":"ons","uk":39,"us":null,"fx":[0.42,0.26,0.7,0.71,0.64,0.19,0.34,0.48,0.79]},{"id":"martina","f":"Martina","n":"Marti","a":92,"h":94,"src":"both","uk":26,"us":null,"fx":[0.3,0.62,0.69,0.71,0.64,0.17,0.24,0.37,0.81]},{"id":"tabitha","f":"Tabitha","n":"Tabbie","a":92,"h":100,"src":"both","uk":143,"us":null,"fx":[0.49,0.38,0.69,0.75,0.53,0.15,0.3,0.38,0.44]},{"id":"viola","f":"Viola","n":"Vio","a":92,"h":91,"src":"both","uk":32,"us":null,"fx":[0.24,0.36,0.65,0.74,0.66,0.21,0.22,0.41,0.74]},{"id":"maja","f":"Maja","n":"Maj","a":94,"h":90,"src":"ons","uk":85,"us":null,"fx":[0.11,0.39,0.56,0.7,0.6,0.2,0.33,0.42,0.81]},{"id":"oliwia","f":"Oliwia","n":"Oli","a":90,"h":96,"src":"ons","uk":46,"us":null,"fx":[0.35,0.49,0.68,0.76,0.65,0.11,0.42,0.39,0.75]},{"id":"lowenna","f":"Lowenna","n":"Wenna","a":91,"h":89,"src":"ons","uk":26,"us":null,"fx":[0.2,0.17,0.49,0.78,0.6,0.1,0.48,0.49,0.23]},{"id":"merryn","f":"Merryn","n":"Merr","a":89,"h":88,"src":"ons","uk":34,"us":null,"fx":[0.17,0.28,0.63,0.75,0.64,0.14,0.39,0.44,0.33]},{"id":"ayleen","f":"Ayleen","n":"Aylee","a":88,"h":91,"src":"ons","uk":29,"us":null,"fx":[0.47,0.25,0.61,0.8,0.63,0.1,0.36,0.57,0.32]},{"id":"taliyah","f":"Taliyah","n":"Tal","a":87,"h":98,"src":"both","uk":34,"us":null,"fx":[0.24,0.27,0.7,0.68,0.51,0.25,0.46,0.48,0.41]},{"id":"ivana","f":"Ivana","n":"Iva","a":86,"h":97,"src":"both","uk":38,"us":null,"fx":[0.2,0.43,0.68,0.71,0.6,0.16,0.32,0.53,0.8]},{"id":"tamara","f":"Tamara","n":"Tammie","a":85,"h":99,"src":"both","uk":39,"us":null,"fx":[0.52,0.52,0.65,0.74,0.47,0.12,0.28,0.55,0.68]},{"id":"novie","f":"Novie","n":"Nov","a":85,"h":90,"src":"ons","uk":79,"us":null,"fx":[0.1,0.24,0.54,0.68,0.6,0.13,0.4,0.4,0.52]},{"id":"taliah","f":"Taliah","n":"Talia","a":85,"h":99,"src":"ons","uk":30,"us":null,"fx":[0.35,0.33,0.66,0.75,0.45,0.15,0.4,0.59,0.4]},{"id":"milani","f":"Milani","n":"Mila","a":85,"h":85,"src":"ons","uk":31,"us":null,"fx":[0.22,0.21,0.58,0.8,0.69,0.34,0.29,0.62,0.77]},{"id":"mariella","f":"Mariella","n":"Mar","a":84,"h":98,"src":"ons","uk":30,"us":null,"fx":[0.23,0.47,0.69,0.71,0.66,0.12,0.28,0.42,0.78]},{"id":"maisy","f":"Maisy","n":"Maisie","a":84,"h":95,"src":"ons","uk":81,"us":null,"fx":[0.51,0.32,0.32,0.83,0.66,0.2,0.32,0.66,0.37]},{"id":"marta","f":"Marta","n":"Martie","a":90,"h":84,"src":"both","uk":31,"us":null,"fx":[0.49,0.6,0.63,0.73,0.61,0.13,0.22,0.47,0.8]},{"id":"ilaria","f":"Ilaria","n":"Ila","a":83,"h":96,"src":"ons","uk":39,"us":null,"fx":[0.29,0.53,0.69,0.76,0.64,0.12,0.36,0.36,0.82]},{"id":"mari","f":"Mari","n":"Mar","a":83,"h":86,"src":"both","uk":32,"us":null,"fx":[0.07,0.46,0.51,0.69,0.59,0.14,0.32,0.52,0.75]},{"id":"ethel","f":"Ethel","n":"Eth","a":87,"h":83,"src":"both","uk":26,"us":null,"fx":[0.16,0.59,0.7,0.68,0.65,0.15,0.22,0.54,0.55]},{"id":"saskia","f":"Saskia","n":"Saskie","a":81,"h":91,"src":"ons","uk":45,"us":null,"fx":[0.47,0.41,0.67,0.74,0.66,0.14,0.32,0.41,0.77]},{"id":"esme","f":"Esme","n":"Esm","a":83,"h":81,"src":"ons","uk":933,"us":null,"fx":[0.17,0.25,0.63,0.68,0.64,0.18,0.34,0.34,0.5]}]}}</script>
+<script>
+(function () {
+  "use strict";
+
+  var D = JSON.parse(document.getElementById("data").textContent);
+
+  // Why each set exists, in the project's own terms. The headings above them
+  // are computed; these say what the computation means for the decision.
+  var WHY = {
+    "the short form reshapes the name, warm to say every day":
+      "The one to read first. nickname_reshapes descends from the only trait that survived Hannah's held-out test — Theresa→Tessa and Margaret→Maggie reshape the sound, Rebecca→Becca just clips it.",
+    "a deep bench of short forms, travels outside English":
+      "Why Margaret actually won: Maggie, Meg, Greta, Daisy, Peggy. Marguerite had only Daisy and scored 0. A deep bench means she can pick a different one at fourteen and still be herself.",
+    "sits awkwardly beside Tessa, one short form or none":
+      "A warning set, not a suggestion. Every name here scores well alone and is a trap next to your first daughter. Worth reading precisely so the trap is visible.",
+    "drags one loud association, the short form reshapes the name":
+      "The Daniel Tiger problem, generalised. These carry one referent most people reach for first. That worry turned out unfounded for Maggie — but it is per-name, so here they are.",
+    "drags one loud association, travels outside English":
+      "The same baggage, in names that also survive outside English.",
+    "the short form only clips it, stays Anglophone":
+      "The set to skip, on the evidence. Clipped short forms are what Becca does, and Becca is the one that never landed.",
+    "the short form is a whole name, the full name is light":
+      "Names where the short form could be the whole thing. A different shape from what you've chosen before — closer to Tessa-as-given-name than to Theresa-plus-Tessa."
+  };
+
+  var SECOND = [
+    ["too_common_to_have_considered", "Too common to have considered",
+     "Your stated rule was “nothing too common.” Measured on both of you separately, currently_common correlates <b>positively</b> with liking — +0.37 for Hannah, +0.33 for Alex. Popularity is the largest known blind spot, so these are surfaced on purpose."],
+    ["british_not_american", "Ordinary in Britain, invisible here",
+     "Until the ONS source was added, the corpus was American-only, so these were outside the frame by construction rather than by taste. The count is girls given the name in England and Wales last year."],
+    ["you_two_disagree", "Where you two split",
+     "One of you places these far above the other. The average buries them, and disagreement is where the real preference lives — these are the conversations, not the noise."]
+  ];
+
+  var FACET_LABEL = {
+    nickname_reshapes: "short form reshapes it",
+    nickname_bench: "depth of nickname bench",
+    formal_gravity: "weight of the full name",
+    everyday_warmth: "warmth said every day",
+    pairs_with_sibling: "sounds right beside Tessa",
+    one_loud_association: "drags one association",
+    spelling_friction: "will be spelled out",
+    short_form_stands_alone: "short form stands alone",
+    travels: "travels outside English"
+  };
+
+  var db = null, who = "", marks = {}, tab = 0, open = null;
+  var byId = {};
+  D.sets.forEach(function (s) { s.names.forEach(function (n) { byId[n.id] = n; }); });
+  Object.keys(D.second).forEach(function (k) {
+    D.second[k].forEach(function (n) { byId[n.id] = n; });
+  });
+
+  function slug(s) {
+    return String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "").slice(0, 40) || "anon";
+  }
+  function el(id) { return document.getElementById(id); }
+  function lsGet(k, f) {
+    try { var v = localStorage.getItem(k); return v === null ? f : JSON.parse(v); }
+    catch (e) { return f; }
+  }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  function markOf(rater, id) {
+    var m = marks[slug(rater) + "__" + id];
+    return m ? m.mark : null;
+  }
+  function raters() {
+    var seen = {};
+    Object.keys(marks).forEach(function (k) { if (marks[k].rater) seen[marks[k].rater] = 1; });
+    return Object.keys(seen).sort();
+  }
+
+  function setMark(id, v) {
+    if (!who) { el("who").focus(); return; }
+    var k = slug(who) + "__" + id;
+    if (marks[k] && marks[k].mark === v) { v = null; }
+    if (v === null) { delete marks[k]; } else {
+      marks[k] = { rater: who, raterSlug: slug(who), nameId: id, mark: v, ts: Date.now() };
+    }
+    lsSet("marks", marks);
+    if (db) {
+      if (v === null) { db.doc("marks/" + k)["delete"]().catch(function () {}); }
+      else { db.doc("marks/" + k).set(marks[k]).catch(function () {}); }
+    }
+    render();
+  }
+
+  // --- building blocks -------------------------------------------------
+  function srcBadge(n) {
+    var s = document.createElement("span");
+    s.className = "src";
+    if (n.src === "ons") { s.className += " uk"; s.textContent = "UK only"; }
+    else if (n.src === "both") { s.textContent = "US + UK"; }
+    else { s.textContent = "US only"; }
+    return s;
+  }
+
+  function card(n) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "card";
+    var mine = who ? markOf(who, n.id) : null;
+    if (mine !== null && mine !== undefined) b.setAttribute("data-mark", String(mine));
+
+    var nick = document.createElement("div");
+    nick.className = "card-nick"; nick.textContent = n.n;
+    var formal = document.createElement("div");
+    formal.className = "card-formal"; formal.textContent = n.f;
+    b.appendChild(nick); b.appendChild(formal);
+
+    var meta = document.createElement("div");
+    meta.className = "card-meta";
+    meta.appendChild(srcBadge(n));
+    var freq = document.createElement("span");
+    freq.textContent = n.us ? "US #" + n.us : (n.uk ? n.uk + " in E&W" : "rare");
+    meta.appendChild(freq);
+
+    var mk = document.createElement("span");
+    mk.className = "marks";
+    raters().forEach(function (r) {
+      var v = markOf(r, n.id);
+      if (v === null || v === undefined) return;
+      var d = document.createElement("span");
+      d.className = "mk"; d.setAttribute("data-v", String(v));
+      d.textContent = r.slice(0, 1).toUpperCase();
+      d.title = r + ": " + (v === 3 ? "shortlist" : v === 2 ? "maybe" : "no");
+      mk.appendChild(d);
+    });
+    meta.appendChild(mk);
+    b.appendChild(meta);
+
+    b.addEventListener("click", function () {
+      open = (open === n.id) ? null : n.id;
+      render();
+    });
+    return b;
+  }
+
+  function detail(n) {
+    var d = document.createElement("div");
+    d.className = "detail";
+
+    var h = document.createElement("div"); h.className = "dhead";
+    var a = document.createElement("span"); a.className = "dnick"; a.textContent = n.n;
+    var b2 = document.createElement("span"); b2.className = "dformal"; b2.textContent = n.f;
+    h.appendChild(a); h.appendChild(b2); d.appendChild(h);
+
+    var facts = document.createElement("p"); facts.className = "dfacts";
+    var bits = [];
+    bits.push(n.src === "ons" ? "England and Wales only" :
+              n.src === "both" ? "in both national lists" : "US lists only");
+    if (n.uk) bits.push(n.uk + " girls given it in E&W last year");
+    if (n.us) bits.push("US rank #" + n.us + " in 2024");
+    bits.push("Alex " + n.a + "th percentile, Hannah " + n.h + "th");
+    facts.textContent = bits.join(" · ");
+    d.appendChild(facts);
+
+    var v = document.createElement("div"); v.className = "verdicts";
+    [[3, "Shortlist"], [2, "Maybe"], [0, "No"]].forEach(function (p) {
+      var btn = document.createElement("button");
+      btn.type = "button"; btn.className = "vb";
+      btn.setAttribute("data-v", String(p[0]));
+      btn.setAttribute("aria-pressed", String(who ? markOf(who, n.id) === p[0] : false));
+      btn.textContent = p[1];
+      btn.addEventListener("click", function (e) { e.stopPropagation(); setMark(n.id, p[0]); });
+      v.appendChild(btn);
+    });
+    if (!who) {
+      var hint = document.createElement("span");
+      hint.style.cssText = "font-size:13px;color:var(--ink-mute);align-self:center";
+      hint.textContent = "put your name in at the top to mark names";
+      v.appendChild(hint);
+    }
+    d.appendChild(v);
+
+    var fl = document.createElement("div"); fl.className = "flabel";
+    fl.textContent = "What Jev says about it";
+    d.appendChild(fl);
+    D.facetKeys.forEach(function (k, i) {
+      var row = document.createElement("div"); row.className = "frow";
+      var nm = document.createElement("span"); nm.className = "fname";
+      nm.textContent = FACET_LABEL[k] || k;
+      var bar = document.createElement("span"); bar.className = "fbar";
+      var fill = document.createElement("i");
+      fill.style.width = Math.round((n.fx[i] || 0) * 100) + "%";
+      bar.appendChild(fill);
+      row.appendChild(nm); row.appendChild(bar);
+      d.appendChild(row);
+    });
+    return d;
+  }
+
+  function grid(names) {
+    var g = document.createElement("div"); g.className = "grid";
+    names.forEach(function (n) {
+      g.appendChild(card(n));
+      if (open === n.id) g.appendChild(detail(n));
+    });
+    return g;
+  }
+
+  // --- views -----------------------------------------------------------
+  function viewSets(root) {
+    D.sets.forEach(function (s) {
+      var sec = document.createElement("section"); sec.className = "setsec";
+      var hd = document.createElement("div"); hd.className = "sethead";
+      var h = document.createElement("h2"); h.className = "seth"; h.textContent = s.label;
+      var c = document.createElement("span"); c.className = "setn";
+      c.textContent = s.n + " names";
+      hd.appendChild(h); hd.appendChild(c); sec.appendChild(hd);
+      if (WHY[s.label]) {
+        var p = document.createElement("p"); p.className = "setwhy";
+        p.textContent = WHY[s.label]; sec.appendChild(p);
+      }
+      sec.appendChild(grid(s.names));
+      root.appendChild(sec);
+    });
+  }
+
+  function viewSecond(root) {
+    var n0 = document.createElement("div"); n0.className = "note brass";
+    n0.innerHTML = "<b>A fourth list is missing.</b> The strongest test here would be " +
+      "re-pairing names you rejected with a <i>different</i> short form — Marguerite scored 0 " +
+      "behind Daisy, and Margo is a different candidate. The code runs, but the TypeSafe " +
+      "account is out of credits, so those 265 re-scorings returned 402. Add credits and it fills in.";
+    root.appendChild(n0);
+
+    SECOND.forEach(function (pair) {
+      var list = D.second[pair[0]];
+      if (!list || !list.length) return;
+      var sec = document.createElement("section"); sec.className = "setsec";
+      var hd = document.createElement("div"); hd.className = "sethead";
+      var h = document.createElement("h2"); h.className = "seth"; h.textContent = pair[1];
+      var c = document.createElement("span"); c.className = "setn";
+      c.textContent = list.length + " names";
+      hd.appendChild(h); hd.appendChild(c); sec.appendChild(hd);
+      var p = document.createElement("p"); p.className = "setwhy"; p.innerHTML = pair[2];
+      sec.appendChild(p);
+      sec.appendChild(grid(list));
+      root.appendChild(sec);
+    });
+  }
+
+  function viewMarked(root) {
+    var rs = raters();
+    if (!rs.length) {
+      var p = document.createElement("p"); p.className = "empty";
+      p.textContent = "Nothing marked yet. Open a name and press Shortlist, Maybe or No.";
+      root.appendChild(p); return;
+    }
+    var counts = { 3: 0, 2: 0, 0: 0 };
+    Object.keys(marks).forEach(function (k) { counts[marks[k].mark]++; });
+    var t = document.createElement("div"); t.className = "tallyrow";
+    [[rs.length, "marking"], [counts[3], "shortlisted"], [counts[2], "maybe"], [counts[0], "ruled out"]]
+      .forEach(function (pair) {
+        var d = document.createElement("div"); d.className = "tally";
+        var a = document.createElement("div"); a.className = "tally-n"; a.textContent = String(pair[0]);
+        var b = document.createElement("div"); b.className = "tally-l"; b.textContent = pair[1];
+        d.appendChild(a); d.appendChild(b); t.appendChild(d);
+      });
+    root.appendChild(t);
+
+    [[3, "Shortlisted", "Both of you marking one of these is the signal worth acting on."],
+     [2, "Maybe", "Worth saying aloud a few more times."],
+     [0, "Ruled out", ""]].forEach(function (grp) {
+      var ids = {};
+      Object.keys(marks).forEach(function (k) {
+        if (marks[k].mark === grp[0] && byId[marks[k].nameId]) ids[marks[k].nameId] = 1;
+      });
+      var list = Object.keys(ids).map(function (i) { return byId[i]; });
+      if (!list.length) return;
+      var sec = document.createElement("section"); sec.className = "setsec";
+      var hd = document.createElement("div"); hd.className = "sethead";
+      var h = document.createElement("h2"); h.className = "seth"; h.textContent = grp[1];
+      var c = document.createElement("span"); c.className = "setn"; c.textContent = list.length + " names";
+      hd.appendChild(h); hd.appendChild(c); sec.appendChild(hd);
+      if (grp[2]) {
+        var p = document.createElement("p"); p.className = "setwhy"; p.textContent = grp[2];
+        sec.appendChild(p);
+      }
+      sec.appendChild(grid(list));
+      root.appendChild(sec);
+    });
+  }
+
+  var TABS = [
+    ["The seven sets", viewSets],
+    ["Worth a second look", viewSecond],
+    ["What you've marked", viewMarked]
+  ];
+
+  function render() {
+    var tb = el("tabs"); tb.textContent = "";
+    TABS.forEach(function (t, i) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tab"; b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", String(i === tab));
+      b.textContent = t[0];
+      b.addEventListener("click", function () { tab = i; open = null; render(); });
+      tb.appendChild(b);
+    });
+    var v = el("view"); v.textContent = "";
+    TABS[tab][1](v);
+
+    var wc = el("whochips"); wc.textContent = "";
+    raters().forEach(function (r) {
+      if (r === who) return;
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.textContent = r;
+      b.addEventListener("click", function () {
+        who = r; el("who").value = r; lsSet("who", r); render();
+      });
+      wc.appendChild(b);
+    });
+  }
+
+  el("who").addEventListener("input", function (e) {
+    who = e.target.value.trim(); lsSet("who", who); render();
+  });
+
+  // --- shared state ----------------------------------------------------
+  function connect() {
+    if (!window.claude || !window.claude.use) return;
+    window.claude.use("db").then(function (d) {
+      if (!d) return;
+      db = d;
+      db.collection("marks").onSnapshot(function (snap) {
+        var next = {};
+        snap.docs.forEach(function (doc) {
+          var data = doc.data();
+          if (data && data.nameId) next[doc.id] = data;
+        });
+        marks = next; lsSet("marks", marks); render();
+      }, function () {});
+    }).catch(function () {});
+  }
+
+  marks = lsGet("marks", {}) || {};
+  who = lsGet("who", "") || "";
+  el("who").value = who;
+  render();
+  connect();
+})();
+</script>

@@ -379,6 +379,45 @@ A full run is roughly 30,000 Jev calls and about two minutes. Code fetches
 data, computes lookups (syllables, peak decade, counts, hyphens) and does
 arithmetic on the answers. It never decides whether a name is any good.
 
+## The explorer artifact
+
+https://claude.ai/artifact/8tHGteyTPZFz34v6wf94RD  (source kept at `explorer.html`)
+
+Three tabs: the seven computed sets, the second-look lists, and what has been
+marked. Marks are shortlist / maybe / no, stored in the artifact's `db` under
+`marks` keyed `raterSlug__nameId` - the same shape the rating tool uses, so
+`ArtifactData` reads them back the same way. Both raters see each other's
+marks live.
+
+It carries Fraunces and Karla from the rating artifact so the two read as a
+pair, on a cooler palette since this one is the output rather than the input.
+
+## Second look: where the picture is most likely wrong
+
+`second_look.py` builds lists the main ranking cannot, each grounded in
+something the 244 ratings established.
+
+- **Too common to have considered.** Stated rule was "nothing too common";
+  `currently_common` correlates *positively* with liking on both raters
+  independently (+0.37 Hannah, +0.33 Alex). This is the largest known blind
+  spot. Margot, Katherine, Grace, Leah, Gianna, Ruth.
+- **Ordinary in Britain, invisible here.** Only reachable since the ONS
+  source: Margaux, Meabh, Martina, Viola, Maja, Lowenna.
+- **Where you two split.** Alethea, Talulah, Allegra, Elvira, Roisin.
+- **BLOCKED: rejected on the short form, not the name.** The strongest of the
+  four and the one that did not run. `pick_nicknames.py` has been storing
+  `nickname_alternatives` since the first commit for exactly this - Marguerite
+  scored 0 behind Daisy and Margo is a different candidate - and 265
+  re-pairings across 102 rejected names were built and submitted. Every call
+  returned **402: no available TypeSafe API credits**. The code is correct and
+  runs on `python second_look.py` once credits are topped up.
+
+**Dropped: model confidence as a signal.** Low `taste_confidence` looked like
+a way to find names the evidence does not settle. It is not: 1,451 names sit
+at exactly 0.00 and the *highest*-confidence names are the obvious rejections
+(Stormi 0.97). Confidence here reports "certainly no", not "uncertain", so it
+cannot find the interesting middle. Do not reach for it again.
+
 ## Environment note
 
 This project was started in a Claude Code web session where `api.typesafe.ai`
