@@ -72,9 +72,39 @@ A leftover shows as a thin straight "rat's nest" line between two pads that shou
 If you get stuck, take a screenshot of the area and the DRC message and send it to me.
 I'll tell you exactly where to click.
 
-## 5. Make the factory files (only if you changed anything)
+## 4b. The six connections on this board, one by one
 
-If you didn't change the board, skip this: the files in `hardware/fab/` are ready.
+The current board has exactly these six open. For each one: run DRC (step 3), go to the
+**Unconnected Items** tab, and **double-click** the matching line. KiCad zooms there and
+draws a thin straight line (the "ratsnest") between the two things that need joining.
+Then do what the row says. All six are on the **back** layer, so click **`B.Cu`** in
+the Layers panel first.
+
+In the pictures, **pink A** is the stranded pad and **green B** is the nearest copper it
+should join. Traces and the ground pour are both blue, so a trace looks like a blue
+strip with a white outline.
+
+| # | Picture | What it is | How to fix it |
+|---|---|---|---|
+| 1 | ![VBAT](renders/fixes/1_vbat.png) | Battery line: charger chip **U2** pin 2 isn't joined to the rest of the **VBAT** trace (about 4 mm away) | Press **X**, click on U2 pin 2 (the small pad at A), and move toward B. KiCad will try to push the neighbouring traces aside; follow where it finds room. If it's blocked, press **V** to hop to the front layer, go around, press **V** again to come back, and finish on the VBAT trace at B |
+| 2 | ![SW12 lower](renders/fixes/2_gnd_sw12_0.png) | Ground: the **#** key switch's lower ground leg | Press **X**, click the switch's round pad at A, and draw a short trace to the blue ground area at B (about 2 mm). Double-click to finish |
+| 3 | ![SW12 upper](renders/fixes/3_gnd_sw12_1.png) | Ground: the same switch's upper leg | Same as #2 |
+| 4 | ![U8](renders/fixes/4_gnd_u8_2.png) | Ground: LED level-shifter chip **U8** pin 3 (and its capacitor C17, already joined to it) | Press **X** from U8 pin 3 to the ground area at B (about 1 mm). If a trace is in the way, let the router shove it |
+| 5 | ![Q2](renders/fixes/5_gnd_q2_3.png) | Ground: LED power switch **Q2** pin 2 | Same idea, about 1 mm |
+| 6 | ![D1](renders/fixes/6_gnd_d1_4.png) | Ground: USB protection chip **D1** pin 2 | Same idea, about 1.3 mm |
+
+**Alternative for any ground one (#2–#6), if drawing the trace gets fiddly:** press
+**Ctrl+Shift+V** (Add Via), click a clear spot right next to the stranded pad, and set its
+net to **GND** in the dialog. Then press **X** and draw a tiny trace from the pad to the via.
+The via drops through to the front-side ground, which is connected.
+
+After each fix, press **B** (refill) and re-run DRC. The Unconnected count should go down by one.
+When it says **0**, save (Ctrl+S) and you're done.
+
+## 5. Make the factory files
+
+Easiest: after saving, tell me the board is done and push it (or send it to me), and I'll
+generate everything with `kicad_gen/make_fab.py`. Or do it yourself in KiCad:
 
 1. **File → Fabrication Outputs → Gerbers (.gbr)…**
    - Output directory: `fab/gerbers/`

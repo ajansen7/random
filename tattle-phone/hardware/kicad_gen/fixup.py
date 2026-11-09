@@ -679,7 +679,8 @@ def join_components(board, grid):
 
 
 def cleanup(board):
-    """Remove duplicate vias and vias DRC reports as dangling."""
+    """Remove duplicate vias and vias DRC reports as dangling. Never deletes tracks
+    (removing "dangling" track pieces once cut real connections)."""
     removed = 0
     seen = []
     for v in [t for t in board.GetTracks() if t.GetClass() == "PCB_VIA"]:
@@ -692,13 +693,6 @@ def cleanup(board):
     rpt = tempfile.mktemp(suffix=".txt")
     pcbnew.WriteDRCReport(board, rpt, pcbnew.EDA_UNITS_MILLIMETRES, True)
     for blk in re.split(r"\n(?=\[)", open(rpt).read()):
-        if blk.startswith("[track_dangling]"):
-            for x, y, d in ITEM.findall(blk):
-                for t in [t for t in board.GetTracks() if t.GetClass() == "PCB_TRACK"]:
-                    for p in (t.GetStart(), t.GetEnd()):
-                        if abs(mm(p.x) - float(x)) < 0.01 and abs(mm(p.y) - float(y)) < 0.01:
-                            board.Remove(t); removed += 1
-                            break
         if blk.startswith("[via_dangling]"):
             for x, y, d in ITEM.findall(blk):
                 for v in [t for t in board.GetTracks() if t.GetClass() == "PCB_VIA"]:

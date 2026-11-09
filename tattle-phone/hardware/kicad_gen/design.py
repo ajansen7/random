@@ -52,7 +52,7 @@ part("F1", "Device:Polyfuse", "0.75A hold", "Fuse:Fuse_1206_3216Metric",
      {"1": "VBUS_C", "2": "VIN"}, at=(-9.5, 7.5), rot=90, block=B)
 part("D1", "Power_Protection:USBLC6-2SC6", "USBLC6-2SC6", "Package_TO_SOT_SMD:SOT-23-6",
      {"I/O1": "USB_DP", "I/O2": "USB_DM", "VBUS": "VIN", "GND": "GND"},
-     at=(7.8, 17.0), rot=90, block=B)
+     at=(6.0, 14.8), rot=90, block=B)
 part("D2", "Diode:SMF5V0A", "SMF5.0A", "Diode_SMD:D_SMF",
      {"A1": "VIN", "A2": "GND"}, at=(-13.5, 8.5), rot=90, block=B)
 
@@ -67,12 +67,12 @@ part("U2", "Battery_Management:BQ24075RGT", "BQ24075RGT",
 C("C1", "10u", "VIN", at=(-15.5, 15.0), fp=C0805, rot=90, block=B)
 C("C2", "10u", "VSYS", at=(-15.5, 19.5), fp=C0805, rot=90, block=B)
 C("C3", "4.7u", "VBAT", at=(-11.0, 23.0), fp=C0603, block=B)
-R("R3", "10k", "EN2", "VIN", at=(-5.8, 14.6), block=B)
-R("R4", "1.5k", "ILIM", "GND", at=(-5.8, 16.3), block=B)      # ~1 A input limit
-R("R5", "DNP", "TMR", "GND", at=(-5.8, 18.0), block=B, dnp=True)  # open = default timers
-R("R6", "1.2k", "ISET", "GND", at=(-5.8, 19.7), block=B)      # ~750 mA charge
-R("R7", "10k", "CHG", "+3V3", at=(-5.8, 21.4), block=B)
-R("R8", "10k", "PGOOD", "+3V3", at=(-5.8, 23.1), block=B)
+R("R3", "10k", "EN2", "VIN", at=(-7.0, 15.5), block=B)
+R("R4", "1.5k", "ILIM", "GND", at=(-7.0, 17.0), block=B)      # ~1 A input limit
+R("R5", "DNP", "TMR", "GND", at=(-7.0, 18.5), block=B, dnp=True)  # open = default timers
+R("R6", "1.2k", "ISET", "GND", at=(-7.0, 20.0), block=B)      # ~750 mA charge
+R("R7", "10k", "CHG", "+3V3", at=(-7.0, 21.5), block=B)
+R("R8", "10k", "PGOOD", "+3V3", at=(-7.0, 23.0), block=B)
 part("J2", "Connector_Generic:Conn_01x02", "Battery (JST-PH)", JST2,
      {"Pin_1": "VBAT", "Pin_2": "GND"}, at=(-18.5, 33.0), block=B,
      note="check your cell's lead polarity")

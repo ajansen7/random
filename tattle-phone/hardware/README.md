@@ -6,9 +6,9 @@ case, ~1,800 track segments and ~260 vias, GND pours on both layers and the ante
 
 **6 connections are still open.** They're in tight spots where the autorouter and my
 fix-up router couldn't get through without shoving other traces aside. KiCad's
-interactive router does that easily, so a few minutes in KiCad 10 finishes them
-(see "Finishing the routing" below). After that the board is ready for a final
-review and Gerbers.
+interactive router does that easily. **[KICAD_GUIDE.md](KICAD_GUIDE.md) walks a first-time
+user through each one with a close-up picture.** After that, `kicad_gen/make_fab.py`
+generates the factory files.
 
 ![PCB front](renders/pcb_front.png) ![PCB back (mirrored, as seen from behind)](renders/pcb_back.png)
 
