@@ -52,3 +52,4 @@ tattle-phone/hardware/kicad/*.ses
 tattle-phone/hardware/kicad/*.unrouted.kicad_pcb
 tattle-phone/hardware/kicad/*-backups/
 tattle-phone/hardware/kicad/fp-info-cache
+tattle-phone/hardware/kicad_gen/ripup_state.json
