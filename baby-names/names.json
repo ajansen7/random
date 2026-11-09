@@ -1,0 +1,553 @@
+[
+  {
+    "id": "theresa",
+    "formal": "Theresa",
+    "nickname": "Tessa",
+    "other_nicknames": [
+      "Tess",
+      "Tessie"
+    ],
+    "note": "Greek by way of a long line of saints. Steady, unhurried, not currently fashionable.",
+    "anchor": true
+  },
+  {
+    "id": "margaret",
+    "formal": "Margaret",
+    "nickname": "Maggie",
+    "other_nicknames": [
+      "Meg",
+      "Greta",
+      "Daisy"
+    ],
+    "note": "Greek for pearl. One of the deepest nickname benches of any name in English.",
+    "anchor": true
+  },
+  {
+    "id": "rebecca",
+    "formal": "Rebecca",
+    "nickname": "Becca",
+    "other_nicknames": [
+      "Bex",
+      "Becky"
+    ],
+    "note": "Hebrew, biblical. Familiar and warm, with a distinctly late-century ring.",
+    "anchor": true
+  },
+  {
+    "id": "harriet",
+    "formal": "Harriet",
+    "nickname": "Hattie",
+    "other_nicknames": [
+      "Hettie",
+      "Harry"
+    ],
+    "note": "English form of Henriette — 'home ruler'. The nickname reshapes the sound entirely.",
+    "anchor": false
+  },
+  {
+    "id": "josephine",
+    "formal": "Josephine",
+    "nickname": "Josie",
+    "other_nicknames": [
+      "Jo",
+      "Posy"
+    ],
+    "note": "French feminine of Joseph. Formal on paper, breezy out loud.",
+    "anchor": false
+  },
+  {
+    "id": "winifred",
+    "formal": "Winifred",
+    "nickname": "Winnie",
+    "other_nicknames": [
+      "Freddie",
+      "Win"
+    ],
+    "note": "Welsh, 'blessed reconciliation'. Deeply old-fashioned, which is either the appeal or the problem.",
+    "anchor": false
+  },
+  {
+    "id": "beatrice",
+    "formal": "Beatrice",
+    "nickname": "Bea",
+    "other_nicknames": [
+      "Trixie",
+      "Bee"
+    ],
+    "note": "Latin — 'she who brings happiness'. Dante's guide, and a Shakespeare heroine with a sharp tongue.",
+    "anchor": false
+  },
+  {
+    "id": "eleanor",
+    "formal": "Eleanor",
+    "nickname": "Nell",
+    "other_nicknames": [
+      "Nellie",
+      "Ellie"
+    ],
+    "note": "Medieval queens, twice over. Eleanor to Nell is a full transformation, not a trim.",
+    "anchor": false
+  },
+  {
+    "id": "frances",
+    "formal": "Frances",
+    "nickname": "Frankie",
+    "other_nicknames": [
+      "Fran",
+      "Frankie"
+    ],
+    "note": "Latin, 'the free one'. The short form lands somewhere between jaunty and tomboy.",
+    "anchor": false
+  },
+  {
+    "id": "henrietta",
+    "formal": "Henrietta",
+    "nickname": "Etta",
+    "other_nicknames": [
+      "Hettie",
+      "Retta"
+    ],
+    "note": "French feminine of Henry. Etta carries a century of singers with it.",
+    "anchor": false
+  },
+  {
+    "id": "cecilia",
+    "formal": "Cecilia",
+    "nickname": "Cece",
+    "other_nicknames": [
+      "Cilla",
+      "Sissy"
+    ],
+    "note": "Latin. Patron saint of music, so the name comes with a soundtrack.",
+    "anchor": false
+  },
+  {
+    "id": "genevieve",
+    "formal": "Genevieve",
+    "nickname": "Evie",
+    "other_nicknames": [
+      "Vivi",
+      "Gen"
+    ],
+    "note": "Patron saint of Paris. Long and lace-edged on paper, quick in the mouth.",
+    "anchor": false
+  },
+  {
+    "id": "clementine",
+    "formal": "Clementine",
+    "nickname": "Clemmie",
+    "other_nicknames": [
+      "Clem",
+      "Tiny"
+    ],
+    "note": "Latin, 'merciful'. Hard to hear without the song, for better or worse.",
+    "anchor": false
+  },
+  {
+    "id": "adelaide",
+    "formal": "Adelaide",
+    "nickname": "Addie",
+    "other_nicknames": [
+      "Della",
+      "Heidi"
+    ],
+    "note": "Germanic, 'noble kind'. Stately without being stiff.",
+    "anchor": false
+  },
+  {
+    "id": "matilda",
+    "formal": "Matilda",
+    "nickname": "Tilly",
+    "other_nicknames": [
+      "Mattie",
+      "Tilda"
+    ],
+    "note": "Germanic, 'mighty in battle'. A medieval empress and a Roald Dahl girl.",
+    "anchor": false
+  },
+  {
+    "id": "philippa",
+    "formal": "Philippa",
+    "nickname": "Pippa",
+    "other_nicknames": [
+      "Pip",
+      "Phil"
+    ],
+    "note": "Greek, 'lover of horses'. Reads more British than American.",
+    "anchor": false
+  },
+  {
+    "id": "dorothea",
+    "formal": "Dorothea",
+    "nickname": "Thea",
+    "other_nicknames": [
+      "Dot",
+      "Dodie"
+    ],
+    "note": "Greek, 'gift of God'. Middlemarch's heroine; Thea is the modern exit.",
+    "anchor": false
+  },
+  {
+    "id": "augusta",
+    "formal": "Augusta",
+    "nickname": "Gussie",
+    "other_nicknames": [
+      "Gus",
+      "Aggie"
+    ],
+    "note": "Latin, 'venerable'. Grand on the certificate, scruffy and fun in practice.",
+    "anchor": false
+  },
+  {
+    "id": "wilhelmina",
+    "formal": "Wilhelmina",
+    "nickname": "Mina",
+    "other_nicknames": [
+      "Willa",
+      "Billie"
+    ],
+    "note": "Germanic feminine of William. Three completely different girls live inside it.",
+    "anchor": false
+  },
+  {
+    "id": "edith",
+    "formal": "Edith",
+    "nickname": "Edie",
+    "other_nicknames": [
+      "Edie",
+      "Dita"
+    ],
+    "note": "Old English, 'prosperous in war'. Brisk, tidy, quietly formidable.",
+    "anchor": false
+  },
+  {
+    "id": "agatha",
+    "formal": "Agatha",
+    "nickname": "Aggie",
+    "other_nicknames": [
+      "Aggie",
+      "Attie"
+    ],
+    "note": "Greek, simply 'good'. An early saint and the best-selling novelist of all time.",
+    "anchor": false
+  },
+  {
+    "id": "florence",
+    "formal": "Florence",
+    "nickname": "Flossie",
+    "other_nicknames": [
+      "Flo",
+      "Foss"
+    ],
+    "note": "Latin, 'flourishing'. The city, the nurse, and a very soft nickname.",
+    "anchor": false
+  },
+  {
+    "id": "constance",
+    "formal": "Constance",
+    "nickname": "Connie",
+    "other_nicknames": [
+      "Coco",
+      "Stance"
+    ],
+    "note": "Latin, 'steadfast'. A virtue name that never went fully out of circulation.",
+    "anchor": false
+  },
+  {
+    "id": "rosemary",
+    "formal": "Rosemary",
+    "nickname": "Romy",
+    "other_nicknames": [
+      "Rosie",
+      "Mae"
+    ],
+    "note": "The herb — 'dew of the sea'. Romy is the unexpected door out of it.",
+    "anchor": false
+  },
+  {
+    "id": "millicent",
+    "formal": "Millicent",
+    "nickname": "Millie",
+    "other_nicknames": [
+      "Missy",
+      "Cent"
+    ],
+    "note": "Germanic, 'strong in work'. Millie is common now; Millicent is not.",
+    "anchor": false
+  },
+  {
+    "id": "susannah",
+    "formal": "Susannah",
+    "nickname": "Sukie",
+    "other_nicknames": [
+      "Susie",
+      "Zanna"
+    ],
+    "note": "Hebrew, 'lily'. Sukie is the old English pet form, and the strangest one here.",
+    "anchor": false
+  },
+  {
+    "id": "georgiana",
+    "formal": "Georgiana",
+    "nickname": "Georgie",
+    "other_nicknames": [
+      "Gigi",
+      "Ana"
+    ],
+    "note": "Feminine of George. Regency-novel formal; Georgie is all knees and elbows.",
+    "anchor": false
+  },
+  {
+    "id": "cordelia",
+    "formal": "Cordelia",
+    "nickname": "Delia",
+    "other_nicknames": [
+      "Cora",
+      "Dilly"
+    ],
+    "note": "Lear's honest daughter. Ornate, and it knows it.",
+    "anchor": false
+  },
+  {
+    "id": "gwendolyn",
+    "formal": "Gwendolyn",
+    "nickname": "Gwen",
+    "other_nicknames": [
+      "Winnie",
+      "Wendy"
+    ],
+    "note": "Welsh, 'white ring'. Gwen is one clean syllable with no frills at all.",
+    "anchor": false
+  },
+  {
+    "id": "bridget",
+    "formal": "Bridget",
+    "nickname": "Birdie",
+    "other_nicknames": [
+      "Biddy",
+      "Bridie"
+    ],
+    "note": "Ireland's own saint. Bridget to Birdie is a genuine leap.",
+    "anchor": false
+  },
+  {
+    "id": "magdalena",
+    "formal": "Magdalena",
+    "nickname": "Maggie",
+    "other_nicknames": [
+      "Lena",
+      "Maddie"
+    ],
+    "note": "Biblical, from the town of Magdala. A second, very different road to the same short name.",
+    "anchor": false
+  },
+  {
+    "id": "marguerite",
+    "formal": "Marguerite",
+    "nickname": "Daisy",
+    "other_nicknames": [
+      "Rita",
+      "Margo"
+    ],
+    "note": "French for the daisy flower — and a form of Margaret. The nickname is a translation, not a clipping.",
+    "anchor": false
+  },
+  {
+    "id": "theodora",
+    "formal": "Theodora",
+    "nickname": "Teddy",
+    "other_nicknames": [
+      "Thea",
+      "Dora"
+    ],
+    "note": "Greek, 'gift of God'. A Byzantine empress; Teddy is pure playground.",
+    "anchor": false
+  },
+  {
+    "id": "antonia",
+    "formal": "Antonia",
+    "nickname": "Toni",
+    "other_nicknames": [
+      "Nia",
+      "Annie"
+    ],
+    "note": "An old Roman family name. Willa Cather put it on the prairie.",
+    "anchor": false
+  },
+  {
+    "id": "isadora",
+    "formal": "Isadora",
+    "nickname": "Izzy",
+    "other_nicknames": [
+      "Dora",
+      "Sadie"
+    ],
+    "note": "'Gift of Isis'. Theatrical, trailing scarves.",
+    "anchor": false
+  },
+  {
+    "id": "leonora",
+    "formal": "Leonora",
+    "nickname": "Nora",
+    "other_nicknames": [
+      "Leo",
+      "Nell"
+    ],
+    "note": "A southern-European cousin of Eleanor. Nora is the plainer, sturdier half.",
+    "anchor": false
+  },
+  {
+    "id": "emmeline",
+    "formal": "Emmeline",
+    "nickname": "Emmy",
+    "other_nicknames": [
+      "Lina",
+      "Em"
+    ],
+    "note": "Germanic root meaning 'work'. The suffragette's name.",
+    "anchor": false
+  },
+  {
+    "id": "rosalind",
+    "formal": "Rosalind",
+    "nickname": "Roz",
+    "other_nicknames": [
+      "Rosie",
+      "Linda"
+    ],
+    "note": "Shakespeare's cleverest heroine. Roz is blunt and a little wry.",
+    "anchor": false
+  },
+  {
+    "id": "imogen",
+    "formal": "Imogen",
+    "nickname": "Immy",
+    "other_nicknames": [
+      "Midge",
+      "Genny"
+    ],
+    "note": "Probably a printer's error in Cymbeline that stuck. Common in Britain, rare here.",
+    "anchor": false
+  },
+  {
+    "id": "seraphina",
+    "formal": "Seraphina",
+    "nickname": "Sera",
+    "other_nicknames": [
+      "Fifi",
+      "Phina"
+    ],
+    "note": "From the seraphim — the burning ones. Maximal, unapologetically.",
+    "anchor": false
+  },
+  {
+    "id": "verity",
+    "formal": "Verity",
+    "nickname": "Vera",
+    "other_nicknames": [
+      "Vee",
+      "Ritty"
+    ],
+    "note": "Latin for truth. A Puritan virtue name that aged into something elegant.",
+    "anchor": false
+  },
+  {
+    "id": "priscilla",
+    "formal": "Priscilla",
+    "nickname": "Cilla",
+    "other_nicknames": [
+      "Prilla",
+      "Pris"
+    ],
+    "note": "Roman, and a New Testament letter-writer. Cilla is the British pet form.",
+    "anchor": false
+  },
+  {
+    "id": "juliana",
+    "formal": "Juliana",
+    "nickname": "Jules",
+    "other_nicknames": [
+      "Lia",
+      "Annie"
+    ],
+    "note": "Latin, feminine of Julian. Smooth all the way through.",
+    "anchor": false
+  },
+  {
+    "id": "ottilie",
+    "formal": "Ottilie",
+    "nickname": "Tillie",
+    "other_nicknames": [
+      "Ottie",
+      "Lila"
+    ],
+    "note": "Germanic, 'prosperous in battle'. Rare enough that you'd spell it constantly.",
+    "anchor": false
+  },
+  {
+    "id": "alberta",
+    "formal": "Alberta",
+    "nickname": "Bertie",
+    "other_nicknames": [
+      "Albie",
+      "Birdie"
+    ],
+    "note": "Germanic, 'noble bright'. Bertie is the whole appeal.",
+    "anchor": false
+  },
+  {
+    "id": "vanessa",
+    "formal": "Vanessa",
+    "nickname": "Nessa",
+    "other_nicknames": [
+      "Nessie",
+      "Van"
+    ],
+    "note": "Invented by Jonathan Swift for a friend. Note how close Nessa sits to Tessa.",
+    "anchor": false
+  },
+  {
+    "id": "clarissa",
+    "formal": "Clarissa",
+    "nickname": "Rissa",
+    "other_nicknames": [
+      "Clara",
+      "Issa"
+    ],
+    "note": "Latin, 'bright, clear'. The first great English novel is named for her.",
+    "anchor": false
+  },
+  {
+    "id": "anastasia",
+    "formal": "Anastasia",
+    "nickname": "Stasia",
+    "other_nicknames": [
+      "Ana",
+      "Tasia"
+    ],
+    "note": "Greek, 'resurrection'. Russian-imperial weight to it.",
+    "anchor": false
+  },
+  {
+    "id": "charlotte",
+    "formal": "Charlotte",
+    "nickname": "Lottie",
+    "other_nicknames": [
+      "Charlie",
+      "Tottie"
+    ],
+    "note": "French feminine of Charles. Everything the others have — except rarity.",
+    "anchor": false
+  },
+  {
+    "id": "eloise",
+    "formal": "Eloise",
+    "nickname": "Elle",
+    "other_nicknames": [
+      "Lulu",
+      "Weezie"
+    ],
+    "note": "Medieval French. The Plaza girl gave it a permanent streak of mischief.",
+    "anchor": false
+  }
+]

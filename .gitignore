@@ -21,3 +21,29 @@ interview-recorder/outputs/
 
 # Tattle phone secrets
 tattle-phone/firmware/tattle_phone/config.h
+
+# Claude Code local settings (contains secrets - never commit)
+.claude/settings.local.json
+
+# Baby names working files
+baby-names/scored.json
+baby-names/ratings.json
+
+# corpus build cache and API outputs
+baby-names/.cache/
+baby-names/corpus.json
+baby-names/named.json
+
+# baby-names outputs
+baby-names/taste.json
+baby-names/shortlist.json
+baby-names/scored_corpus.json
+baby-names/.venv/
+baby-names/names_v2.json
+baby-names/taste_Alex.json
+baby-names/taste_Hannah.json
+baby-names/shortlist_Alex.json
+baby-names/corpus_uk.json
+baby-names/pool.json
+baby-names/facets.json
+baby-names/sets.json
