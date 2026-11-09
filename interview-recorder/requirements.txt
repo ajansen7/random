@@ -1,9 +1,0 @@
-openai-whisper
-sounddevice
-numpy
-scipy
-torch
-torchvision
-torchaudio
-pyperclip
-pynput

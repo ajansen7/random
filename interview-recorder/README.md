@@ -33,15 +33,9 @@ A high-fidelity audio recording and transcription tool powered by OpenAI's Whisp
    cd interview-recorder
    ```
 
-2. **Set up a virtual environment**:
+2. **Install dependencies** (requires [uv](https://docs.astral.sh/uv/getting-started/installation/)):
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
 
 ## 🛠️ Usage
@@ -49,7 +43,7 @@ A high-fidelity audio recording and transcription tool powered by OpenAI's Whisp
 Simply run the script:
 
 ```bash
-python recorder.py
+uv run recorder.py
 ```
 
 Follow the on-screen instructions. Once you stop the recording, the script will:
@@ -60,12 +54,7 @@ Follow the on-screen instructions. Once you stop the recording, the script will:
 
 ## 📦 Requirements
 
-- `openai-whisper`
-- `sounddevice`
-- `numpy`
-- `scipy`
-- `pyperclip`
-- `pynput`
+Dependencies are managed via [uv](https://docs.astral.sh/uv/getting-started/installation/) and declared in `pyproject.toml`.
 
 ## ⚖️ License
 
