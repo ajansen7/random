@@ -45,7 +45,11 @@ yours to do in KiCad (or ask me to take a pass).
     generously.
   - *Library footprint issues:* footprints were placed from KiCad's install
     folder, not through a library table. KiCad 10 may offer to relink them.
-  - *Silkscreen overlaps / starved thermals:* cosmetic. Tidy up while routing.
+  - *Silkscreen:* `tidy.py` places every reference label clear of pads, other labels
+    and the edge, and drops artwork nobody can see (LED outlines under the keycaps). A few
+    footprint outlines still touch their own pads; KiCad trims those automatically in the Gerbers.
+  - *Starved thermals:* a few QFN centre pads have fewer than two ground spokes until routing
+    adds vias under them.
 
 ## What's on the board
 

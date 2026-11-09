@@ -327,6 +327,8 @@ def add_zone(board, net, layer, pts, priority=0, rule_area=False):
         z.SetLocalClearance(pcbnew.FromMM(0.3))
         z.SetMinThickness(pcbnew.FromMM(0.25))
         z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
+        z.SetThermalReliefGap(pcbnew.FromMM(0.3))
+        z.SetThermalReliefSpokeWidth(pcbnew.FromMM(0.35))
     ol = z.Outline()
     ol.NewOutline()
     for x, y in pts:
@@ -413,8 +415,12 @@ def build_board(path, parts, netmap, sym_uuids):
             t.SetMirrored(True)
         board.Add(t)
 
-    silk("TATTLE PHONE v0.1", 0, 30.0, size=1.5)
-    silk("ON", 21.0, LY.SLIDE_SWITCH_Y + 5.0)
+    import tidy
+    moved, hidden = tidy.tidy_silk(board)
+    print(f"silkscreen: {moved} labels placed, {hidden} hidden (too tight; still on Fab layer)")
+    silk("TATTLE PHONE v0.1", 0, 26.5, size=1.2)
+    silk("POWER", 15.0, LY.SLIDE_SWITCH_Y + 6.5, size=0.8)
+    silk("TATTLE/PLAY", -14.0, LY.SLIDE_SWITCH_Y + 6.5, size=0.8)
     silk("ANTENNA KEEP-OUT", 0, LY.PCB_TOP_Y - 3.0, layer=pcbnew.F_SilkS, size=0.8)
 
     board.BuildConnectivity()
