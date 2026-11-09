@@ -1,7 +1,9 @@
 """
 Autoroute the board with FreeRouting.
 
-    FREEROUTING_CP="/path/to/freerouting/lib/*" JAVA=/path/to/java python3 route.py [passes]
+    FREEROUTING_CP="/path/to/freerouting/lib/*" JAVA=/path/to/java python3 route.py [passes] [--continue]
+
+--continue keeps the existing tracks and only routes what's still unconnected.
 
 Exports a Specctra DSN from ../kicad/tattle_phone.kicad_pcb, leaves GND out
 (both copper layers are GND pours), runs FreeRouting headless, imports the
@@ -22,7 +24,7 @@ KDIR = os.path.join(HERE, "..", "kicad")
 PCB = os.path.join(KDIR, "tattle_phone.kicad_pcb")
 DSN = os.path.join(KDIR, "tattle_phone.dsn")
 SES = os.path.join(KDIR, "tattle_phone.ses")
-SKIP_NETS = ["GND"]
+SKIP_NETS = [] if os.environ.get("ROUTE_GND") else ["GND"]   # ROUTE_GND=1: route ground as a net too
 
 
 def strip_nets(dsn_path, nets):
@@ -48,10 +50,9 @@ def import_ses(board, ses_path):
         m = re.search(r"_(\d+):(\d+)_um", ps[1])
         vias[ps[1]] = (int(m.group(1)) * 1000, int(m.group(2)) * 1000) if m else (600_000, 300_000)
     layers = {"F.Cu": pcbnew.F_Cu, "B.Cu": pcbnew.B_Cu}
-    nets = board.GetNetsByName()
     n_trk = n_via = 0
     for net in find(find1(routes, "network_out"), "net"):
-        ni = nets[str(net[1])] if str(net[1]) in nets else None
+        ni = board.FindNet(str(net[1]))
         for w in find(net, "wire"):
             path = find1(w, "path")
             layer, width, coords = layers[str(path[1])], float(path[2]) * unit_nm, path[3:]
@@ -72,10 +73,15 @@ def import_ses(board, ses_path):
 
 
 def main():
-    passes = sys.argv[1] if len(sys.argv) > 1 else "40"
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    keep = "--continue" in sys.argv   # keep existing tracks, route only what's left
+    passes = args[0] if args else "40"
     # Load the real board so its .kicad_pro net classes (power widths, USB pair) apply.
     board = pcbnew.LoadBoard(PCB)
     old = [t for t in board.GetTracks()]
+    if keep:
+        print(f"continuing: keeping {len(old)} existing tracks/vias")
+        old = []
     if old:
         print(f"removing {len(old)} existing tracks/vias for a fresh route")
         for t in old:
@@ -97,6 +103,9 @@ def main():
     if not os.path.exists(SES):
         raise SystemExit("FreeRouting produced no session file")
 
+    if keep:
+        for t in list(board.GetTracks()):
+            board.Remove(t)   # the session file contains the complete wiring
     n_trk, n_via = import_ses(board, SES)
     board.BuildConnectivity()
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
