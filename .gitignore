@@ -47,3 +47,8 @@ baby-names/corpus_uk.json
 baby-names/pool.json
 baby-names/facets.json
 baby-names/sets.json
+tattle-phone/hardware/kicad/*.dsn
+tattle-phone/hardware/kicad/*.ses
+tattle-phone/hardware/kicad/*.unrouted.kicad_pcb
+tattle-phone/hardware/kicad/*-backups/
+tattle-phone/hardware/kicad/fp-info-cache
