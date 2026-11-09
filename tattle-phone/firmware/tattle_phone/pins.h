@@ -30,6 +30,14 @@
 // Battery voltage via 2:1 divider (only needed if you skip the MAX17048 gauge)
 #define PIN_VBAT_ADC  1
 
-// I2C bus: fuel gauge (MAX17048) + keypad IO expander (phase 2)
+// I2C bus: fuel gauge (MAX17048 @0x36) + keypad expander (PCA9555 @0x20)
 #define PIN_I2C_SDA   9
 #define PIN_I2C_SCL   10
+
+// Charger status (BQ24074 open-drain outputs, pulled up to 3V3; LOW = active)
+#define PIN_CHG       12   // LOW while charging
+#define PIN_PGOOD     13   // LOW when USB power is present
+#define PIN_GAUGE_ALRT 14  // MAX17048 low-battery alert (optional)
+#define PIN_KEYPAD_INT 21  // PCA9555 INT; RTC GPIO so a key press can wake the phone
+
+// Backup serial on test pads: GPIO43 (TX) / GPIO44 (RX)

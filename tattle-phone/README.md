@@ -15,7 +15,17 @@ tattle-phone/
 │   ├── tattle_phone.ino
 │   ├── pins.h                    ← one pin map for breadboard AND PCB
 │   └── config.example.h          ← copy to config.h, add Wi-Fi + URL
-└── cloud/drive_upload.gs         ← Google Apps Script: receives WAV → Drive + email
+├── cloud/drive_upload.gs         ← Google Apps Script: receives WAV → Drive + email
+├── hardware/
+│   ├── README.md                 ← PCB guide: schematic by block, footprints, layout
+│   ├── layout.py                 ← shared dimensions for the board AND the case
+│   └── place_footprints.py       ← KiCad script: draws outline, places keys/LEDs/holes
+└── enclosure/
+    ├── tattle_phone.scad         ← parametric OpenSCAD model (shells, keypad, CALL cap)
+    ├── layout.scad               ← generated from hardware/layout.py
+    ├── Makefile                  ← `make` → STLs + pcb_outline.dxf, `make renders`
+    ├── stl/                      ← ready-to-slice parts
+    └── renders/                  ← preview images
 ```
 
 ---
@@ -38,7 +48,7 @@ tattle-phone/
    │  GPIO7   ◄── big CALL button (wakes from deep sleep)     │
    │  GPIO8   ──► 13× SK6812 LEDs (call + 12 keys)            │
    │  GPIO11  ──► P-FET LED power switch                      │
-   │  I2C     ◄─► fuel gauge, keypad IO expander (phase 2)    │
+   │  I2C     ◄─► MAX17048 gauge, PCA9555 keypad expander      │
    └──────────────────────────────────────────────────────────┘
                                   │ HTTPS POST (base64 WAV)
                                   ▼
@@ -85,7 +95,10 @@ tattle-phone/
 | U4 | MAX98357AETE+ | $1.20 |
 | U5 | ICS-43434 (bottom-port mic) | $1.60 |
 | U6 | MAX17048G+T10 fuel gauge | $1.20 |
-| U7 | TCA9555 or AW9523 16-bit IO expander (keypad, phase 2) | $0.60 |
+| U7 | PCA9555PW 16-bit IO expander (keypad) | $0.60 |
+| U8 | SN74AHCT1G125 (LED data level shift) | $0.10 |
+| Q2 | 2N7002 (drives the LED P-FET gate) | $0.02 |
+| SW14 | Side slide switch (hard power off via charger SYSOFF) | $0.10 |
 | J1 | USB-C 16-pin receptacle (mid-mount or top) | $0.30 |
 | D1 | USBLC6-2SC6 ESD on D+/D- | $0.10 |
 | LED1–13 | SK6812 MINI-E | $0.10 ea |
@@ -111,8 +124,8 @@ Expect ~$15–20 per board assembled at qty 5, plus about $25 in shipping and se
 A 1500 mAh cell gives **months** of standby. Even at 20 tattles a day it should
 go 2–3 weeks between charges. Use the fuel gauge to blink the keypad red under 15%.
 
-Also add a **hard power slide switch** (on the TPS63001 EN pin) for travel and
-storage. Charging still works with it off.
+Also add a **hard power slide switch** on the BQ24074's SYSOFF pin for travel and
+storage. It disconnects the battery from the system, and charging still works with it off.
 
 ---
 
@@ -147,6 +160,30 @@ storage. Charging still works with it off.
 ---
 
 ## 5. Enclosure (3D printing)
+
+**The model is in [`enclosure/`](enclosure/).** It's a parametric OpenSCAD design
+(175 × 52–58 × 30 mm) with front and back shells, a one-piece 12-key keypad on a
+flexible web, a CALL cap and a speaker back-box. Print-ready STLs are in
+`enclosure/stl/`. Change any dimension in `hardware/layout.py`, run `make`, and
+the case and the KiCad board outline update together.
+
+| Part | Material | Print orientation / notes |
+|---|---|---|
+| `front.stl` | PETG/ASA, "almond" or any color | Face-down. Brim helps on the rounded edges |
+| `back.stl` | same | Back-down. Tree supports under the antenna nub only |
+| `keypad.stl` | **Translucent/natural PETG** | As exported (web on the bed). Numbers are engraved so the LEDs glow through them |
+| `call_cap.stl` | Green PETG | As exported (flange on the bed) |
+| `speaker_cup.stl` | anything | Glue over the speaker ring with the wire through the hole, then seal it |
+
+Hardware: 4 × M2.5 × 18 screws (Torx/tri-wing) + 4 × M2.5 heat-set inserts
+(≈ 3.6 mm OD × 4 mm), thin foam for the battery pocket, and a 1 mm felt/foam
+gasket for the mic duct.
+
+![closed](enclosure/renders/closed.png)
+![x-ray](enclosure/renders/xray.png)
+![exploded](enclosure/renders/exploded.png)
+
+### Design notes
 
 Inspired by the classic chunky cordless handset, as an original design: a
 tapered brick with a slight banana curve, a stubby fake antenna nub on top, an
@@ -222,7 +259,7 @@ It's faster and works without internet, but it's one more thing to maintain.
    queued for retry.
 
 **Phase 2: keypad and fun**
-- 12 keys on a TCA9555/AW9523 over I2C. A matrix also works, but an expander frees GPIOs
+- 12 keys on a PCA9555 over I2C. A matrix also works, but an expander frees GPIOs
   and can raise an interrupt to wake the chip.
 - Each key lights its LED and plays a tone. `playTones()` already does
   dual-tone, so real DTMF pairs are easy.
@@ -238,6 +275,54 @@ It's faster and works without internet, but it's one more thing to maintain.
 **Phase 4: enclosure**
 - Rough PLA test fit first, then PETG/ASA final with translucent keys.
 
+**Phase 5: two phones that call each other** (§8)
+
+---
+
+## 8. Two phones calling each other (intercom)
+
+The plan supports this without hardware changes: both phones already have a mic,
+speaker, Wi-Fi and a keypad. What changes is mostly firmware and power.
+
+**How a call works**
+1. Each phone has a name in `config.h` (`"Kitchen"`, `"Bedroom"`) and announces
+   itself on the LAN with mDNS (`_tattle._udp`), so neither needs a fixed IP.
+2. Speed-dial: a key with a sticker of the other kid's face (say **2**) sends
+   `RING` over UDP. The other phone rings and flashes all its keys.
+3. Pressing CALL on the ringing phone answers (`ANSWER`). Either CALL press hangs
+   up (`HANGUP`). If nobody answers in 30 s, the caller can leave a message
+   (it reuses the tattle recorder and is sent to the other phone instead of Drive).
+4. Audio goes over UDP in 20 ms frames: 16 kHz/16-bit = 256 kbit/s raw, or 64 kbit/s
+   with IMA-ADPCM. That's trivial for a home network. A ~80 ms jitter buffer
+   smooths out Wi-Fi hiccups.
+
+**Half-duplex first, full-duplex later.** With the speaker and mic in the same
+small handset, the far end hears itself echo back unless you cancel it.
+- **v1, walkie-talkie:** hold CALL to talk and let go to listen. The call LED shows
+  who's talking. It's robust, needs no DSP, and kids get it right away.
+- **v2, real phone call:** full-duplex with the ESP-SR acoustic echo canceller
+  (it runs on the S3, and the PSRAM helps). Earpiece-level volume makes it easier.
+
+**The real constraint is power.** To *receive* a call, a phone has to be awake on
+Wi-Fi, but deep sleep is what makes the battery last months.
+- **Recommended:** during "play hours" (e.g. 7 am–7 pm, set in config) phones stay
+  connected in Wi-Fi power-save + automatic light sleep, which is a few mA on average
+  and wakes on an incoming packet within ~0.3 s. At night they go to deep sleep.
+  Roughly 50–60 mAh/day, or **3–4 weeks on 1500 mAh**. Size up to a 2000 mAh cell
+  (103450 → 104050/105050) if the case allows.
+- A phone sitting on its charging cradle (stretch goal, §5) can always answer.
+- Fallback: if the other phone doesn't answer, the message waits on it like voicemail.
+
+**Without a router:** ESP-NOW (peer-to-peer Wi-Fi) also works and has lower latency.
+Both phones must share the router's channel to use ESP-NOW and normal Wi-Fi at the same time.
+That's a later option for car trips or the backyard.
+
+**Firmware restructure this needs:** a FreeRTOS task per job (mic in, speaker out,
+network) plus a state machine:
+`IDLE → RINGING_OUT / RINGING_IN → IN_CALL → IDLE`, alongside the existing
+`RECORDING → UPLOADING` tattle path. Tattle uploads get the phone's name in the
+file name so you know which kid called.
+
 ---
 
 ## Status
@@ -247,5 +332,9 @@ It's faster and works without internet, but it's one more thing to maintain.
       outbox on flash, Wi-Fi upload with retry, deep sleep / wake on CALL
 - [x] Apps Script Drive receiver with email notification
 - [ ] Breadboard bring-up (firmware has not been compiled or run on hardware yet)
-- [ ] KiCad schematic and layout
-- [ ] Enclosure CAD
+- [x] PCB guide: schematic by block, footprints, placement script ([`hardware/`](hardware/))
+- [x] Enclosure model v1 + STLs ([`enclosure/`](enclosure/)). Not test-printed yet
+- [x] Intercom design (§8)
+- [ ] KiCad schematic capture and routing
+- [ ] Test print and fit check against a real PCB
+- [ ] Intercom firmware
