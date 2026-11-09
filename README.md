@@ -26,6 +26,14 @@ A collection of various scripts, experiments, and miscellaneous code.
   - `index.html`: The main page.
   - Various image assets like `apple_steak.png` and `banana_sausage.png`.
 
+### 📞 Tattle Phone (`tattle-phone/`)
+- **Purpose**: A 3D-printed, toddler-proof 90s-style handset that records "tattles" and uploads them to Google Drive.
+- **Key Tools**: ESP32-S3 (Arduino), custom KiCad PCB, Google Apps Script.
+- **Contents**:
+  - `README.md`: Full design doc (architecture, BOM, power, PCB, enclosure, build plan).
+  - `firmware/tattle_phone/`: Record/upload firmware.
+  - `cloud/drive_upload.gs`: Drive upload receiver with email notification.
+
 ## Setup
 
 ### Python Dependencies
