@@ -59,11 +59,15 @@ static void ledsPower(bool on) {
 
 static void setAll(uint32_t c) { leds.fill(c); leds.show(); }
 static void setCall(uint32_t c) { leds.setPixelColor(0, c); leds.show(); }
+// The "in use" light: on for the whole tattle session (and, later, live calls).
+static void setStatus(uint32_t c) { leds.setPixelColor(LED_STATUS, c); leds.show(); }
+static bool playMode() { return digitalRead(PIN_MODE_SW) == LOW; }
 
 static void chase(uint32_t c, int step) {   // keypad "busy" animation
   leds.clear();
   leds.setPixelColor(0, c);
-  if (NUM_LEDS > 1) leds.setPixelColor(1 + (step % (NUM_LEDS - 1)), c);
+  leds.setPixelColor(1 + (step % 12), c);              // keys only
+  leds.setPixelColor(LED_STATUS, leds.Color(255, 0, 0)); // session still in progress
   leds.show();
 }
 
@@ -351,16 +355,17 @@ static int flushOutbox() {
 // The call
 // =================================================================
 static void doCall() {
+  setStatus(leds.Color(255, 0, 0));   // "in use" until we are done
   soundRing();
   soundBeep();
   size_t len = 0;
   uint8_t *wav = recordTattle(&len);
-  if (!wav) { setCall(leds.Color(255, 120, 0)); soundError(); return; }
+  if (!wav) { setCall(leds.Color(255, 120, 0)); soundError(); setStatus(0); return; }
   setCall(leds.Color(0, 80, 0));
   soundGoodbye();
   bool saved = saveToOutbox(wav, len);
   free(wav);
-  if (!saved) { soundError(); return; }
+  if (!saved) { soundError(); setStatus(0); return; }
 
   int pending = flushOutbox();
   if (pending == 0) { rainbowFlash(); soundSent(); }
@@ -382,6 +387,7 @@ static void goToSleep() {
 void setup() {
   Serial.begin(115200);
   pinMode(PIN_CALL_BTN, INPUT_PULLUP);
+  pinMode(PIN_MODE_SW, INPUT_PULLUP);   // board also has an external 10k pull-up
   ledsPower(true);
   setAll(0);
   audioInit();
@@ -408,6 +414,15 @@ void loop() {
   uint8_t b = (uint8_t)(20 + 20 * sinf(millis() / 600.0f));
   setCall(leds.Color(0, b, 0));
 
-  if (millis() - lastActivity > IDLE_SLEEP_MS) goToSleep();
+  // TATTLE mode: deep sleep when idle (months of standby; CALL wakes it).
+  // PLAY mode: stay awake so the other phone can ring us (intercom firmware is a
+  // later phase; for now it just keeps the phone ready and shows a dim blue light).
+  if (playMode()) {
+    setStatus(leds.Color(0, 0, 12));
+    lastActivity = millis();
+  } else {
+    setStatus(0);
+    if (millis() - lastActivity > IDLE_SLEEP_MS) goToSleep();
+  }
   delay(20);
 }

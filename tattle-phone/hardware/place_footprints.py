@@ -59,8 +59,8 @@ def _set_side(fp, side):
         return
     try:  # KiCad 9
         fp.Flip(fp.GetPosition(), pcbnew.FLIP_DIRECTION_LEFT_RIGHT)
-    except (AttributeError, TypeError):  # KiCad 8
-        fp.Flip(fp.GetPosition(), False)
+    except (AttributeError, TypeError):  # KiCad 7/8: True = mirror left-right (keeps "up" up)
+        fp.Flip(fp.GetPosition(), True)
 
 
 def _pad_centroid(fp):
@@ -72,8 +72,8 @@ def _pad_centroid(fp):
     return pcbnew.VECTOR2I(int(sum(xs) / len(xs)), int(sum(ys) / len(ys)))
 
 
-def run():
-    board = pcbnew.GetBoard()
+def run(board=None):
+    board = board or pcbnew.GetBoard()
     _draw_outline(board)
     missing = []
     for ref, (x, y, rot, side) in layout.placements().items():
@@ -82,7 +82,8 @@ def run():
             missing.append(ref)
             continue
         _set_side(fp, side)
-        fp.SetOrientationDegrees(rot)
+        # Flipping to the back = mirror top/bottom + 180 deg turn; keep that turn.
+        fp.SetOrientationDegrees((rot + (180 if side == "back" else 0)) % 360)
         # Footprint origins vary (pin 1 vs centre), so line up the pad centroid
         # with the target. Mounting holes have a single pad, so this is exact.
         target = _pt(x, y)

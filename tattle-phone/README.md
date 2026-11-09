@@ -11,13 +11,16 @@ LiPo and USB-C charging.
 ```
 tattle-phone/
 ├── README.md                     ← this design doc
+├── ORDERING.md                   ← next steps, shopping list, what to tell the PCB fab
 ├── firmware/tattle_phone/        ← Arduino sketch (phase 1: record + upload)
 │   ├── tattle_phone.ino
 │   ├── pins.h                    ← one pin map for breadboard AND PCB
 │   └── config.example.h          ← copy to config.h, add Wi-Fi + URL
 ├── cloud/drive_upload.gs         ← Google Apps Script: receives WAV → Drive + email
 ├── hardware/
-│   ├── README.md                 ← PCB guide: schematic by block, footprints, layout
+│   ├── README.md                 ← PCB guide: what's on the board, check results, ordering, routing tips
+│   ├── kicad/                    ← KiCad project (schematic + placed board + bom.csv), open in KiCad 10
+│   ├── kicad_gen/                ← design.py (the circuit as code), build.py, check.py, bom.py
 │   ├── layout.py                 ← shared dimensions for the board AND the case
 │   └── place_footprints.py       ← KiCad script: draws outline, places keys/LEDs/holes
 └── enclosure/
@@ -33,7 +36,7 @@ tattle-phone/
 ## 1. System overview
 
 ```
-           USB-C ──► ESD ──► BQ24074 charger ──► 1S LiPo (1200–2000 mAh, protected)
+           USB-C ──► ESD ──► BQ24075 charger ──► 1S LiPo (1200–2000 mAh, protected)
              │  (CC 5.1k)         │ power-path "SYS"                │
              │                    ▼                                 ▼
              │            TPS63001 buck-boost 3.3 V          MAX17048 fuel gauge (I2C)
@@ -46,9 +49,9 @@ tattle-phone/
    │  I2S0 RX ◄── ICS-43434 / INMP441 MEMS mic                │
    │  I2S1 TX ──► MAX98357A 3 W amp ──► 28–40 mm 8 Ω speaker   │
    │  GPIO7   ◄── big CALL button (wakes from deep sleep)     │
-   │  GPIO8   ──► 13× SK6812 LEDs (call + 12 keys)            │
+   │  GPIO8   ──► 14× SK6812 LEDs (call, 12 keys, status)     │
    │  GPIO11  ──► P-FET LED power switch                      │
-   │  I2C     ◄─► MAX17048 gauge, PCA9555 keypad expander      │
+   │  I2C     ◄─► MAX17048 gauge, TCA9555 keypad expander      │
    └──────────────────────────────────────────────────────────┘
                                   │ HTTPS POST (base64 WAV)
                                   ▼
@@ -63,10 +66,10 @@ tattle-phone/
 | Storage | **On-board flash (FAT partition, ~9.9 MB)** | ≈ 5 min of 16 kHz audio as an *outbox*. Tattles queue there if Wi-Fi is down and upload later. No SD card to lose or eat. Add a microSD footprint only if you want to keep an on-device archive. |
 | Mic | **ICS-43434** (PCB) / **INMP441 breakout** (prototype) | Digital I2S out, so no analog noise to fight on a board with Wi-Fi and a class-D amp. |
 | Speaker amp | **MAX98357A** | I2S in, speaker out. Has a shutdown pin, so it's silent and draws nothing at idle. |
-| Charging | **BQ24074** | Has power path, so the phone works while plugged in and the battery isn't cycled. Has a thermistor input (use it, there's a toddler involved) and 1.5 A max (set ~500 mA–1 A for a small cell). TP4056 modules are fine for the breadboard. |
+| Charging | **BQ24075** | Has power path, so the phone works while plugged in and the battery isn't cycled. Has a thermistor input (use it, there's a toddler involved) and 1.5 A max (set ~500 mA–1 A for a small cell). TP4056 modules are fine for the breadboard. |
 | 3.3 V rail | **TPS63001 buck-boost** | Holds 3.3 V across the whole LiPo range (3.0–4.2 V) through Wi-Fi's 300–500 mA bursts. An LDO browns out once the cell drops below ~3.6 V. |
 | Battery gauge | **MAX17048** | Accurate %, ~4 µA. Lets the phone show "low battery" (red keypad blink) and lets the upload carry battery %. |
-| LEDs | **SK6812 MINI-E** (reverse-mount) | One data pin for all 13. Reverse-mount LEDs shine *up through* the PCB next to each switch, into translucent keycaps. |
+| LEDs | **SK6812MINI** ×14 | One data pin for all of them: CALL, 12 keys, and a status light. They sit on the front of the board beside each switch, under translucent keycaps. |
 | Cloud | **Google Apps Script** | Free, no server, writes straight to your Drive, and emails you so your phone pings. A home server alternative is in §6. |
 
 ---
@@ -90,18 +93,18 @@ tattle-phone/
 | Ref | Part | LCSC-ish cost |
 |---|---|---|
 | U1 | ESP32-S3-WROOM-1-N16R8 | $4.50 |
-| U2 | BQ24074RGTR (charger, power path) | $1.80 |
+| U2 | BQ24075RGTR (charger, power path, SYSOFF) | $1.80 |
 | U3 | TPS63001DRCR (3.3 V buck-boost) + 1.5 µH inductor | $2.20 |
 | U4 | MAX98357AETE+ | $1.20 |
 | U5 | ICS-43434 (bottom-port mic) | $1.60 |
 | U6 | MAX17048G+T10 fuel gauge | $1.20 |
-| U7 | PCA9555PW 16-bit IO expander (keypad) | $0.60 |
+| U7 | TCA9555RTWR 16-bit IO expander (keypad) | $0.60 |
 | U8 | SN74AHCT1G125 (LED data level shift) | $0.10 |
 | Q2 | 2N7002 (drives the LED P-FET gate) | $0.02 |
 | SW14 | Side slide switch (hard power off via charger SYSOFF) | $0.10 |
-| J1 | USB-C 16-pin receptacle (mid-mount or top) | $0.30 |
+| J1 | USB-C 16-pin receptacle (HRO TYPE-C-31-M-12) | $0.30 |
 | D1 | USBLC6-2SC6 ESD on D+/D- | $0.10 |
-| LED1–13 | SK6812 MINI-E | $0.10 ea |
+| LED1–14 | SK6812MINI (front side) | $0.10 ea |
 | SW1–13 | 6×6 mm tact switches (or Kailh low-profile) | $0.05 ea |
 | Q1 | AO3401 P-FET (LED power gate) | $0.05 |
 | J2 | JST-PH 2-pin battery, J3 JST-PH 2-pin speaker | $0.10 |
@@ -124,7 +127,7 @@ Expect ~$15–20 per board assembled at qty 5, plus about $25 in shipping and se
 A 1500 mAh cell gives **months** of standby. Even at 20 tattles a day it should
 go 2–3 weeks between charges. Use the fuel gauge to blink the keypad red under 15%.
 
-Also add a **hard power slide switch** on the BQ24074's SYSOFF pin for travel and
+Also add a **hard power slide switch** on the BQ24075's SYSOFF pin for travel and
 storage. It disconnects the battery from the system, and charging still works with it off.
 
 ---
@@ -151,9 +154,7 @@ storage. It disconnects the battery from the system, and charging still works wi
   NTC to TS and glue the thermistor to the cell.
 - **Decoupling:** follow the datasheets. Use a big bulk cap (≥ 22 µF, ideally
   100 µF) near the ESP32 for Wi-Fi bursts and another at the amp.
-- **Assembly:** the S3 module, QFN charger, LGA mic and SK6812 MINI-E are hard to
-  hand-solder. Let **JLCPCB/PCBWay assembly** place them, then hand-solder the
-  JST connectors and big button yourself.
+- **Assembly:** have the factory assemble **both sides** (LEDs on the front, everything else on the back). You only hand-solder the through-hole key switches and JST connectors.
 - Add **test points**: VBAT, SYS, 3V3, GND, I2S lines, and a header footprint for
   a serial adapter in case native USB ever gets wedged.
 
@@ -162,8 +163,9 @@ storage. It disconnects the battery from the system, and charging still works wi
 ## 5. Enclosure (3D printing)
 
 **The model is in [`enclosure/`](enclosure/).** It's a parametric OpenSCAD design
-(175 × 52–58 × 30 mm) with front and back shells, a one-piece 12-key keypad on a
-flexible web, a CALL cap and a speaker back-box. Print-ready STLs are in
+(175 × 52–58 × 30 mm) with front and back shells, 12 captive keycaps, a CALL cap,
+a status-light lens, a speaker back-box, and slots for the POWER (right) and
+TATTLE/PLAY (left) switches. Print-ready STLs are in
 `enclosure/stl/`. Change any dimension in `hardware/layout.py`, run `make`, and
 the case and the KiCad board outline update together.
 
@@ -171,7 +173,8 @@ the case and the KiCad board outline update together.
 |---|---|---|
 | `front.stl` | PETG/ASA, "almond" or any color | Face-down. Brim helps on the rounded edges |
 | `back.stl` | same | Back-down. Tree supports under the antenna nub only |
-| `keypad.stl` | **Translucent/natural PETG** | As exported (web on the bed). Numbers are engraved so the LEDs glow through them |
+| `keypad.stl` | **Translucent/natural PETG** | All 12 keys in one print, flanges on the bed. Numbers are engraved so the LEDs glow through them |
+| `status_lens.stl` | Translucent PETG | Tiny plug for the status-light window. It's captive inside the light pipe |
 | `call_cap.stl` | Green PETG | As exported (flange on the bed) |
 | `speaker_cup.stl` | anything | Glue over the speaker ring with the wire through the hole, then seal it |
 
@@ -198,8 +201,8 @@ earpiece grille near the top, a keypad, and a big CALL key.
   strip or rubber feet if it's going to get dropped a lot.
 - **Keys:** print keycaps in **translucent/natural PETG** so the LEDs glow
   through, with the numbers as raised or recessed text (or a two-color print).
-  Design the keypad as **one flexible "membrane" sheet** (TPU or a thin PETG web) so each
-  key is held captive and nothing can come off and be swallowed.
+  Each key has a flange wider than its hole, so it's held captive under the front
+  wall: nothing can come off and be swallowed, and there are no thin hinges to break.
 - **CALL button:** a big (25–30 mm) green handset-icon key over a 12 mm tact
   switch with its own LED, or just use a 30 mm arcade button.
 - **Speaker:** grille holes in the front face near the top, and a sealed printed
@@ -259,7 +262,7 @@ It's faster and works without internet, but it's one more thing to maintain.
    queued for retry.
 
 **Phase 2: keypad and fun**
-- 12 keys on a PCA9555 over I2C. A matrix also works, but an expander frees GPIOs
+- 12 keys on a TCA9555 over I2C. A matrix also works, but an expander frees GPIOs
   and can raise an interrupt to wake the chip.
 - Each key lights its LED and plays a tone. `playTones()` already does
   dual-tone, so real DTMF pairs are easy.
@@ -325,6 +328,14 @@ file name so you know which kid called.
 
 ---
 
+## Decisions from the first review
+
+- **Keys:** 12 separate captive keycaps (flange under the front wall) instead of a printed flex-hinge web. Simpler, nothing to fatigue, and no key can come out without opening the case.
+- **Soldering:** factory assembly on both sides. Only big through-hole parts are left to hand-solder.
+- **Power:** small battery is fine. There's a hard ON/OFF switch, plus a **TATTLE / PLAY** switch: TATTLE = deep sleep, CALL only (months of standby); PLAY = stays on Wi-Fi for intercom calls.
+- **One CALL button** plus a **status light** above the keypad that's on during a tattle or a live call.
+- **Apps Script** for uploads; an always-on home computer is the fallback.
+
 ## Status
 
 - [x] Architecture, BOM, power and PCB/enclosure plan (this doc)
@@ -335,6 +346,7 @@ file name so you know which kid called.
 - [x] PCB guide: schematic by block, footprints, placement script ([`hardware/`](hardware/))
 - [x] Enclosure model v1 + STLs ([`enclosure/`](enclosure/)). Not test-printed yet
 - [x] Intercom design (§8)
-- [ ] KiCad schematic capture and routing
+- [x] KiCad project generated: schematic + placed board, netlist-checked, DRC clean apart from routing ([`hardware/`](hardware/))
+- [ ] Route the board, tidy the schematic
 - [ ] Test print and fit check against a real PCB
 - [ ] Intercom firmware

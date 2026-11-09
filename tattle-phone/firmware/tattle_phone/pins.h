@@ -20,9 +20,11 @@
 // so it can wake the chip from deep sleep.
 #define PIN_CALL_BTN  7
 
-// Addressable LED chain (WS2812B / SK6812). LED 0 = call button, 1-12 = keypad.
+// Addressable LED chain (SK6812MINI). LED 0 = call button, 1-12 = keypad 1..9 * 0 #,
+// 13 = status ("in use") light above the keypad.
 #define PIN_LEDS      8
-#define NUM_LEDS      13
+#define NUM_LEDS      14
+#define LED_STATUS    13
 // Drives a P-MOSFET high-side switch on the LED 5V/VBAT rail. WS2812s draw
 // ~1 mA each even when "off", which would flatten the battery in deep sleep.
 #define PIN_LED_PWR   11   // HIGH = LEDs powered
@@ -30,14 +32,15 @@
 // Battery voltage via 2:1 divider (only needed if you skip the MAX17048 gauge)
 #define PIN_VBAT_ADC  1
 
-// I2C bus: fuel gauge (MAX17048 @0x36) + keypad expander (PCA9555 @0x20)
+// I2C bus: fuel gauge (MAX17048 @0x36) + keypad expander (TCA9555 @0x20)
 #define PIN_I2C_SDA   9
 #define PIN_I2C_SCL   10
 
-// Charger status (BQ24074 open-drain outputs, pulled up to 3V3; LOW = active)
+// Charger status (BQ24075 open-drain outputs, pulled up to 3V3; LOW = active)
 #define PIN_CHG       12   // LOW while charging
 #define PIN_PGOOD     13   // LOW when USB power is present
 #define PIN_GAUGE_ALRT 14  // MAX17048 low-battery alert (optional)
-#define PIN_KEYPAD_INT 21  // PCA9555 INT; RTC GPIO so a key press can wake the phone
+#define PIN_KEYPAD_INT 21  // TCA9555 INT; RTC GPIO so a key press can wake the phone
+#define PIN_MODE_SW   38   // TATTLE/PLAY slide switch: LOW = PLAY (stay reachable), HIGH = TATTLE only
 
 // Backup serial on test pads: GPIO43 (TX) / GPIO44 (RX)

@@ -3,7 +3,7 @@
 #   make renders    -> renders/*.png (needs a display, or xvfb-run on headless Linux)
 OPENSCAD ?= openscad
 SCAD     := tattle_phone.scad
-PARTS    := front back keypad call_cap speaker_cup
+PARTS    := front back keypad call_cap speaker_cup status_lens
 STLS     := $(PARTS:%=stl/%.stl)
 XVFB     := $(shell command -v xvfb-run >/dev/null && echo xvfb-run -a)
 RENDER    = $(XVFB) $(OPENSCAD) --imgsize=1400,1050 --colorscheme=Tomorrow

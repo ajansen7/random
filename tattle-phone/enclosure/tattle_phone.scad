@@ -9,7 +9,8 @@
 //   exploded   parts spread out along z
 //   front      front shell        (print face-down)
 //   back       back shell         (print back-down; supports under the antenna nub)
-//   keypad     12-key translucent keypad on one flexible web (print as-is)
+//   keypad     12 separate translucent keycaps, each captive under the front wall (print as-is)
+//   status_lens  little translucent plug for the "in use" light (print as-is)
 //   call_cap   big CALL button cap (print as-is)
 //   speaker_cup sealed back box for the speaker (print as-is)
 //   pcb        2D board outline + holes, for DXF export to KiCad
@@ -26,8 +27,7 @@ $fn = $preview ? 40 : 72;
 // ------------------------------------------------------------ tunables
 KEY_CLEAR   = 0.4;         // keycap-to-hole gap, per side
 KEY_PROUD   = 1.6;         // how far keys stand out of the front face
-SLOT_W      = 0.7;         // flex slot around each key in the web
-HINGE_W     = 6.0;         // un-slotted bridge that each key flexes on
+KEY_FLANGE  = 1.2;         // keycap flange overhang under the front wall, per side
 WEB_T       = 1.0;
 WEB_BOT     = PCB_FRONT_Z + SWITCH_H + 0.05;     // web rests on the switch tops
 CALL_FLANGE = 5.0;         // flange overhang (diameter) under the front wall
@@ -39,7 +39,6 @@ SCREW_CB    = 6.0;         // counterbore depth from the back -> M2.5 x 18 screw
 LIP_T       = 0.6;
 LIP_H       = 1.5;
 USBC_SLOT   = [9.4, 3.6];
-USBC_Z      = (PCB_FRONT_Z + PCB_BACK_Z) / 2;    // mid-mount receptacle centre: check datasheet
 SLIDE_SLOT  = [9.0, 3.2];
 SLIDE_Z     = PCB_BACK_Z - 1.6;
 FONT        = "Liberation Sans:style=Bold";
@@ -72,18 +71,20 @@ module shared_cutouts() {
         linear_extrude(WALL + 4) rrect(USBC_SLOT[0], USBC_SLOT[1], USBC_SLOT[1]/2 - 0.01);
         linear_extrude(1 + 1.2) rrect(12.5, 7.0, 3.0);
     }
-    // power slide switch, right-hand side
-    translate([cx(SLIDE_SWITCH_Y) + CORNER_R - WALL - 1, SLIDE_SWITCH_Y, SLIDE_Z])
+    // slide switches: POWER on the right, TATTLE/PLAY mode on the left
+    for (s = [-1, 1]) translate([s * (cx(SLIDE_SWITCH_Y) + CORNER_R - WALL - 1), SLIDE_SWITCH_Y, SLIDE_Z])
         cube([WALL + 4, SLIDE_SLOT[0], SLIDE_SLOT[1]], center = true);
 }
 
 // ------------------------------------------------------------ front shell
 module grille_holes() {
-    for (i = [-6:6], j = [-6:6]) {
-        x = i * 3.2 + (abs(j) % 2) * 1.6;
-        y = j * 2.77;
-        if (norm([x, y]) < 12.5) translate([SPEAKER_XY[0] + x, SPEAKER_XY[1] + y, INNER_FRONT - 1])
-            cylinder(d = 1.8, h = WALL + 2, $fn = 16);
+    // Five smooth slots, flush with the face: easy to wipe, nothing for crumbs to
+    // pack into. Glue a scrap of speaker cloth behind them inside the case.
+    r = 12;
+    for (dy = [-8, -4, 0, 4, 8]) {
+        half = sqrt(r*r - dy*dy) - 1.5;
+        translate([SPEAKER_XY[0], SPEAKER_XY[1] + dy, INNER_FRONT - 1])
+            hull() for (sx = [-1, 1]) translate([sx * half, 0, 0]) cylinder(d = 2.0, h = WALL + 2, $fn = 20);
     }
 }
 
@@ -98,6 +99,11 @@ module front_features() {
         cylinder(d = SPEAKER_D + 0.4 + 3.2, h = 5);
         translate([0, 0, -1]) cylinder(d = SPEAKER_D + 0.4, h = 7);
     }
+    // light pipe for the status LED: keeps its glow in one spot and holds the lens
+    translate([STATUS_LED_XY[0], STATUS_LED_XY[1], PCB_FRONT_Z + 2.0]) difference() {
+        cylinder(d = 7.4, h = CASE_T - PCB_FRONT_Z - 2.0);
+        translate([0, 0, -1]) cylinder(d = 5.4, h = CASE_T);
+    }
     // mic duct: front holes -> gasket -> port hole in the PCB
     translate([MIC_XY[0], MIC_XY[1], PCB_FRONT_Z + 0.6]) difference() {
         cylinder(d = 5, h = CASE_T - PCB_FRONT_Z);
@@ -110,8 +116,8 @@ module front_cutouts() {
         linear_extrude(WALL + 2) rrect(KEY_W + 2*KEY_CLEAR, KEY_H + 2*KEY_CLEAR, 1.6 + KEY_CLEAR);
     translate([CALL_XY[0], CALL_XY[1], INNER_FRONT - 1]) cylinder(d = CALL_CAP_D + 2*KEY_CLEAR, h = WALL + 2);
     grille_holes();
-    // shallow earpiece dish around the grille
-    translate([SPEAKER_XY[0], SPEAKER_XY[1], CASE_T - 0.6]) cylinder(d = 30, h = 2);
+    // status light window (the printed lens sits in it)
+    translate([STATUS_LED_XY[0], STATUS_LED_XY[1], INNER_FRONT - 1]) cylinder(d = 3.3, h = WALL + 2);
     // mic: three pin-holes in a little dish
     translate([MIC_XY[0], MIC_XY[1], CASE_T - 0.5]) cylinder(d = 7, h = 2);
     for (dx = [-1.6, 0, 1.6]) translate([MIC_XY[0] + dx, MIC_XY[1], INNER_FRONT - 1]) cylinder(d = 1.1, h = WALL + 2, $fn = 12);
@@ -173,31 +179,22 @@ module back_shell() {
     }
 }
 
-// ------------------------------------------------------------ keypad (one part)
+// ------------------------------------------------------------ keycaps
+// Twelve separate caps. Each has a flange wider than its hole in the front
+// wall, so once the case is screwed shut a key can't be pulled out, and there
+// is no thin hinge to fatigue. The cap rests on its tact switch.
 module key_rect() { rrect(KEY_W, KEY_H, 1.6); }
-
-module web2d() {
-    margin = 1.2;
-    xs = [for (k = KEYS) k[1]];
-    ys = [for (k = KEYS) k[2]];
-    w = max(xs) - min(xs) + KEY_W + 2*margin;
-    h = max(ys) - min(ys) + KEY_H + 2*margin;
-    difference() {
-        translate([(max(xs) + min(xs))/2, (max(ys) + min(ys))/2]) rrect(w, h, 3);
-        for (k = KEYS) translate([k[1], k[2]]) difference() {
-            offset(delta = SLOT_W) key_rect();
-            key_rect();
-            translate([-HINGE_W/2, KEY_H/2 - 1]) square([HINGE_W, SLOT_W + 2]);   // flex hinge on top edge
-        }
-    }
-}
 
 module keycap(label) {
     top = CASE_T + KEY_PROUD;
     difference() {
-        hull() {
-            translate([0, 0, WEB_BOT]) linear_extrude(top - WEB_BOT - 0.8) key_rect();
-            translate([0, 0, top - 0.01]) linear_extrude(0.01) rrect(KEY_W - 1.4, KEY_H - 1.4, 1.0);
+        union() {
+            translate([0, 0, WEB_BOT]) linear_extrude(INNER_FRONT - WEB_BOT - 0.35)
+                rrect(KEY_W + 2*KEY_FLANGE, KEY_H + 2*KEY_FLANGE, 1.6 + KEY_FLANGE);
+            hull() {
+                translate([0, 0, WEB_BOT]) linear_extrude(top - WEB_BOT - 0.8) key_rect();
+                translate([0, 0, top - 0.01]) linear_extrude(0.01) rrect(KEY_W - 1.4, KEY_H - 1.4, 1.0);
+            }
         }
         translate([0, 0, top - 0.6]) linear_extrude(1)
             text(label, size = label == "*" ? 7 : 5, font = FONT, halign = "center",
@@ -206,17 +203,17 @@ module keycap(label) {
 }
 
 module keypad() {
-    intersection() {   // web + rim follow the inside curve of the front shell
-        body(WALL + 0.15);
-        union() {
-            translate([0, 0, WEB_BOT]) linear_extrude(WEB_T) web2d();
-            // rim: clamps the web's outer edge against the inside of the front wall
-            translate([0, 0, WEB_BOT]) linear_extrude(INNER_FRONT - WEB_BOT - 0.1) difference() {
-                web2d(); offset(delta = -1.6) hull() web2d();
-            }
-        }
-    }
     for (k = KEYS) translate([k[1], k[2], 0]) keycap(k[0]);
+}
+
+// ------------------------------------------------------------ status light lens
+// A translucent plug: rod through the window, flange inside the light pipe so it
+// can't come out the front. Rests just above the LED.
+module status_lens() {
+    translate([STATUS_LED_XY[0], STATUS_LED_XY[1], 0]) {
+        translate([0, 0, PCB_FRONT_Z + 1.8]) cylinder(d = 2.9, h = CASE_T - PCB_FRONT_Z - 1.8);
+        translate([0, 0, INNER_FRONT - 1.4]) cylinder(d = 5.0, h = 1.2);
+    }
 }
 
 // ------------------------------------------------------------ CALL cap
@@ -293,12 +290,14 @@ if (part == "assembly") {
     color("gray") speaker_cup();
     color(KEY_COLOR) keypad();
     color("limegreen") call_cap();
+    color("white") status_lens();
     color([0.98, 0.93, 0.80, 0.25]) front_shell();
 } else if (part == "closed") {
     color(SHELL_COLOR) back_shell();
     color(SHELL_COLOR) front_shell();
     color(KEY_COLOR) keypad();
     color("limegreen") call_cap();
+    color("white") status_lens();
 } else if (part == "exploded") {
     color(SHELL_COLOR) back_shell();
     translate([0, 0, 18]) { pcb_dummy(); speaker_dummy(); }
@@ -312,6 +311,8 @@ if (part == "assembly") {
     back_shell();
 } else if (part == "keypad") {
     if (print_orient) translate([0, 0, -WEB_BOT]) keypad(); else color(KEY_COLOR) keypad();
+} else if (part == "status_lens") {
+    if (print_orient) translate([0, 0, -(PCB_FRONT_Z + 1.8)]) status_lens(); else status_lens();
 } else if (part == "call_cap") {
     if (print_orient) translate([0, 0, -WEB_BOT]) call_cap(); else call_cap();
 } else if (part == "speaker_cup") {

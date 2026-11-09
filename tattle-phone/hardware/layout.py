@@ -40,20 +40,23 @@ SWITCH_H = 4.3
 KEY_W, KEY_H = 10.5, 9.0          # keycap footprint
 KEY_PITCH_X, KEY_PITCH_Y = 13.5, 13.0
 KEY_COLS_X = [-KEY_PITCH_X, 0.0, KEY_PITCH_X]
-KEY_ROWS_Y = [94.0, 81.0, 68.0, 55.0]   # rows "1 2 3", "4 5 6", "7 8 9", "* 0 #"
+KEY_ROWS_Y = [93.0, 80.0, 67.0, 54.0]   # rows "1 2 3", "4 5 6", "7 8 9", "* 0 #"
 KEY_LABELS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]
-LED_OFFSET_X = 4.0                # reverse-mount LED sits beside each switch, under the cap
+LED_OFFSET_X = 5.0                # SK6812MINI (front side) beside each switch, under the cap edge
 
 CALL_XY = (0.0, 34.0)
 CALL_CAP_D = 22.0
 CALL_LED_OFFSET_Y = 8.5
 
 # ---------------------------------------------------------------- misc parts
-MIC_XY = (0.0, 14.0)              # bottom-port mic on the back, port hole through PCB
-USBC_X = 0.0                      # mid-mount receptacle in the bottom edge
+MIC_XY = (0.0, 15.0)              # bottom-port mic on the back, port hole through PCB
+USBC_X = 0.0                      # HRO TYPE-C-31-M-12, top-mount on the BACK of the board
+USBC_H = 3.26                     # receptacle body height
+USBC_Z = PCB_BACK_Z - USBC_H / 2  # centre of the opening (derived below PCB_BACK_Z)
 SPEAKER_XY = (0.0, 147.0)
 SPEAKER_D = 36.0                  # 36 mm 8 ohm 1 W
-SLIDE_SWITCH_Y = 64.0             # power slide switch, right-hand edge, back side
+SLIDE_SWITCH_Y = 61.0             # power slide switch (right edge) and TATTLE/PLAY mode switch (left edge)
+STATUS_LED_XY = (0.0, 104.0)      # "in use" light above the keypad, front side
 BATTERY = dict(w=34.0, l=50.0, t=10.0, center_y=55.0)   # 103450 LiPo
 MOUNT_HOLES = [(-19.0, 22.0), (19.0, 22.0), (-19.0, 108.0), (19.0, 108.0)]
 MOUNT_HOLE_D = 2.7                # M2.5 clearance
@@ -100,16 +103,18 @@ def placements():
       SW1..SW12  keypad switches, in order 1 2 3 4 5 6 7 8 9 * 0 #
       SW13       CALL switch (12x12)
       LED1       CALL button LED   (first in the data chain = firmware index 0)
-      LED2..13   key LEDs, same order as SW1..SW12 (firmware index 1..12)
+      LED2..13   key LEDs, same order as SW1..SW12 (firmware index 1..12), front side
+      LED14      status ("in use") light above the keypad (firmware index 13)
       MK1        microphone (back side, port hole through the board)
       H1..H4     M2.5 mounting holes (case screws pass through these)
     """
     p = {}
     for i, _label, x, y in keys():
         p[f"SW{i + 1}"] = (x, y, 90.0, "front")
-        p[f"LED{i + 2}"] = (x + LED_OFFSET_X, y, 0.0, "back")
+        p[f"LED{i + 2}"] = (x + LED_OFFSET_X, y, 0.0, "front")
     p["SW13"] = (CALL_XY[0], CALL_XY[1], 0.0, "front")
-    p["LED1"] = (CALL_XY[0], CALL_XY[1] + CALL_LED_OFFSET_Y, 0.0, "back")
+    p["LED1"] = (CALL_XY[0], CALL_XY[1] + CALL_LED_OFFSET_Y, 0.0, "front")
+    p["LED14"] = (STATUS_LED_XY[0], STATUS_LED_XY[1], 0.0, "front")
     p["MK1"] = (MIC_XY[0], MIC_XY[1], 0.0, "back")
     for n, (x, y) in enumerate(MOUNT_HOLES):
         p[f"H{n + 1}"] = (x, y, 0.0, "front")
@@ -159,12 +164,13 @@ def write_scad(path: str) -> None:
         "CASE_LEN", "CASE_W_BOTTOM", "CASE_W_TOP", "CASE_T", "CORNER_R", "WALL",
         "SPLIT_Z", "PCB_T", "PCB_FRONT_Z", "PCB_BACK_Z", "PCB_CORNER_R", "PCB_BOTTOM_Y",
         "PCB_TOP_Y", "SWITCH_H", "KEY_W", "KEY_H", "LED_OFFSET_X", "CALL_CAP_D",
-        "SPEAKER_D", "SLIDE_SWITCH_Y", "MOUNT_HOLE_D",
+        "SPEAKER_D", "SLIDE_SWITCH_Y", "MOUNT_HOLE_D", "USBC_Z",
     ]:
         lines.append(v(name, globals()[name]))
     lines.append(v("CALL_XY", CALL_XY))
     lines.append(v("MIC_XY", MIC_XY))
     lines.append(v("SPEAKER_XY", SPEAKER_XY))
+    lines.append(v("STATUS_LED_XY", STATUS_LED_XY))
     lines.append(v("USBC_X", USBC_X))
     lines.append(v("MOUNT_HOLES", MOUNT_HOLES))
     lines.append(v("PCB_CORNERS", PCB_CORNERS))
