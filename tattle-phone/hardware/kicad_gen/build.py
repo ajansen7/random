@@ -442,7 +442,7 @@ def write_project(path):
             "pcb_color": "rgba(0, 0, 0, 0.000)", "schematic_color": "rgba(0, 0, 0, 0.000)",
             "track_width": 0.2, "via_diameter": 0.6, "via_drill": 0.3, "wire_width": 6}
     ns["classes"] = [dict(base, name="Default"),
-                     dict(base, name="Power", track_width=0.5, via_diameter=0.8, via_drill=0.4),
+                     dict(base, name="Power", track_width=0.4, via_diameter=0.7, via_drill=0.35),
                      dict(base, name="USB", track_width=0.2, diff_pair_width=0.2, diff_pair_gap=0.15)]
     ns["netclass_patterns"] = [{"netclass": "Power", "pattern": n} for n in design.POWER_NETS] + \
                               [{"netclass": "USB", "pattern": "USB_D*"}]
