@@ -299,7 +299,10 @@ def endpoints(board, net_name, x, y, desc):
                 bd, best = d, t
     if best is None:
         return [(x, y)]
-    return [(mm(best.GetStart().x), mm(best.GetStart().y)), (mm(best.GetEnd().x), mm(best.GetEnd().y))]
+    # every point along the track (not just its ends), so a boxed-in end isn't fatal
+    sx, sy, ex, ey = mm(best.GetStart().x), mm(best.GetStart().y), mm(best.GetEnd().x), mm(best.GetEnd().y)
+    n = max(1, int(math.hypot(ex - sx, ey - sy) / 0.1))
+    return [(sx + (ex - sx) * k / n, sy + (ey - sy) * k / n) for k in range(n + 1)]
 
 
 def disc(grid, x, y, layers, r=0.15):
