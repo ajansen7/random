@@ -1,10 +1,16 @@
 # Tattle Phone: PCB
 
-There's a first-pass KiCad project in [`kicad/`](kicad/). It has a schematic
-with every part and connection, and a board with the outline, every footprint
-placed to fit the printed case, every pad on its net, GND pours and the antenna
-keep-out. **The board is not routed yet.** That's the next step, and it's
-yours to do in KiCad (or ask me to take a pass).
+There's a KiCad project in [`kicad/`](kicad/). It has a schematic with every part
+and connection, and a **routed** board: outline, placement fitted to the printed
+case, ~1,800 track segments and ~260 vias, GND pours on both layers and the antenna keep-out.
+
+**6 connections are still open.** They're in tight spots where the autorouter and my
+fix-up router couldn't get through without shoving other traces aside. KiCad's
+interactive router does that easily, so a few minutes in KiCad 10 finishes them
+(see "Finishing the routing" below). After that the board is ready for a final
+review and Gerbers.
+
+![PCB front](renders/pcb_front.png) ![PCB back (mirrored, as seen from behind)](renders/pcb_back.png)
 
 > ⚠️ Component values come from datasheets and common reference designs
 > (Adafruit's BQ24075 and MAX98357A boards are worth opening alongside). Check
@@ -22,24 +28,51 @@ yours to do in KiCad (or ask me to take a pass).
 | `kicad_gen/design.py` | **The circuit as code:** every part, footprint, pin→net and position. This is the master copy |
 | `kicad_gen/build.py` | Regenerates the whole KiCad project from `design.py` + `layout.py` |
 | `kicad_gen/check.py` | Compares schematic and board pin by pin, then runs DRC and summarises it |
+| `kicad_gen/route.py`, `fixup.py` | Autorouting (FreeRouting) and post-route fix-ups; see "How it was routed" |
 | `layout.py` | Dimensions shared by the board **and** the 3D-printed case (keys, LEDs, holes, outline) |
 | `place_footprints.py` | Scripting-console helper. Re-snaps the case-critical parts if you move things by hand |
 
 ### Two ways to work
 
-- **Edit in KiCad (normal):** open the project, tidy the schematic, route the
-  board. From then on the KiCad files are the master copy, and `design.py` becomes reference.
+- **Edit in KiCad (normal):** open the project, finish the last connections, tidy the
+  schematic. From then on the KiCad files are the master copy, and `design.py` becomes reference.
   Don't re-run `build.py`, because it would overwrite your routing.
 - **Edit the code:** change `design.py` / `layout.py`, run
   `python3 kicad_gen/build.py && python3 kicad_gen/check.py` (needs KiCad's Python
   module), and you get a fresh project. This is good for big part swaps before routing.
 
+## Finishing the routing (KiCad 10)
+
+Open the board, press **B** to refill the pours, then **Inspect → Design Rules Checker**.
+It lists the 6 open connections (case coordinates in mm from the bottom-centre of the board):
+
+| Net | Where | What to do |
+|---|---|---|
+| VBAT | charger U2, pin 2 (≈ −9.6, 18) | Short hop on the back. Nudge the neighbouring trace with the interactive router (X, then drag) |
+| GND | ESD chip D1 (≈ 6, 15) | Add a via next to its GND pin, or run a short trace to the nearest GND via |
+| GND | speaker-amp corner (≈ 15, 50) | Same: via or short trace to the pour |
+| GND | battery gauge U6 area (≈ 16, 57) | Same |
+| GND | LED level shifter U8, pin 3 (≈ 9, 74) | Its pin sits in a pocket. Shove one adjacent trace 0.3 mm and drop a via |
+| GND | LED power switch Q2 area (≈ 8, 89) | Same |
+
+Then re-run DRC until "unconnected items" reads 0, and do a visual pass. Pay most
+attention to the 3.3 V regulator loop (U3/L1/C4–C6) and the USB pair: the autorouter
+gets these right electrically, but you can make them shorter and fatter by hand.
+
+**How it was routed** (all scripted, in `kicad_gen/`): `route.py` runs the
+[FreeRouting](https://github.com/freerouting/freerouting) autorouter on everything
+except GND. `fixup.py` then finishes the leftover signals with a small A* router
+(narrowing to 0.15–0.25 mm at fine-pitch pins), finds GND copper islands by rasterizing
+the pours, and ties each island to the main ground with a via or short trace.
+`fixup.py --cleanup` removes duplicate and dangling vias. Re-running `build.py`
+regenerates an **unrouted** board, so only do that if you want to start over.
+
 ## Current check results
 
 - **Schematic vs board:** 377 pins, 71 nets, 0 mismatches. KiCad exported the
   schematic's netlist and it was compared pad by pad with the board.
-- **DRC:** no clearance, edge, hole or keep-out errors. What's left is expected:
-  - *Unconnected items:* the board isn't routed.
+- **DRC:** no clearance, edge, hole or keep-out errors. What's left:
+  - *Unconnected items: 6*. See "Finishing the routing" above.
   - *Courtyard overlap LEDn / SWn (12×):* each key LED sits under its keycap, just
     beside the tact switch. The bodies clear by about 0.25 mm; the switch's outline is drawn
     generously.
@@ -85,15 +118,11 @@ The pin map matches [`firmware/tattle_phone/pins.h`](../firmware/tattle_phone/pi
   MAX98357AETE+T, ICS-43434, MAX17048G+T10, TCA9555RTWR, SK6812MINI, HRO TYPE-C-31-M-12,
   C&K PCM12SMTR. Swap in equivalents in KiCad if any are out of stock.
 
-## Routing tips for the next step
+## Before ordering
 
-1. Start with the power loop around U3/L1/C4–C6: short, wide, on the back.
-2. USB D+/D− as a pair from J1 → D1 → U1 (`USB` net class).
-3. I2S lines to the mic and amp. Keep them away from L1 and the speaker traces.
-4. LED chain: DIN→DOUT hops along the front between keys, with VLED and GND alongside.
-5. Key switches → U7. 12 short runs on the back.
-6. Re-pour, run DRC, then export a STEP (File → Export → STEP) and drop it
-   into the enclosure model as a fit check.
+1. Finish the 6 connections above, DRC to zero errors.
+2. Export a STEP (File → Export → STEP) and drop it into the enclosure model as a fit check.
+3. Fabrication outputs: Gerbers + drill files, BOM, and component placement (CPL). See `../ORDERING.md`.
 
 ## Bring-up checklist
 

@@ -347,6 +347,7 @@ file name so you know which kid called.
 - [x] Enclosure model v1 + STLs ([`enclosure/`](enclosure/)). Not test-printed yet
 - [x] Intercom design (§8)
 - [x] KiCad project generated: schematic + placed board, netlist-checked, DRC clean apart from routing ([`hardware/`](hardware/))
-- [ ] Route the board, tidy the schematic
+- [x] Board routed (FreeRouting + scripted fix-ups), DRC clean except 6 open connections
+- [ ] Finish the last 6 connections in KiCad, tidy the schematic
 - [ ] Test print and fit check against a real PCB
 - [ ] Intercom firmware

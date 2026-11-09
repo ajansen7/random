@@ -35,10 +35,14 @@ nm = pcbnew.FromMM
 
 class Grid:
     def __init__(self, board):
-        bb = board.GetBoardEdgesBoundingBox()
-        self.x0, self.y0 = mm(bb.GetLeft()) - 1, mm(bb.GetTop()) - 1
-        self.nx = int((mm(bb.GetWidth()) + 2) / G) + 1
-        self.ny = int((mm(bb.GetHeight()) + 2) / G) + 1
+        poly = pcbnew.SHAPE_POLY_SET()
+        board.GetBoardPolygonOutlines(poly)
+        ol = poly.Outline(0)
+        xs = [mm(ol.CPoint(k).x) for k in range(ol.PointCount())]
+        ys = [mm(ol.CPoint(k).y) for k in range(ol.PointCount())]
+        self.x0, self.y0 = min(xs) - 1, min(ys) - 1
+        self.nx = int((max(xs) - min(xs) + 2) / G) + 1
+        self.ny = int((max(ys) - min(ys) + 2) / G) + 1
         self.board = board
         xs = self.x0 + np.arange(self.nx) * G
         ys = self.y0 + np.arange(self.ny) * G
@@ -225,9 +229,11 @@ def commit_path(board, grid, path, net, width=TRACK_W):
                 keep.append(b)
         keep.append(run[-1])
         for a, b in zip(keep, keep[1:]):
+            if math.hypot(b[1] - a[1], b[2] - a[2]) < 0.1 and len(keep) > 2:
+                continue        # no stubs; neighbouring segments overlap this cell anyway
             t = pcbnew.PCB_TRACK(board)
-            t.SetStart(pcbnew.VECTOR2I(nm(a[1]), nm(a[2])))
-            t.SetEnd(pcbnew.VECTOR2I(nm(b[1]), nm(b[2])))
+            t.SetStart(pcbnew.VECTOR2I(nm(float(a[1])), nm(float(a[2]))))
+            t.SetEnd(pcbnew.VECTOR2I(nm(float(b[1])), nm(float(b[2]))))
             t.SetWidth(nm(width))
             t.SetLayer(LAYERS[a[0]])
             t.SetNet(net)
@@ -239,7 +245,7 @@ def commit_path(board, grid, path, net, width=TRACK_W):
 
 def add_via(board, net, x, y):
     v = pcbnew.PCB_VIA(board)
-    v.SetPosition(pcbnew.VECTOR2I(nm(x), nm(y)))
+    v.SetPosition(pcbnew.VECTOR2I(nm(float(x)), nm(float(y))))
     v.SetWidth(nm(VIA_D))
     v.SetDrill(nm(VIA_DRILL))
     v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu)
@@ -306,7 +312,7 @@ def disc(grid, x, y, layers, r=0.15):
 def route_signals(board, grid, pairs):
     fixed = 0
     for net_name, ((xa, ya, da), (xb, yb, db)) in pairs:
-        if net_name == "GND":
+        if da.startswith("Zone") or db.startswith("Zone"):
             continue
         net = board.FindNet(net_name)
         vo = grid.obstacles(net.GetNetCode(), VIA_D / 2)
@@ -319,7 +325,8 @@ def route_signals(board, grid, pairs):
         path = None
         for width in (TRACK_W, 0.15):   # neck down if the normal width can't get out
             to = grid.obstacles(net.GetNetCode(), width / 2)
-            path = astar(grid, starts, goals, [to[pcbnew.F_Cu], to[pcbnew.B_Cu]], vobs)
+            path = astar(grid, starts, goals, [to[pcbnew.F_Cu], to[pcbnew.B_Cu]], vobs,
+                         max_nodes=6_000_000, via_cost=15)
             if path:
                 break
         if path:
@@ -463,6 +470,241 @@ def stitch_islands(board, grid, min_area_mm2=4.0):
     return added
 
 
+def _outlines(z):
+    polys = z.GetFilledPolysList(z.GetLayer())
+    out = []
+    for k in range(polys.OutlineCount()):
+        one = pcbnew.SHAPE_POLY_SET()
+        one.AddOutline(polys.Outline(k))
+        out.append((one.Area(), one))
+    return sorted(out, key=lambda t: -t[0])
+
+
+def stitch_to_main(board, grid):
+    """For each GND pour island that isn't the main pour on its layer, add a via
+    where it overlaps the main pour of the other layer (so it provably joins)."""
+    net = board.FindNet("GND")
+    board.BuildConnectivity()
+    pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+    zones = {z.GetLayer(): z for z in board.Zones() if not z.GetIsRuleArea() and z.GetNetCode() == net.GetNetCode()}
+    isl = {L: _outlines(z) for L, z in zones.items()}
+    vo = grid.obstacles(net.GetNetCode(), VIA_D / 2)
+    vfree = ~vo[pcbnew.F_Cu] & ~vo[pcbnew.B_Cu]
+    added = 0
+    for L, lst in isl.items():
+        other = pcbnew.B_Cu if L == pcbnew.F_Cu else pcbnew.F_Cu
+        if not isl.get(other):
+            continue
+        main_other = pcbnew.SHAPE_POLY_SET(isl[other][0][1])
+        main_other.Inflate(-nm(VIA_D / 2 + 0.05), 8)
+        for area, one in lst[1:]:
+            inner = pcbnew.SHAPE_POLY_SET(one)
+            inner.Inflate(-nm(VIA_D / 2 + 0.05), 8)
+            if inner.OutlineCount() == 0:
+                continue
+            bb = one.BBox()
+            j1, i1 = grid.ij(mm(bb.GetLeft()), mm(bb.GetTop()))
+            j2, i2 = grid.ij(mm(bb.GetRight()), mm(bb.GetBottom()))
+            for j in range(max(j1, 0), min(j2 + 1, grid.ny), 2):
+                hit = False
+                for i in range(max(i1, 0), min(i2 + 1, grid.nx), 2):
+                    if not vfree[j, i]:
+                        continue
+                    x, y = grid.xy(j, i)
+                    p = pcbnew.VECTOR2I(nm(x), nm(y))
+                    if inner.Contains(p) and main_other.Contains(p):
+                        add_via(board, net, x, y)
+                        rr = int((VIA_D + CLR) / G) + 1
+                        vfree[max(j - rr, 0):j + rr + 1, max(i - rr, 0):i + rr + 1] = False
+                        added += 1
+                        hit = True
+                        break
+                if hit:
+                    break
+    return added
+
+
+def _zone_mask(grid, z):
+    m = np.zeros(grid.X.shape, bool)
+    polys = z.GetFilledPolysList(z.GetLayer())
+    for k in range(polys.OutlineCount()):
+        ol = polys.Outline(k)
+        m |= grid._poly_mask([(mm(ol.CPoint(q).x), mm(ol.CPoint(q).y)) for q in range(ol.PointCount())])
+        for h in range(polys.HoleCount(k)):
+            hl = polys.Hole(k, h)
+            m &= ~grid._poly_mask([(mm(hl.CPoint(q).x), mm(hl.CPoint(q).y)) for q in range(hl.PointCount())])
+    return m
+
+
+def gnd_components(board, grid):
+    """Label connected GND copper across both layers. Returns (labels[F], labels[B], main_label)."""
+    net = board.FindNet("GND").GetNetCode()
+    cu = {L: np.zeros(grid.X.shape, bool) for L in LAYERS}
+    links = np.zeros(grid.X.shape, bool)
+    for z in board.Zones():
+        if not z.GetIsRuleArea() and z.GetNetCode() == net:
+            cu[z.GetLayer()] |= _zone_mask(grid, z)
+    for t in board.GetTracks():
+        if t.GetNetCode() != net:
+            continue
+        if t.GetClass() == "PCB_VIA":
+            p = t.GetPosition()
+            for L in LAYERS:
+                grid._stamp_segment(cu[L], mm(p.x), mm(p.y), mm(p.x), mm(p.y), mm(t.GetWidth()) / 2)
+            grid._stamp_segment(links, mm(p.x), mm(p.y), mm(p.x), mm(p.y), mm(t.GetDrill()) / 2)
+        elif t.GetLayer() in cu:
+            grid._stamp_segment(cu[t.GetLayer()], mm(t.GetStart().x), mm(t.GetStart().y),
+                                mm(t.GetEnd().x), mm(t.GetEnd().y), mm(t.GetWidth()) / 2)
+    for fp in board.GetFootprints():
+        for p in fp.Pads():
+            if p.GetNetCode() != net:
+                continue
+            for L in LAYERS:
+                if p.IsOnLayer(L):
+                    grid._stamp_rect(cu[L], p.GetBoundingBox(), -0.02)
+            if p.GetAttribute() == pcbnew.PAD_ATTRIB_PTH:
+                grid._stamp_rect(links, p.GetBoundingBox(), -0.1)
+    # union-find over horizontal runs
+    parent = []
+
+    def find(a):
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    def union(a, b):
+        a, b = find(a), find(b)
+        if a != b:
+            parent[b] = a
+
+    labels = {}
+    for L in LAYERS:
+        lab = np.full(grid.X.shape, -1, np.int32)
+        prev = []
+        for j in range(grid.ny):
+            row = cu[L][j]
+            if not row.any():
+                prev = []
+                continue
+            d = np.diff(np.concatenate(([0], row.view(np.int8), [0])))
+            starts, ends = np.where(d == 1)[0], np.where(d == -1)[0]
+            cur = []
+            for s0, e0 in zip(starts, ends):
+                idx = len(parent)
+                parent.append(idx)
+                lab[j, s0:e0] = idx
+                for ps, pe, pidx in prev:
+                    if ps <= e0 and s0 <= pe:      # 8-connected overlap
+                        union(pidx, idx)
+                cur.append((s0, e0, idx))
+            prev = cur
+        labels[L] = lab
+    f, bk = labels[pcbnew.F_Cu], labels[pcbnew.B_Cu]
+    both = links & (f >= 0) & (bk >= 0)
+    for j, i in zip(*np.where(both)):
+        union(int(f[j, i]), int(bk[j, i]))
+    roots = np.array([find(k) for k in range(len(parent))], np.int32)
+    for L in LAYERS:
+        lab = labels[L]
+        lab[lab >= 0] = roots[lab[lab >= 0]]
+    # main = component holding the most GND pad area
+    counts = {}
+    for fp in board.GetFootprints():
+        for p in fp.Pads():
+            if p.GetNetCode() == net:
+                c = p.GetPosition()
+                j, i = grid.ij(mm(c.x), mm(c.y))
+                for L in LAYERS:
+                    r = labels[L][j, i]
+                    if r >= 0:
+                        counts[r] = counts.get(r, 0) + 1
+    main = max(counts, key=counts.get)
+    return labels, main, counts
+
+
+def join_components(board, grid):
+    net = board.FindNet("GND")
+    board.BuildConnectivity()
+    pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+    labels, main, counts = gnd_components(board, grid)
+    others = [c for c in counts if c != main]
+    print(f"  GND copper: main piece has {counts[main]} pads; {len(others)} other pieces with pads")
+    vo = grid.obstacles(net.GetNetCode(), VIA_D / 2)
+    vfree = ~vo[pcbnew.F_Cu] & ~vo[pcbnew.B_Cu]
+    F, Bk = labels[pcbnew.F_Cu], labels[pcbnew.B_Cu]
+    added = 0
+    for c in others:
+        # 1) a via where this piece (either layer) overlaps the main piece on the other layer
+        cand = vfree & (((F == c) & (Bk == main)) | ((Bk == c) & (F == main)))
+        # keep a margin: require the 5x5 neighbourhood to satisfy it too
+        ok = cand.copy()
+        for dj in (-2, 2):
+            ok &= np.roll(cand, dj, 0)
+        for di in (-2, 2):
+            ok &= np.roll(cand, di, 1)
+        js, is_ = np.where(ok)
+        if len(js):
+            k = len(js) // 2
+            x, y = grid.xy(js[k], is_[k])
+            add_via(board, net, x, y)
+            added += 1
+            continue
+        # 2) otherwise route from this piece to the main piece
+        vobs = [vo[pcbnew.F_Cu], vo[pcbnew.B_Cu]]
+        starts = {(l, j, i) for l, lab in enumerate((F, Bk)) for j, i in zip(*np.where(lab == c))}
+        goals_all = [(l, j, i) for l, lab in enumerate((F, Bk)) for j, i in zip(*np.where(lab == main))]
+        if not starts or not goals_all:
+            continue
+        sj = np.mean([s[1] for s in starts]); si = np.mean([s[2] for s in starts])
+        goals_all.sort(key=lambda g: (g[1] - sj) ** 2 + (g[2] - si) ** 2)
+        goals = set(goals_all[:4000])
+        starts = set(list(starts)[::3])
+        path = None
+        for width in (0.2, 0.15):
+            to = grid.obstacles(net.GetNetCode(), width / 2)
+            path = astar(grid, starts, goals, [to[pcbnew.F_Cu], to[pcbnew.B_Cu]], vobs,
+                         max_nodes=6_000_000, via_cost=15)
+            if path:
+                break
+        if path:
+            commit_path(board, grid, path, net, width=width)
+            added += 1
+        else:
+            print(f"  could not join a GND piece near ({grid.xy(int(sj), int(si))[0] - 100:.1f}, {200 - grid.xy(int(sj), int(si))[1]:.1f})")
+    return added
+
+
+def cleanup(board):
+    """Remove duplicate vias and vias DRC reports as dangling."""
+    removed = 0
+    seen = []
+    for v in [t for t in board.GetTracks() if t.GetClass() == "PCB_VIA"]:
+        p = v.GetPosition()
+        if any(n == v.GetNetCode() and abs(p.x - q.x) < nm(0.5) and abs(p.y - q.y) < nm(0.5) for n, q in seen):
+            board.Remove(v); removed += 1
+        else:
+            seen.append((v.GetNetCode(), p))
+    board.BuildConnectivity()
+    rpt = tempfile.mktemp(suffix=".txt")
+    pcbnew.WriteDRCReport(board, rpt, pcbnew.EDA_UNITS_MILLIMETRES, True)
+    for blk in re.split(r"\n(?=\[)", open(rpt).read()):
+        if blk.startswith("[track_dangling]"):
+            for x, y, d in ITEM.findall(blk):
+                for t in [t for t in board.GetTracks() if t.GetClass() == "PCB_TRACK"]:
+                    for p in (t.GetStart(), t.GetEnd()):
+                        if abs(mm(p.x) - float(x)) < 0.01 and abs(mm(p.y) - float(y)) < 0.01:
+                            board.Remove(t); removed += 1
+                            break
+        if blk.startswith("[via_dangling]"):
+            for x, y, d in ITEM.findall(blk):
+                for v in [t for t in board.GetTracks() if t.GetClass() == "PCB_VIA"]:
+                    p = v.GetPosition()
+                    if abs(mm(p.x) - float(x)) < 0.01 and abs(mm(p.y) - float(y)) < 0.01:
+                        board.Remove(v); removed += 1
+    return removed
+
+
 def place_fiducials(board, grid):
     for fp in board.GetFootprints():
         if not fp.GetReference().startswith("FID"):
@@ -490,12 +732,30 @@ def place_fiducials(board, grid):
 
 
 def main():
+    if "--cleanup" in sys.argv:
+        # Separate process: KiCad 7's Python bindings break after Remove().
+        board = pcbnew.LoadBoard(PCB)
+        print(f"cleanup: removed {cleanup(board)} duplicate/dangling items")
+        board.Save(PCB)
+        return
     board = pcbnew.LoadBoard(PCB)
     if "--signals-only" in sys.argv:
         pairs = unconnected(board)
         route_signals(board, Grid(board), pairs)
         board.Save(PCB)
         return
+    for z in board.Zones():      # pours fine enough to reach between 0.5 mm-pitch pins
+        if not z.GetIsRuleArea():
+            z.SetLocalClearance(nm(0.2))
+            z.SetMinThickness(nm(0.15))
+            z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+            z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
+    for z in board.Zones():
+        if not z.GetIsRuleArea():
+            z.SetLocalClearance(nm(0.2))
+            z.SetMinThickness(nm(0.15))
+            z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+            z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
     for rnd in range(4):
         pairs = unconnected(board)
         print(f"round {rnd + 1}: {len(pairs)} unconnected "
@@ -504,12 +764,12 @@ def main():
             break
         grid = Grid(board)
         progress = route_signals(board, grid, pairs)
-        grid = Grid(board)
-        progress += stitch_gnd(board, grid, pairs)
-        grid = Grid(board)
-        n_isl = stitch_islands(board, grid)
-        print(f"  pour-island stitching vias: {n_isl}")
-        progress += n_isl
+        if not progress:
+            # only pour islands left: tie each one to the other layer with a via
+            grid = Grid(board)
+            n_isl = join_components(board, grid)
+            print(f"  pour-island stitching vias: {n_isl}")
+            progress += n_isl
         if not progress:
             break
     place_fiducials(board, Grid(board))

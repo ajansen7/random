@@ -324,9 +324,10 @@ def add_zone(board, net, layer, pts, priority=0, rule_area=False):
     else:
         z.SetNetCode(net.GetNetCode())
         z.SetAssignedPriority(priority)
-        z.SetLocalClearance(pcbnew.FromMM(0.3))
-        z.SetMinThickness(pcbnew.FromMM(0.25))
-        z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
+        z.SetLocalClearance(pcbnew.FromMM(0.2))
+        z.SetMinThickness(pcbnew.FromMM(0.15))
+        z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL)
+        z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)
         z.SetThermalReliefGap(pcbnew.FromMM(0.3))
         z.SetThermalReliefSpokeWidth(pcbnew.FromMM(0.35))
     ol = z.Outline()

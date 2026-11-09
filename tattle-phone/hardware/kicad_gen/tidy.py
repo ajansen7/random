@@ -71,7 +71,7 @@ def tidy_silk(board, edge_margin=0.4):
         body = fp.GetBoundingBox(False, False)
         cx, cy = body.GetCenter().x, body.GetCenter().y
         ok = False
-        for size in (0.8, 0.7):
+        for size in (0.8,):
             ref.SetTextSize(pcbnew.VECTOR2I(MM(size), MM(size)))
             ref.SetTextThickness(MM(size * 0.15))
             for ang in (0, 90):

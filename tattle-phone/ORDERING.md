@@ -4,7 +4,7 @@
 
 | Piece | Ready to order? | What's missing |
 |---|---|---|
-| **PCB** | **Not yet** | The board is placed and checked but **not routed** (no copper traces). The fab needs Gerbers, and Gerbers from an unrouted board would be a blank board. |
+| **PCB** | **Almost** | Routed except **6 short connections** that need a few minutes in KiCad's interactive router (`hardware/README.md` → "Finishing the routing"). Then export Gerbers. |
 | **Enclosure** | **Yes, for a test print** | STLs are in `enclosure/stl/`. Print one in cheap PLA first to check fit and feel. Do the final PETG print once you have a real board to test-fit. |
 | **Parts you buy yourself** | **Yes** | See the shopping list below. Order these now; they're needed for the breadboard prototype and the final build either way. |
 
@@ -15,8 +15,8 @@
    and Google Drive upload before any money goes into boards. See README §7.
 2. **Test-print the case in PLA** (now). Check the overall size in a toddler's hands,
    how the keycaps feel, and whether the screws, inserts and the battery pocket fit.
-3. **Route the PCB** in KiCad 10 (`hardware/kicad/`), or ask me to take a pass.
-   Then export Gerbers + drill files, the BOM and the placement (CPL) file.
+3. **Finish the last 6 PCB connections** in KiCad 10 (`hardware/kicad/`), DRC to zero,
+   then export Gerbers + drill files, the BOM and the placement (CPL) file.
 4. **Order 5 PCBs with assembly** (instructions below). Turnaround is about 1–2 weeks.
 5. **Solder the through-hole parts** (13 key switches, 3 JST connectors), flash, and run
    the bring-up checklist in `hardware/README.md`.
