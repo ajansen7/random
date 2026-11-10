@@ -26,6 +26,16 @@
 #define PLAY_END_HOUR    -1
 #define AWAKE_MINUTES     5
 
+// ---- Calls ----
+// Default: full duplex with Espressif's echo canceller. If a call echoes or howls and
+// tuning doesn't fix it, uncomment this for walkie-talkie calls (hold green to talk).
+// #define CALL_MODE_WALKIE
+// Speaker-to-mic delay the echo canceller assumes, in ~16 ms chunks. Tune at bring-up
+// (watch "call: mic=... after-aec=..." in the serial monitor): try 1, 2, 3.
+// #define CALL_ECHO_DELAY_CHUNKS 2
+// If the mic records only silence, uncomment (selects the PDM mic's other data slot):
+// #define MIC_RIGHT_SLOT
+
 // ---- Time zone for file names and play hours (POSIX TZ string) ----
 // US Eastern: "EST5EDT,M3.2.0,M11.1.0"   US Central: "CST6CDT,M3.2.0,M11.1.0"
 // US Mountain: "MST7MDT,M3.2.0,M11.1.0"  US Pacific: "PST8PDT,M3.2.0,M11.1.0"

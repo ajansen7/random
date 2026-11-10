@@ -9,8 +9,8 @@
 namespace intercom {
 
 static const uint16_t PORT = 47260;
-static const size_t FRAME_BYTES = audio::FRAME * sizeof(int16_t);
-static const size_t JITTER_FRAMES = 4;          // start playing once this much is queued
+static const size_t JITTER_BYTES = audio::RATE * 2 * 80 / 1000;   // start playing once 80 ms is queued
+static const size_t BUFFER_BYTES = audio::RATE * 2 * 400 / 1000;   // drop audio beyond 400 ms backlog
 
 struct __attribute__((packed)) Header {
   char magic[4];          // "TPL1"
@@ -32,11 +32,9 @@ static IPAddress friendIP;
 static uint16_t seq = 0;
 static uint32_t keyHash = 0;
 
-static TaskHandle_t speakerTask = nullptr;
-static volatile bool playing = false;
-static volatile bool talking = false;
-static volatile uint8_t volume = 60;
-static volatile int32_t lastLevel = 0;
+static volatile bool inCall = false;
+static volatile bool dropping = false;
+static bool primed = false;
 
 static uint32_t fnv1a(const char *s) {
   uint32_t h = 2166136261u;
@@ -67,7 +65,7 @@ static void onPacket(AsyncUDPPacket &p) {
   haveFriend = true;
   lastHeard = millis();
   if (h.type == AUDIO) {
-    if (playing && !talking)
+    if (inCall && !dropping)
       xStreamBufferSend(audioBuf, p.data() + sizeof(Header), p.length() - sizeof(Header), 0);
   } else if (h.type != PING) {
     Msg m = (Msg)h.type;
@@ -79,7 +77,7 @@ void begin() {
   if (listening) return;
   keyHash = fnv1a(INTERCOM_KEY);
   if (!ctrlQ) ctrlQ = xQueueCreate(16, sizeof(Msg));
-  if (!audioBuf) audioBuf = xStreamBufferCreate(FRAME_BYTES * 16, FRAME_BYTES);
+  if (!audioBuf) audioBuf = xStreamBufferCreate(BUFFER_BYTES, 1);
   if (udp.listen(PORT)) {
     udp.onPacket(onPacket);
     listening = true;
@@ -87,7 +85,7 @@ void begin() {
 }
 
 void end() {
-  stopPlayback();
+  callEnd();
   if (listening) udp.close();
   listening = false;
 }
@@ -116,8 +114,8 @@ Msg poll() {
 uint32_t msSinceHeard() { return lastHeard ? millis() - lastHeard : UINT32_MAX; }
 
 void sendAudio(const int16_t *pcm, size_t n) {
-  static uint8_t buf[sizeof(Header) + FRAME_BYTES];
-  n = min(n, audio::FRAME);
+  static uint8_t buf[sizeof(Header) + audio::MAX_CHUNK * sizeof(int16_t)];
+  n = min(n, audio::MAX_CHUNK);
   Header h;
   fillHeader(h, AUDIO);
   memcpy(buf, &h, sizeof(h));
@@ -125,55 +123,35 @@ void sendAudio(const int16_t *pcm, size_t n) {
   sendRaw(buf, sizeof(h) + n * sizeof(int16_t), false);
 }
 
-// ------------------------------------------------------------------ speaker task
-static void speakerLoop(void *) {
-  static int16_t frame[audio::FRAME];
-  bool primed = false;
-  for (;;) {
-    if (!playing) {
-      vTaskDelay(pdMS_TO_TICKS(10));
-      continue;
-    }
-    size_t avail = xStreamBufferBytesAvailable(audioBuf);
-    if (talking || (!primed && avail < JITTER_FRAMES * FRAME_BYTES)) {
-      primed = primed && !talking;
-      lastLevel = 0;
-      audio::silence(20);                 // paces the loop at the I2S rate
-      continue;
-    }
-    size_t got = xStreamBufferReceive(audioBuf, frame, FRAME_BYTES, 0);
-    if (got == 0) {                       // ran dry: re-buffer before playing again
-      primed = false;
-      continue;
+void callStart() {
+  xStreamBufferReset(audioBuf);
+  primed = false;
+  dropping = false;
+  inCall = true;
+}
+
+void callEnd() { inCall = false; }
+
+int32_t readAudio(int16_t *out, size_t n) {
+  const size_t bytes = n * sizeof(int16_t);
+  if (!primed) {                          // wait for a little cushion before playing
+    if (xStreamBufferBytesAvailable(audioBuf) < JITTER_BYTES) {
+      memset(out, 0, bytes);
+      return 0;
     }
     primed = true;
-    size_t n = got / sizeof(int16_t);
-    for (size_t i = 0; i < n; i++) frame[i] = (int16_t)((int32_t)frame[i] * volume / 100);
-    lastLevel = audio::rms(frame, n);
-    audio::play(frame, n);
   }
+  size_t got = xStreamBufferReceive(audioBuf, out, bytes, 0);
+  if (got < bytes) {
+    memset((uint8_t *)out + got, 0, bytes - got);
+    if (got == 0) primed = false;         // ran dry: re-buffer before playing again
+  }
+  return audio::rms(out, n);
 }
 
-void startPlayback(uint8_t volumePct) {
-  volume = volumePct;
-  xStreamBufferReset(audioBuf);
-  if (!speakerTask) xTaskCreatePinnedToCore(speakerLoop, "speaker", 4096, nullptr, 5, &speakerTask, 1);
-  audio::ampOn();
-  playing = true;
+void dropIncoming(bool drop) {
+  if (drop && !dropping) xStreamBufferReset(audioBuf);
+  dropping = drop;
 }
-
-void stopPlayback() {
-  if (!playing) return;
-  playing = false;
-  delay(40);                              // let the speaker task finish its frame
-  audio::ampOff();
-}
-
-void setTalking(bool t) {
-  if (t && !talking && audioBuf) xStreamBufferReset(audioBuf);
-  talking = t;
-}
-
-int32_t incomingLevel() { return lastLevel; }
 
 }  // namespace intercom

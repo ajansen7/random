@@ -5,9 +5,9 @@
 // and talks to it directly. Every packet carries a hash of INTERCOM_KEY, so a
 // neighbour's phones (or anything else on the LAN) are ignored.
 //
-// Audio: 20 ms frames of 16 kHz 16-bit PCM (640 bytes, ~260 kbit/s), half duplex:
-// the phone whose green button is held talks, the other listens. A short jitter
-// buffer (~80 ms) smooths Wi-Fi hiccups.
+// Audio: 16 kHz 16-bit PCM in small chunks (the echo canceller's chunk size),
+// ~260 kbit/s each way. Incoming audio waits in a short jitter buffer (~80 ms) that
+// the call loop pulls from, one chunk per step, in lockstep with the microphone.
 #pragma once
 #include <Arduino.h>
 
@@ -23,10 +23,12 @@ Msg poll();                           // next control message from the friend, o
 uint32_t msSinceHeard();              // since the last packet of any kind from the friend
 
 // ---- during a call ----
+void callStart();                     // start accepting audio (clears the jitter buffer)
+void callEnd();
 void sendAudio(const int16_t *pcm, size_t n);
-void startPlayback(uint8_t volumePct);   // speaker task plays incoming audio
-void stopPlayback();
-void setTalking(bool talking);        // while we talk, incoming audio is dropped (no echo)
-int32_t incomingLevel();              // RMS of the last frame played (for the LED)
+// Next n samples of the friend's voice; silence while the jitter buffer (re)fills.
+// Returns the RMS level of what it returned (for the LED).
+int32_t readAudio(int16_t *out, size_t n);
+void dropIncoming(bool drop);         // walkie mode: ignore incoming audio while we talk
 
 }  // namespace intercom

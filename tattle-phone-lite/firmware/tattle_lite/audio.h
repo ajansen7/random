@@ -6,7 +6,8 @@
 namespace audio {
 
 constexpr uint32_t RATE = 16000;
-constexpr size_t FRAME = RATE / 50;      // 20 ms = 320 samples: the call's packet size
+constexpr size_t FRAME = RATE / 50;      // 20 ms = 320 samples: recording read size
+constexpr size_t MAX_CHUNK = 512;        // largest call chunk (the echo canceller picks it)
 
 void begin();
 

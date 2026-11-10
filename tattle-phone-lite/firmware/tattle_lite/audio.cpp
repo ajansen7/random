@@ -19,7 +19,11 @@ void begin() {
   // --- Microphone: I2S0 in PDM RX mode. The S3 converts PDM to 16-bit PCM in hardware.
   // Default down-sampling (x128) gives a 2.048 MHz mic clock at 16 kHz, inside the
   // LMD3526B261's "standard mode" range (1.3-4.8 MHz).
+  // Small DMA rings (3 x 256 samples = 48 ms) on both sides: the echo canceller needs
+  // the delay from "written to the speaker" to "heard by the mic" short and steady.
   i2s_chan_config_t rxc = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
+  rxc.dma_desc_num = 3;
+  rxc.dma_frame_num = 256;
   ESP_ERROR_CHECK(i2s_new_channel(&rxc, nullptr, &micChan));
   i2s_pdm_rx_config_t rx = {};
   rx.clk_cfg = I2S_PDM_RX_CLK_DEFAULT_CONFIG(RATE);
@@ -35,6 +39,8 @@ void begin() {
   // --- Amplifier: I2S1 standard (Philips) TX, 16-bit mono copied to both slots.
   i2s_chan_config_t txc = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_1, I2S_ROLE_MASTER);
   txc.auto_clear = true;    // underrun -> silence, not a repeated buffer
+  txc.dma_desc_num = 3;
+  txc.dma_frame_num = 256;
   ESP_ERROR_CHECK(i2s_new_channel(&txc, &ampChan, nullptr));
   i2s_std_config_t tx = {};
   tx.clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(RATE);

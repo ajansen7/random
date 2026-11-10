@@ -7,10 +7,11 @@
 //                           at MAX_RECORD_S. If Wi-Fi is down the WAV waits in the
 //                           flash outbox and is retried later.
 //   GREEN CIRCLE (CALL)     ring the other phone (FRIEND_NAME). When it rings here,
-//                           green answers. During a call: HOLD green to talk, let go
-//                           to listen (walkie-talkie style; no echo, no DSP needed).
-//   RED SQUARE   (HANG UP)  ends a call or declines a ringing one. When idle, red
-//                           shows the battery level and puts the phone to sleep.
+//                           green answers. Calls are full duplex like a real phone:
+//                           both kids talk whenever they like (an echo canceller keeps
+//                           each earpiece out of the other mic). Optional walkie mode.
+//   RED SQUARE   (HANG UP)  ends a call (from either phone) or declines a ringing one.
+//                           When idle, red shows the battery level and goes to sleep.
 //
 // Power: deep sleep (microamps) until a button is pressed. After use the phone
 // stays awake on Wi-Fi for AWAKE_MINUTES so the other phone can call back, or for
@@ -35,6 +36,7 @@
 #include "lights.h"
 #include "net.h"
 #include "intercom.h"
+#include "esp_aec.h"        // ESP-SR acoustic echo canceller (ships with the ESP32-S3 core)
 
 // ---------------- Tunables ----------------
 static const uint32_t MAX_RECORD_S    = 40;     // per tattle (PSRAM holds ~60 s; outbox ~3 x 40 s)
@@ -162,40 +164,99 @@ static void doTattle() {
 }
 
 // ---------------- Calls ----------------
-// Half duplex: hold green to talk. Mic frames go out while held; otherwise the speaker
-// task plays what the friend says.
+// Full duplex (default): both kids talk whenever they like. Each step of the loop
+// plays one chunk of the friend's voice, reads one chunk from our mic, and runs
+// Espressif's acoustic echo canceller (ESP-SR) on it, using what we just played as the
+// reference, so our own earpiece isn't sent back to the friend as an echo.
+// Walkie mode (#define CALL_MODE_WALKIE in config.h, or automatic if the echo
+// canceller can't start): hold green to talk, let go to listen.
+#ifndef CALL_ECHO_DELAY_CHUNKS
+#define CALL_ECHO_DELAY_CHUNKS 2   // speaker->mic delay in chunks (~16 ms each); tune at bring-up
+#endif
+
 static void inCall() {
   Serial.println("in call");
   soundAnswered();
-  intercom::startPlayback(CALL_VOLUME);
-  audio::micStart();
-  int16_t frame[audio::FRAME];
-  uint32_t lastPing = 0;
-  bool ended = false, dropped = false;
-  while (!ended) {
-    updateButtons();
-    bool talk = btnCall.down;
-    intercom::setTalking(talk);
-    size_t got = audio::micRead(frame, audio::FRAME, 40, MIC_GAIN);   // also paces the loop (20 ms)
-    if (talk && got) intercom::sendAudio(frame, got);
 
-    if (talk) lights::all(0, 255, 0);
-    else lights::all(0, (uint8_t)min<int32_t>(200, 25 + intercom::incomingLevel() / 20), 0);
+  bool walkie = false;
+#ifdef CALL_MODE_WALKIE
+  walkie = true;
+#endif
+  aec_handle_t *aec = walkie ? nullptr : aec_create(audio::RATE, 4, 1, AEC_MODE_FD_LOW_COST);
+  size_t n = audio::FRAME;
+  if (aec) n = min<size_t>(aec_get_chunksize(aec), audio::MAX_CHUNK);
+  else walkie = true;
+  Serial.printf("call: %s, chunk %u samples\n", walkie ? "walkie (hold green to talk)" : "full duplex + echo canceller", (unsigned)n);
 
-    if (millis() - lastPing > 2000) { intercom::send(intercom::PING); lastPing = millis(); }
-    switch (intercom::poll()) {
-      case intercom::HANGUP: ended = true; break;
-      case intercom::RING: intercom::send(intercom::BUSY); break;
-      default: break;
+  const size_t DELAY = CALL_ECHO_DELAY_CHUNKS;
+  int16_t *mic = (int16_t *)heap_caps_aligned_alloc(16, n * 2, MALLOC_CAP_INTERNAL);
+  int16_t *out = (int16_t *)heap_caps_aligned_alloc(16, n * 2, MALLOC_CAP_INTERNAL);
+  int16_t *ref = (int16_t *)heap_caps_aligned_alloc(16, n * 2, MALLOC_CAP_INTERNAL);
+  int16_t *played = (int16_t *)heap_caps_aligned_alloc(16, n * 2 * (DELAY + 1), MALLOC_CAP_INTERNAL);
+  if (!mic || !out || !ref || !played) { Serial.println("call: out of memory"); soundError(); goto cleanup; }
+  memset(played, 0, n * 2 * (DELAY + 1));
+
+  {
+    intercom::callStart();
+    audio::ampOn();
+    audio::micStart();
+    uint32_t lastPing = 0, lastLog = 0, step = 0;
+    int32_t micLvl = 0, outLvl = 0;
+    bool ended = false, dropped = false;
+    while (!ended) {
+      updateButtons();
+      bool talk = walkie && btnCall.down;
+      intercom::dropIncoming(talk);
+
+      // 1. speaker: the friend's next chunk (silence while we talk in walkie mode)
+      int16_t *now = played + (step % (DELAY + 1)) * n;
+      int32_t farLvl = intercom::readAudio(now, n);
+      for (size_t i = 0; i < n; i++) now[i] = (int16_t)((int32_t)now[i] * CALL_VOLUME / 100);
+      audio::play(now, n);                // blocks once the DMA ring is full: paces the loop
+      // the chunk played DELAY steps ago is what the mic is hearing now
+      memcpy(ref, played + ((step + 1) % (DELAY + 1)) * n, n * 2);
+      step++;
+
+      // 2. mic -> echo canceller -> friend
+      size_t got = audio::micRead(mic, n, 60, MIC_GAIN);
+      if (got < n) memset(mic + got, 0, (n - got) * 2);
+      if (aec) aec_process(aec, mic, ref, out);
+      else memcpy(out, mic, n * 2);
+      if (!walkie || talk) intercom::sendAudio(out, n);
+
+      // 3. lights: green follows whoever is talking
+      micLvl = audio::rms(mic, n);
+      outLvl = audio::rms(out, n);
+      if (talk) lights::all(0, 255, 0);
+      else lights::all(0, (uint8_t)min<int32_t>(220, 20 + max(farLvl, outLvl) / 20), 0);
+
+      // 4. housekeeping
+      if (millis() - lastPing > 2000) { intercom::send(intercom::PING); lastPing = millis(); }
+      if (millis() - lastLog > 2000) {    // bring-up aid: out << mic while only the friend talks = echo cancelled
+        Serial.printf("call: mic=%ld after-aec=%ld far=%ld\n", (long)micLvl, (long)outLvl, (long)farLvl);
+        lastLog = millis();
+      }
+      switch (intercom::poll()) {
+        case intercom::HANGUP: ended = true; break;
+        case intercom::RING: intercom::send(intercom::BUSY); break;
+        default: break;
+      }
+      if (btnHangup.edge) { intercom::send(intercom::HANGUP); ended = true; }
+      if (intercom::msSinceHeard() > CALL_DROP_MS) { ended = true; dropped = true; }
     }
-    if (btnHangup.edge) { intercom::send(intercom::HANGUP); ended = true; }
-    if (intercom::msSinceHeard() > CALL_DROP_MS) { ended = true; dropped = true; }
+    intercom::callEnd();
+    audio::micStop();
+    audio::ampOff();
+    lights::off();
+    if (dropped) soundError(); else soundGoodbye();
   }
-  intercom::setTalking(false);
-  audio::micStop();
-  intercom::stopPlayback();
-  lights::off();
-  if (dropped) soundError(); else soundGoodbye();
+
+cleanup:
+  if (aec) aec_destroy(aec);
+  heap_caps_free(mic);
+  heap_caps_free(out);
+  heap_caps_free(ref);
+  heap_caps_free(played);
   touched();
 }
 

@@ -100,8 +100,8 @@ current-limited bench supply (~4.5 V, 200 mA) after checking 3V3 and VBAT aren't
 | Button | Idle | Ringing (incoming) | In a call |
 |---|---|---|---|
 | ⭐ yellow star | record a tattle (beep, talk, it stops on silence or another press) and send it to Drive + email | | |
-| 🟢 green circle | call the other phone | answer | **hold to talk**, let go to listen |
-| 🔴 red square | show battery (3/2/1 red blinks) and go to sleep | decline | hang up |
+| 🟢 green circle | call the other phone | answer | (nothing: just talk) |
+| 🔴 red square | show battery (3/2/1 red blinks) and go to sleep | decline | hang up (either phone) |
 
 Lights: the button you're using glows (yellow follows your voice while recording; green
 follows the other kid's voice in a call). A faint green "breath" when idle means the
@@ -116,8 +116,12 @@ at the cost of battery: roughly 20-30 mA while awake.
 UDP broadcasts (no IP addresses to configure); `INTERCOM_KEY` must match on both. If
 your router has "client/AP isolation" (common on guest networks), turn it off for this
 network. If the other phone is asleep, the caller hears a descending "sleepy" tune.
-Half duplex on purpose: no echo, no DSP. Full duplex with echo cancelling is a later
-upgrade.
+Calls are **full duplex** like a real phone: both kids can talk at once. Each phone runs
+Espressif's acoustic echo canceller (ESP-SR, built into the ESP32-S3 core) so its own
+earpiece isn't sent back to the other kid as an echo. If a call still echoes or howls
+after tuning, `#define CALL_MODE_WALKIE` in `config.h` switches to walkie-talkie calls
+(hold green to talk); the firmware also falls back to that by itself if the echo
+canceller can't start.
 
 **Set up and flash**
 
@@ -138,3 +142,8 @@ upgrade.
   put "left" data on the other clock edge).
 - Battery: the boot line prints the battery voltage; compare with a multimeter.
 - Volumes: `TONE_VOLUME`, `RING_VOLUME`, `CALL_VOLUME`.
+- Echo (needs both phones): during a call the monitor prints
+  `call: mic=… after-aec=… far=…` every 2 s. Have only the *other* kid talk: `after-aec`
+  should be far below `mic` (the canceller removing your own earpiece). If it isn't,
+  try `CALL_ECHO_DELAY_CHUNKS` 1, 2 or 3 in `config.h`, and keep `CALL_VOLUME` at earpiece
+  level. The canceller needs a second or two at the start of each call to lock on.
