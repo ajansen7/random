@@ -20,7 +20,7 @@ call each other on the home Wi-Fi.
 2. ✅ Board + case geometry (`hardware/layout.py`), case model (`enclosure/`), STLs build.
 3. ✅ KiCad board: 54.4 × 120.5 mm, 2 layers, routed, **DRC 0 errors / 0 unconnected**,
    schematic and board match on all 164 pins. Fab files with a full LCSC BOM in `hardware/fab/`.
-4. ⏳ Firmware (port of `../tattle-phone/firmware` to 3 buttons, PDM mic).
+4. ✅ Firmware written and **compiles cleanly** (ESP32 core 3.3.12, 0 warnings with `-Wall`). Not yet run on hardware.
 
 ## Parts (factory-placed, all on the back)
 
@@ -92,3 +92,49 @@ its port, never wash), the amp (3×3 mm QFN), the ESP32's ground pad, USB-C. Via
 (ESP32 ground pad, amp thermal pad) wick a little solder unless the vias are plugged: use a
 touch more paste there or Kapton tape over them on the far side. First power-up from a
 current-limited bench supply (~4.5 V, 200 mA) after checking 3V3 and VBAT aren't shorted to GND.
+
+## Firmware (`firmware/tattle_lite/`)
+
+**What the buttons do**
+
+| Button | Idle | Ringing (incoming) | In a call |
+|---|---|---|---|
+| ⭐ yellow star | record a tattle (beep, talk, it stops on silence or another press) and send it to Drive + email | | |
+| 🟢 green circle | call the other phone | answer | **hold to talk**, let go to listen |
+| 🔴 red square | show battery (3/2/1 red blinks) and go to sleep | decline | hang up |
+
+Lights: the button you're using glows (yellow follows your voice while recording; green
+follows the other kid's voice in a call). A faint green "breath" when idle means the
+phone is on Wi-Fi and can be called.
+
+**Power:** deep sleep until a button is pressed. After any use the phone stays awake
+and callable for `AWAKE_MINUTES` (default 5). Optional `PLAY_START_HOUR`/`PLAY_END_HOUR`
+keep both phones callable all afternoon (they also wake themselves at the start time),
+at the cost of battery: roughly 20-30 mA while awake.
+
+**Calls:** both phones must be on the same Wi-Fi. They find each other by name with
+UDP broadcasts (no IP addresses to configure); `INTERCOM_KEY` must match on both. If
+your router has "client/AP isolation" (common on guest networks), turn it off for this
+network. If the other phone is asleep, the caller hears a descending "sleepy" tune.
+Half duplex on purpose: no echo, no DSP. Full duplex with echo cancelling is a later
+upgrade.
+
+**Set up and flash**
+
+1. Deploy `cloud/drive_upload.gs` as a Google Apps Script web app (steps in its header).
+2. `cp firmware/tattle_lite/config.example.h firmware/tattle_lite/config.h` and fill in
+   Wi-Fi, the upload URL/token, and the two phone names (swapped on the other phone).
+3. Batteries in, power ON, USB-C cable to the computer, then
+   `firmware/build.sh /dev/cu.usbmodem*` (find the port with `arduino-cli board list`).
+   Arduino IDE instead: board "ESP32S3 Dev Module", Flash Size 8MB, PSRAM "QSPI PSRAM",
+   Partition Scheme "Custom" (uses `partitions.csv`), USB CDC On Boot "Enabled".
+4. If it won't flash: hold 🟢 green while switching on (that's the BOOT strap), flash,
+   switch off and on.
+
+**First bring-up, and tuning** (serial monitor at 115200 shows what's happening):
+- Recording: `rms=` lines show the mic level. Talking should be well above `SPEECH_RMS`
+  (600) and silence well below. Adjust `SPEECH_RMS` / `MIC_GAIN` in `tattle_lite.ino`.
+- If the mic reads all zeros, add `#define MIC_RIGHT_SLOT` to `config.h` (some PDM mics
+  put "left" data on the other clock edge).
+- Battery: the boot line prints the battery voltage; compare with a multimeter.
+- Volumes: `TONE_VOLUME`, `RING_VOLUME`, `CALL_VOLUME`.

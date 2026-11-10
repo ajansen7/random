@@ -1,0 +1,7 @@
+# 8 MB flash (ESP32-S3-WROOM-1-N8R2). One 3 MB app (flash over USB; no OTA) and a
+# ~4.9 MB FAT partition for the tattle outbox (about three 40-second recordings).
+# Name,    Type, SubType,  Offset,   Size
+nvs,       data, nvs,      0x9000,   0x5000,
+factory,   app,  factory,  0x10000,  0x300000,
+ffat,      data, fat,      0x310000, 0x4E0000,
+coredump,  data, coredump, 0x7F0000, 0x10000,
