@@ -1,0 +1,4 @@
+# KiCad local files
+.history/
+*.lck
+fp-info-cache

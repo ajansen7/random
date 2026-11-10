@@ -54,7 +54,7 @@ These aren't on the PCB order.
 (Written for JLCPCB, but any PCB-plus-assembly service works the same way.)
 
 **Board options**
-- Layers: **2** · Thickness: **1.6 mm** · Material: FR-4 · Surface finish: **lead-free HASL or ENIG**
+- Layers: **4** (the two inner layers are solid ground planes; the fab's default 4-layer stackup is fine) · Thickness: **1.6 mm** · Material: FR-4 · Surface finish: **lead-free HASL or ENIG**
 - Min hole size: **0.2 mm** (there are tiny thermal vias under the ESP32 and the 3.3 V regulator)
 - Quantity: 5 (the minimum, and spares are handy)
 

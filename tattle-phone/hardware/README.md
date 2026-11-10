@@ -2,7 +2,7 @@
 
 There's a KiCad project in [`kicad/`](kicad/). It has a schematic with every part
 and connection, and a **routed** board: outline, placement fitted to the printed
-case, ~1,800 track segments and ~260 vias, GND pours on both layers and the antenna keep-out.
+case, ~1,800 track segments and ~260 vias, GND pours on both outer layers, two solid inner GND planes (4-layer board) and the antenna keep-out.
 
 **6 connections are still open.** They're in tight spots where the autorouter and my
 fix-up router couldn't get through without shoving other traces aside. KiCad's
@@ -41,23 +41,19 @@ generates the factory files.
   `python3 kicad_gen/build.py && python3 kicad_gen/check.py` (needs KiCad's Python
   module), and you get a fresh project. This is good for big part swaps before routing.
 
-## Finishing the routing (KiCad 10)
+## Routing status: complete
 
-Open the board, press **B** to refill the pours, then **Inspect → Design Rules Checker**.
-It lists the 6 open connections (case coordinates in mm from the bottom-centre of the board):
+The board is fully routed: DRC shows **0 unconnected items**. The last connections were
+finished like this (Nov 2026):
 
-| Net | Where | What to do |
-|---|---|---|
-| VBAT | charger U2, pin 2 (≈ −9.6, 18) | Short hop on the back. Nudge the neighbouring trace with the interactive router (X, then drag) |
-| GND | ESD chip D1 (≈ 6, 15) | Add a via next to its GND pin, or run a short trace to the nearest GND via |
-| GND | speaker-amp corner (≈ 15, 50) | Same: via or short trace to the pour |
-| GND | battery gauge U6 area (≈ 16, 57) | Same |
-| GND | LED level shifter U8, pin 3 (≈ 9, 74) | Its pin sits in a pocket. Shove one adjacent trace 0.3 mm and drop a via |
-| GND | LED power switch Q2 area (≈ 8, 89) | Same |
-
-Then re-run DRC until "unconnected items" reads 0, and do a visual pass. Pay most
-attention to the 3.3 V regulator loop (U3/L1/C4–C6) and the USB pair: the autorouter
-gets these right electrically, but you can make them shorter and fatter by hand.
+- **VBAT** at charger U2 pin 2: routed by hand in KiCad 10 with the interactive router
+  (Shove mode), which nudged ISET/NTC/TMR and a few neighbours.
+- **GND islands** (SW12 ×2, D1, U8, Q2, and the U2/R4 ground cut off by the VBAT route):
+  the board went from 2 to **4 layers**. In1.Cu and In2.Cu are solid GND planes, so every
+  via and through-hole pad on GND now lands on ground. That fixed SW12 and U2 by itself.
+  D1 and Q2 each got a 0.5/0.2 mm GND via with a short stub. U8's data line (LED_DATA)
+  used to loop under its GND pin and wall it in; it now drops through a via just left of
+  U8 and runs 3 mm on In2.Cu, which let the pour reach the pin.
 
 **How it was routed** (all scripted, in `kicad_gen/`): `route.py` runs the
 [FreeRouting](https://github.com/freerouting/freerouting) autorouter on everything
@@ -72,7 +68,7 @@ regenerates an **unrouted** board, so only do that if you want to start over.
 - **Schematic vs board:** 377 pins, 71 nets, 0 mismatches. KiCad exported the
   schematic's netlist and it was compared pad by pad with the board.
 - **DRC:** no clearance, edge, hole or keep-out errors. What's left:
-  - *Unconnected items: 6*. See "Finishing the routing" above.
+  - *Unconnected items: 0.*
   - *Courtyard overlap LEDn / SWn (12×):* each key LED sits under its keycap, just
     beside the tact switch. The bodies clear by about 0.25 mm; the switch's outline is drawn
     generously.
@@ -108,7 +104,8 @@ The pin map matches [`firmware/tattle_phone/pins.h`](../firmware/tattle_phone/pi
 
 ## Ordering (JLCPCB or similar)
 
-- 2-layer, 1.6 mm, any colour. Min drill 0.2 mm (thermal vias under U1/U3).
+- **4-layer**, 1.6 mm, any colour, the fab's default stackup (In1/In2 = GND planes). Min drill 0.2 mm
+  (thermal vias under U1/U3, and a few 0.5/0.2 mm GND vias).
 - **Assembly on both sides** (the LEDs are on the front). That costs a bit more
   than one side, but nothing on this board is novice-friendly to hand-solder
   except the through-hole parts.

@@ -4,7 +4,7 @@ Read this first when picking the project up in a new session. It covers what the
 project is, every decision made so far and why, the exact state of each piece, how to
 run the tooling, the traps that already cost time, and what to do next.
 
-Last updated: 2026-11-10 (end of the first cloud session).
+Last updated: 2026-11-09, local session: routing finished, board moved to 4 layers.
 
 ---
 
@@ -39,6 +39,7 @@ asking them to learn deep tool features.
 | Upload | Google Apps Script web app to Drive + email | Owner is happy with it. Fallback: their always-on home computer |
 | Keycaps | **12 separate captive caps** (flange under the front wall) | Replaced the printed flex-hinge web: simpler and kid-proof |
 | Speaker grille | 5 smooth flush slots, cloth glued behind | Replaced the hex holes + dish, which owner disliked ("nooks and crannies") |
+| PCB stackup | **4 layers**, 1.6 mm. In1.Cu + In2.Cu are solid GND planes (In2 also carries one 3 mm LED_DATA hop near U8) | 2 layers ran out of room: every last connection cut a ground pour into islands. Inner planes make any GND via land on ground |
 | Assembly | Factory assembles **both sides**; owner hand-solders only the 13 switches + 3 JST connectors | Owner is a novice solderer |
 
 ## 3. Where everything is
@@ -78,8 +79,8 @@ going to be shared again.
 | Apps Script | Written, not deployed | Deploy as web app (steps in the file header) |
 | Enclosure | v2 model + STLs. Overlap check clean between all parts | PLA test print. Check fit, key feel, battery pocket |
 | PCB schematic | Generated, one sheet, net-label style (every pin labelled). Netlist matches board on all 377 pins | Optional: tidy into wires |
-| PCB board | **Routed except 6 connections** (VBAT at U2 pin 2; GND at SW12 ×2, U8 pin 3, Q2 pin 2, D1 pin 2). DRC otherwise clean (only expected warnings: 12 LED/switch courtyard overlaps, silkscreen, lib links) | Owner finishing the 6 in KiCad 10 using `hardware/KICAD_GUIDE.md` §4b. Then: DRC to 0 → `python3 hardware/kicad_gen/make_fab.py` → order |
-| Fab files | Generator written (`make_fab.py`: Gerbers+drill zip, JLC BOM/CPL), **not yet run on a finished board** | Run after routing is complete. LCSC part numbers are blank and need filling in |
+| PCB board | **Fully routed, 4 layers.** DRC: 0 unconnected, 0 errors beyond the expected (12 LED/switch courtyard overlaps, silkscreen, lib links). `check.py`: 0 schematic/board mismatches | Visual pass in KiCad (3.3 V loop, USB pair). Optional: undo the owner's incidental shoves of VIN/CHG/PGOOD/EN2 near U2 (harmless) |
+| Fab files | `make_fab.py` output in `hardware/fab/`: Gerber zip (incl. In1/In2), drill, `bom_jlc.csv` with **all LCSC numbers** (from `kicad_gen/lcsc.py`, checked against JLC stock + datasheets 2026-11-10), `cpl_jlc.csv` | Upload to JLC; in their placement preview check LED, U1–U8, D1, Q1/Q2 rotations. Parts ≈ $114 / 5 boards |
 | Intercom | Designed (README §8: mDNS discovery, UDP audio, half-duplex v1, play-hours power plan). Not implemented | Later phase |
 
 ## 5. Tooling: how it works and how to run it
@@ -137,6 +138,21 @@ fetch it with Maven `dependency:copy-dependencies` into a `lib/` folder and set
    inside another SVG (inline it instead).
 10. The cloud environment's safety check blocks running downloaded code (FreeRouting)
     unless the owner explicitly allows it. Locally that's not an issue.
+11. **KiCad 10 Python:** `pcbnew.EDA_UNITS_MILLIMETRES` is now `EDA_UNITS_MM`, and
+    `pcbnew.WriteDRCReport` segfaults in a standalone script. `check.py` now runs DRC through
+    `kicad-cli` instead. On macOS use KiCad's bundled Python
+    (`/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3`)
+    with `/Applications/KiCad/KiCad.app/Contents/MacOS` on `PATH` for `kicad-cli`. It has no numpy,
+    so `fixup.py` won't run there.
+12. **FreeRouting 2.4.1 misreads this KiCad-10-routed board:** on DSN import it sees ~56 nets
+    "unrouted" and 196–757 "violations" on a board KiCad calls clean, and the GND zones export as
+    whole-board `(plane GND …)` blocks that wall in any other net. Don't use it for touch-ups.
+    (Java 25 via `brew install openjdk@25`, jar in `~/tools/freerouting/`, if ever needed.)
+13. Interactive shove routing on a 2-layer board with pours on both sides can silently cut a
+    ground island off elsewhere (the VBAT fix did this to U2's ground). Re-check unconnected
+    items after *every* hand route.
+14. kicad-cli DRC reports every pour-island item at the zone's corner (65, 205). Find the real
+    islands with a connectivity pass over the filled polygons (pads, vias, track ends).
 
 ## 7. What was tried for the last 6 connections (so nobody repeats it)
 
@@ -149,15 +165,16 @@ fetch it with Maven `dependency:copy-dependencies` into a `lib/` folder and set
 | Rip-up and reroute (1.0–1.5 mm) | 6 → 22 open ❌ |
 | Spread charger resistors, move D1, full re-route **with GND as a net** | All signals OK but 10 GND open + new errors ❌ (not kept) |
 
-Conclusion: the remaining 6 need shove-routing. KiCad 10's interactive router does it in
-minutes. Guide: `hardware/KICAD_GUIDE.md` §4b.
+| Owner, KiCad 10 shove router | VBAT ✅, but the route cut U2/R4 ground into a new island (still 6) |
+| Scripted straight bridges / via-to-other-side search / FreeRouting with temp nets | No legal spot for any of the 6 ❌ |
+| **4 layers: In1/In2 GND planes** | 6 → 3 at once (THT + via islands), then 0.5/0.2 mm GND vias for D1 and Q2, and LED_DATA moved to In2 for 3 mm so U8's pin-3 pocket opened → **0 open ✅** |
+
+Conclusion: done. The 2-layer board had simply run out of room.
 
 ## 8. Next steps, in order
 
-1. **Owner:** finish the 6 connections in KiCad 10 (guide §4b), DRC → 0 unconnected, save, commit.
-2. **Claude:** run `check.py`, then `make_fab.py`. Help fill LCSC part numbers (check stock:
-   ESP32-S3-WROOM-1-N16R8, BQ24075RGTR, TPS63001DRCR, MAX98357AETE+T, ICS-43434, MAX17048G+T10,
-   TCA9555RTWR, SK6812MINI, HRO TYPE-C-31-M-12, C&K PCM12SMTR). Export a STEP for a case fit check.
+1. ✅ Routing finished, board moved to 4 layers, `check.py` and `make_fab.py` run. **Commit it.**
+2. ✅ LCSC numbers filled (`kicad_gen/lcsc.py`; substitutions: Sunlord SWPA4020 inductor, OPSCO SK6812mini-012 LEDs, 16 V polyfuse; reasons in that file). Still to do: export a STEP for a case fit check.
 3. **Owner:** order breadboard parts + battery, speaker, NTC, screws, inserts (ORDERING.md), and
    test-print the case in PLA.
 4. Breadboard firmware bring-up (it has never been compiled). Deploy the Apps Script.

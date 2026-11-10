@@ -5,7 +5,7 @@ Make the files a PCB fab + assembly service needs (JLCPCB format, works elsewher
 
 Writes ../fab/:
   tattle_phone_gerbers.zip   Gerbers + drill files -> upload as the PCB
-  bom_jlc.csv                Comment, Designator, Footprint, LCSC Part #  (fill in LCSC numbers)
+  bom_jlc.csv                Comment, Designator, Footprint, LCSC Part #  (numbers from lcsc.py)
   cpl_jlc.csv                Designator, Mid X, Mid Y, Layer, Rotation   (placement)
 Through-hole parts (switches, JST connectors) and DNP parts are left out of the
 assembly files: you solder those (or add them back if you pay the fab to).
@@ -19,11 +19,12 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import design  # noqa: E402
+from lcsc import LCSC  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PCB = os.path.join(HERE, "..", "kicad", "tattle_phone.kicad_pcb")
 OUT = os.path.join(HERE, "..", "fab")
-LAYERS = "F.Cu,B.Cu,F.Paste,B.Paste,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts"
+LAYERS = "F.Cu,In1.Cu,In2.Cu,B.Cu,F.Paste,B.Paste,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts"
 
 
 def run(*args):
@@ -72,7 +73,10 @@ def main():
         w = csv.writer(f)
         w.writerow(["Comment", "Designator", "Footprint", "LCSC Part #"])
         for (val, fp), refs in groups.items():
-            w.writerow([val, ",".join(sorted(refs, key=lambda s: (len(s), s))), fp, ""])
+            w.writerow([val, ",".join(sorted(refs, key=lambda s: (len(s), s))), fp, LCSC.get((val, fp), "")])
+    missing = [k for k in groups if k not in LCSC]
+    if missing:
+        print("   no LCSC part number for:", missing)
     print(f"wrote {os.path.normpath(OUT)}: gerbers zip ({len(os.listdir(gdir))} files), "
           f"cpl_jlc.csv ({len(rows) - len([r for r in rows if r['Ref'] in skip])} parts), "
           f"bom_jlc.csv ({len(groups)} lines)")

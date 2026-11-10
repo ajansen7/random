@@ -74,6 +74,10 @@ I'll tell you exactly where to click.
 
 ## 4b. The six connections on this board, one by one
 
+> **Done (Nov 2026).** VBAT was routed by hand, and the ground ones were solved by moving
+> the board to 4 layers with inner ground planes (see `hardware/README.md`, "Routing
+> status"). This section is kept for reference, and the pictures show the old 2-layer board.
+
 The current board has exactly these six open. For each one: run DRC (step 3), go to the
 **Unconnected Items** tab, and **double-click** the matching line. KiCad zooms there and
 draws a thin straight line (the "ratsnest") between the two things that need joining.

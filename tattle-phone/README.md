@@ -134,7 +134,7 @@ storage. It disconnects the battery from the system, and charging still works wi
 
 ## 4. PCB design notes (KiCad)
 
-- **2 layers, 1.6 mm**, shaped to fit the handset's inner profile (a ~45 × 150 mm
+- **4 layers, 1.6 mm** (inner layers In1/In2 are solid GND planes), shaped to fit the handset's inner profile (a ~45 × 150 mm
   rounded rectangle). Export the outline from your CAD as DXF → KiCad Edge.Cuts
   so board and shell match exactly.
 - **Antenna keep-out:** put the ESP32 module at the *top end* of the board with
@@ -347,7 +347,8 @@ file name so you know which kid called.
 - [x] Enclosure model v1 + STLs ([`enclosure/`](enclosure/)). Not test-printed yet
 - [x] Intercom design (§8)
 - [x] KiCad project generated: schematic + placed board, netlist-checked, DRC clean apart from routing ([`hardware/`](hardware/))
-- [x] Board routed (FreeRouting + scripted fix-ups), DRC clean except 6 open connections
-- [ ] Finish the last 6 connections in KiCad, tidy the schematic
+- [x] Board routed (FreeRouting + scripted fix-ups + hand routing in KiCad 10)
+- [x] Moved to 4 layers (inner GND planes): DRC 0 unconnected, netlist matches
+- [ ] Tidy the schematic (optional)
 - [ ] Test print and fit check against a real PCB
 - [ ] Intercom firmware

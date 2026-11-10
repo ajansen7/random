@@ -61,7 +61,9 @@ def netlist_check(board):
 
 def drc(board):
     rpt = tempfile.mktemp(suffix=".txt")
-    pcbnew.WriteDRCReport(board, rpt, pcbnew.EDA_UNITS_MILLIMETRES, True)
+    # kicad-cli rather than pcbnew.WriteDRCReport: the latter segfaults in a standalone script on KiCad 10.
+    subprocess.run(["kicad-cli", "pcb", "drc", "--refill-zones", "--severity-all", "--units", "mm",
+                    "-o", rpt, PCB], check=True, capture_output=True)
     txt = open(rpt).read()
     groups = collections.defaultdict(set)
     counts = collections.Counter()
