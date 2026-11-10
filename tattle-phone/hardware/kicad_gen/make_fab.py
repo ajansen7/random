@@ -64,19 +64,28 @@ def main():
                         "Top" if r["Side"].lower().startswith("top") else "Bottom", r["Rot"]])
     os.remove(pos)
 
-    groups = {}
+    # One BOM line per LCSC part: JLC zeroes out a part number that appears on two lines
+    # (e.g. both PCM12 slide switches, or RESET and BOOT).
+    groups, missing = {}, set()
     for r, p in parts.items():
         if r in skip:
             continue
-        groups.setdefault((p["value"], p["fp"].split(":")[1]), []).append(r)
+        key = (p["value"], p["fp"].split(":")[1])
+        code = LCSC.get(key)
+        if not code:
+            missing.add(key)
+        g = groups.setdefault(code or key, {"vals": [], "fp": key[1], "refs": []})
+        if p["value"] not in g["vals"]:
+            g["vals"].append(p["value"])
+        g["refs"].append(r)
     with open(os.path.join(OUT, "bom_jlc.csv"), "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["Comment", "Designator", "Footprint", "LCSC Part #"])
-        for (val, fp), refs in groups.items():
-            w.writerow([val, ",".join(sorted(refs, key=lambda s: (len(s), s))), fp, LCSC.get((val, fp), "")])
-    missing = [k for k in groups if k not in LCSC]
+        for code, g in groups.items():
+            w.writerow([" / ".join(g["vals"]), ",".join(sorted(g["refs"], key=lambda s: (len(s), s))),
+                        g["fp"], code if isinstance(code, str) else ""])
     if missing:
-        print("   no LCSC part number for:", missing)
+        print("   no LCSC part number for:", sorted(missing))
     print(f"wrote {os.path.normpath(OUT)}: gerbers zip ({len(os.listdir(gdir))} files), "
           f"cpl_jlc.csv ({len(rows) - len([r for r in rows if r['Ref'] in skip])} parts), "
           f"bom_jlc.csv ({len(groups)} lines)")
