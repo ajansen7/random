@@ -5,6 +5,7 @@
 // the case, keypad and KiCad board outline stay in sync.
 //
 // Pick a part with -D part="..." (or edit the default below):
+//   closed     the finished phone (default)
 //   assembly   everything in place, front shell see-through
 //   exploded   parts spread out along z
 //   front      front shell        (print face-down)
@@ -19,7 +20,12 @@
 
 include <layout.scad>
 
-part = "assembly";
+// What to show when you open this file. Try: "closed" (the finished phone),
+// "assembly" (x-ray: see-through front shell with the board inside), "exploded",
+// or a single printable part: "front", "back", "keypad", "call_cap", "status_lens",
+// "speaker_cup". Press F5 for a quick colored preview. F6 renders in full quality but
+// shows everything in OpenSCAD's default yellow/teal colors.
+part = "closed";
 print_orient = false;      // the Makefile sets true for STL export
 
 $fn = $preview ? 40 : 72;
