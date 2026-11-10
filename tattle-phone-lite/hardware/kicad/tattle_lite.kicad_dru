@@ -1,0 +1,4 @@
+(version 1)
+(rule "reverse-mount LED lens holes"
+  (constraint edge_clearance (min 0.2mm))
+  (condition "A.memberOfFootprint('LED*') || B.memberOfFootprint('LED*')"))

@@ -1,0 +1,145 @@
+"""
+Autoroute the board with FreeRouting.
+
+    FREEROUTING_CP="/path/to/freerouting/lib/*" JAVA=/path/to/java python3 route.py [passes] [--continue]
+
+--continue keeps the existing tracks and only routes what's still unconnected.
+
+Exports a Specctra DSN from ../kicad/tattle_lite.kicad_pcb, leaves GND out
+(both copper layers are GND pours), runs FreeRouting headless, imports the
+session back and refills the pours. Any existing tracks are removed first, so
+re-running gives a fresh route. Re-run build.py first if design.py changed.
+"""
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+import pcbnew
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.abspath(__file__))
+KDIR = os.path.join(HERE, "..", "kicad")
+PCB = os.path.join(KDIR, "tattle_lite.kicad_pcb")
+DSN = os.path.join(KDIR, "tattle_lite.dsn")
+SES = os.path.join(KDIR, "tattle_lite.ses")
+SKIP_NETS = [] if os.environ.get("ROUTE_GND") else ["GND"]   # ROUTE_GND=1: route ground as a net too
+
+
+def strip_nets(dsn_path, nets):
+    """Drop nets from the DSN network section so the router leaves them alone."""
+    txt = open(dsn_path).read()
+    for n in nets:
+        txt = re.sub(r'\(net "?%s"?\s+\(pins[^)]*\)\s*\)' % re.escape(n), "", txt)
+        txt = re.sub(r'(\(class [^\n]*?)\s"?%s"?(?=[\s)])' % re.escape(n), r"\1", txt)
+    open(dsn_path, "w").write(txt)
+
+
+def strip_planes(dsn_path):
+    """Drop (plane ...) blocks: KiCad exports each GND pour as a board-sized plane, which
+    FreeRouting treats as solid copper of another net and refuses to route through."""
+    t = open(dsn_path).read()
+    out, i = [], 0
+    while True:
+        j = t.find("(plane ", i)
+        if j < 0:
+            out.append(t[i:])
+            break
+        out.append(t[i:j])
+        depth, k = 0, j
+        while True:
+            depth += t[k] == "("
+            depth -= t[k] == ")"
+            if depth == 0:
+                break
+            k += 1
+        i = k + 1
+    open(dsn_path, "w").write("".join(out))
+
+
+def import_ses(board, ses_path):
+    """Add the routed wires and vias from a FreeRouting .ses file to the board.
+    (KiCad 7's ImportSpecctraSES only works inside the GUI, so do it by hand.)"""
+    from sexp import parse, find, find1
+    root = parse(open(ses_path).read())
+    routes = find1(root, "routes")
+    res = find1(routes, "resolution")
+    unit_nm = {"um": 1000, "mm": 1_000_000, "mil": 25400}[str(res[1])] / float(res[2])
+    pt = lambda x, y: pcbnew.VECTOR2I(int(float(x) * unit_nm), int(-float(y) * unit_nm))
+    vias = {}
+    for ps in find(find1(routes, "library_out") or [], "padstack"):
+        m = re.search(r"_(\d+):(\d+)_um", ps[1])
+        vias[ps[1]] = (int(m.group(1)) * 1000, int(m.group(2)) * 1000) if m else (600_000, 300_000)
+    layers = {"F.Cu": pcbnew.F_Cu, "B.Cu": pcbnew.B_Cu}
+    n_trk = n_via = 0
+    for net in find(find1(routes, "network_out"), "net"):
+        ni = board.FindNet(str(net[1]))
+        for w in find(net, "wire"):
+            path = find1(w, "path")
+            layer, width, coords = layers[str(path[1])], float(path[2]) * unit_nm, path[3:]
+            pts = [pt(coords[i], coords[i + 1]) for i in range(0, len(coords) - 1, 2)]
+            for a, b in zip(pts, pts[1:]):
+                t = pcbnew.PCB_TRACK(board)
+                t.SetStart(a); t.SetEnd(b); t.SetWidth(int(width)); t.SetLayer(layer)
+                if ni: t.SetNet(ni)
+                board.Add(t); n_trk += 1
+        for v in find(net, "via"):
+            dia, drill = vias.get(v[1], (600_000, 300_000))
+            p = pt(v[2], v[3])
+            if any(t.IsLocked() and t.GetClass() == "PCB_VIA" and abs(t.GetPosition().x - p.x) < 1000
+                   and abs(t.GetPosition().y - p.y) < 1000 for t in board.GetTracks()):
+                continue   # a locked via we kept is already there
+            via = pcbnew.PCB_VIA(board)
+            via.SetPosition(pt(v[2], v[3])); via.SetWidth(dia); via.SetDrill(drill)
+            via.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu)
+            if ni: via.SetNet(ni)
+            board.Add(via); n_via += 1
+    return n_trk, n_via
+
+
+def main():
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    keep = "--continue" in sys.argv   # keep existing tracks, route only what's left
+    passes = args[0] if args else "40"
+    # Load the real board so its .kicad_pro net classes (power widths, USB pair) apply.
+    board = pcbnew.LoadBoard(PCB)
+    old = [t for t in board.GetTracks() if not t.IsLocked()]   # locked = placed on purpose (EP vias)
+    if keep:
+        print(f"continuing: keeping {len(old)} existing tracks/vias")
+        old = []
+    if old:
+        print(f"removing {len(old)} existing tracks/vias for a fresh route")
+        for t in old:
+            board.Remove(t)
+    if not pcbnew.ExportSpecctraDSN(board, DSN):
+        raise SystemExit("DSN export failed")
+    strip_nets(DSN, SKIP_NETS)
+    strip_planes(DSN)
+
+    java = os.environ.get("JAVA", "java")
+    cp = os.environ["FREEROUTING_CP"]
+    cmd = [java, "-cp", cp, "app.freerouting.Freerouting", "-de", DSN, "-do", SES, "-mp", passes,
+           "--gui.enabled=false", "--usage_and_diagnostic_data.disable_analytics=true"]
+    if os.path.exists(SES):
+        os.remove(SES)
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    for line in (r.stdout + r.stderr).splitlines():
+        if "final score" in line or "unrouted connection" in line or "ERROR" in line:
+            print("  ", line[-150:])
+    if not os.path.exists(SES):
+        raise SystemExit("FreeRouting produced no session file")
+
+    if keep:
+        for t in list(board.GetTracks()):
+            if not t.IsLocked():
+                board.Remove(t)   # the session file contains the complete wiring
+    n_trk, n_via = import_ses(board, SES)
+    board.BuildConnectivity()
+    pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+    board.Save(PCB)
+    print(f"imported: {n_trk} track segments, {n_via} vias -> {PCB}")
+
+
+if __name__ == "__main__":
+    main()
