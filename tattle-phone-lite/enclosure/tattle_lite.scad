@@ -36,7 +36,8 @@ SCREW_HEAD_D= 5.4;
 SCREW_CB    = 6.0;         // counterbore depth from the back
 LIP_T       = 0.6;
 LIP_H       = 1.5;
-USBC_SLOT   = [9.4, 3.6];
+USBC_OVERMOLD = [13.5, 8.0];   // pocket for the cable's plastic plug body, cut right up to the
+                                // receptacle so any cable whose plug body fits seats fully
 SLIDE_SLOT  = [7.5, 3.4];  // recessed: push with a fingernail or pen tip (toddler-resistant)
 SLIDE_Z     = PCB_BACK_Z - 1.4;
 DOOR_SCREW_Y = DOOR_Y0 + 2.4;          // M2.5 countersunk screw, into an insert in the shelf
@@ -75,10 +76,8 @@ module btn2d(shape, size, grow = 0) {
 // ------------------------------------------------------------ cut-outs through both shells
 module shared_cutouts() {
     // USB-C in the bottom end (programming only), with a counterbore for the plug
-    translate([USBC_X, -1, USBC_Z]) rotate([-90, 0, 0]) {
-        linear_extrude(WALL + 4) rrect(USBC_SLOT[0], USBC_SLOT[1], USBC_SLOT[1]/2 - 0.01);
-        linear_extrude(1 + 1.2) rrect(12.5, 7.0, 3.0);
-    }
+    translate([USBC_X, -1, USBC_Z]) rotate([-90, 0, 0])
+        linear_extrude(1 + PCB_BOTTOM_Y - 0.2) rrect(USBC_OVERMOLD[0], USBC_OVERMOLD[1], 3.0);
     // recessed POWER slide switch, right side
     translate([cx(POWER_SWITCH_Y) + CORNER_R - WALL/2, POWER_SWITCH_Y, SLIDE_Z])
         cube([WALL + 4, SLIDE_SLOT[0], SLIDE_SLOT[1]], center = true);
@@ -177,6 +176,8 @@ module back_shell() {
         translate([0, DOOR_SCREW_Y, WALL - 0.02]) cylinder(d = INSERT_D, h = INSERT_L);
         // finger notch so the door can be lifted
         translate([0, DOOR_Y1 + 0.5, -1]) scale([1, 0.6, 1]) cylinder(d = 10, h = 1.6);
+        // USB-C and power switch: both sit just below the split line, so mostly in this shell
+        shared_cutouts();
     }
 }
 
@@ -291,31 +292,32 @@ module pcb_outline_2d() {
 }
 
 // ------------------------------------------------------------ part selector
-SHELL_COLOR = [0.98, 0.93, 0.80];   // 90s "almond" plastic
+SHELL_COLOR = "skyblue";            // preview only: the real colour is your filament
+DOOR_COLOR  = [0.45, 0.72, 0.85];   // battery door (a touch darker so it reads as a separate part)
 
 module caps_colored() { for (i = [0 : len(BUTTONS) - 1]) color(BTN_COLORS[i]) cap(BUTTONS[i]); }
 function btn(name) = [for (b = BUTTONS) if (b[0] == name) b][0];
 
 if (part == "assembly") {
     color(SHELL_COLOR) back_shell();
-    color([0.9, 0.85, 0.72]) door();
+    color(DOOR_COLOR) door();
     pcb_dummy(); battery_dummy(); speaker_dummy();
     color("gray") speaker_cup();
     caps_colored();
-    color([0.98, 0.93, 0.80, 0.25]) front_shell();
+    color([0.53, 0.81, 0.92, 0.25]) front_shell();
 } else if (part == "closed") {
     color(SHELL_COLOR) back_shell();
-    color([0.95, 0.89, 0.75]) door();
+    color(DOOR_COLOR) door();
     color(SHELL_COLOR) front_shell();
     caps_colored();
 } else if (part == "back_view") {
     translate([0, 0, CASE_T]) rotate([0, 180, 0]) {
         color(SHELL_COLOR) back_shell();
-        color([0.92, 0.86, 0.72]) door();
+        color(DOOR_COLOR) door();
         color(SHELL_COLOR) front_shell();
     }
 } else if (part == "exploded") {
-    translate([0, 0, -22]) color([0.9, 0.85, 0.72]) door();
+    translate([0, 0, -22]) color(DOOR_COLOR) door();
     translate([0, 0, -14]) battery_dummy();
     color(SHELL_COLOR) back_shell();
     translate([0, 0, 18]) { pcb_dummy(); speaker_dummy(); color("gray") speaker_cup(); }
