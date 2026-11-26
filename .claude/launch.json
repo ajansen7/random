@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tessa-tales",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "--directory", "tessa-tales", "tessa.py", "--no-open", "serve"],
+      "port": 4747
+    }
+  ]
+}

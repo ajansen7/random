@@ -1,0 +1,97 @@
+# Tessa Tales knobs. Tune these against her real SD cards, then re-run:
+#   uv run tessa.py sieve <import-id>
+
+# Where her photos and recordings live. Never inside the git repo.
+home = "~/TessaTales"
+
+[bursts]
+gap_seconds = 20              # a new burst starts after this much quiet
+standout_quiet_seconds = 90   # quiet on both sides of a lone photo = she meant it (gold star)
+standout_max_photos = 2       # a "lone" moment can be one or two clicks
+flipbook_min_photos = 8       # stacks this big can become a flip-book page
+
+[stacks]
+# Junk frames are buried before stacking, so gaps here skip over them.
+stack_gap_seconds = 90        # kept pictures this close together can stack
+same_scene = 0.82             # CLIP similarity needed to keep stacking
+same_look_bits = 10           # or a perceptual-hash distance this small (out of 64)
+merge_gap_seconds = 240       # neighbouring stacks this close...
+merge_scene = 0.72            # ...that look this alike become one stack
+
+[moments]
+gap_minutes = 10              # this long with nothing worth keeping starts a new moment
+
+[sieve]
+model = "MobileCLIP2-S2"
+pretrained = "dfndr2b"
+junk_high = 0.60              # junk score at or above this: snowdrift
+junk_low = 0.35               # at or below this: treasure
+person_protect = 0.25         # this much "someone's in here" and it can't be buried
+too_dark = 18                 # mean brightness out of 255
+too_bright = 245
+too_flat = 6                  # pixel spread; a thumb over the lens is very flat
+
+[prompts]
+# CLIP compares every photo with these little descriptions.
+# Tuned on her first real card (2026-11-26): a vague catch-all like "a blurry photo of nothing"
+# swallowed real faces on this blurry, yellow-tinted camera, so junk stays specific.
+# Plain black, white and blank frames are caught by the brightness rules in [sieve], not here.
+junk = [
+    "a photo of the inside of a pocket",
+    "a completely black photo",
+    "a finger covering the camera lens",
+    "a photo of a ceiling",
+    "a photo of the floor",
+    "a photo of carpet",
+    "an empty car seat",
+    "a dark photo of the inside of a car at night",
+    "a photo of a wall",
+    "a photo of a door",
+    "a light on the ceiling",
+    "blurry streaks of light in the dark",
+    "a parking lot at night",
+    "a blurry smear of color",
+    "a bright blurry white blob",
+    "a blurry photo of a bed sheet",
+]
+people = [
+    "a photo of a person",
+    "a photo of a face",
+    "a close-up of a face",
+    "a selfie",
+    "a blurry photo of a person",
+    "a photo of a woman",
+    "a photo of a man",
+    "a photo of a grandmother",
+    "a photo of a baby",
+    "a photo of a baby in a car seat",
+    "a photo of a pregnant belly",
+    "a photo of a pregnant woman",
+    "a photo of a child",
+    "a photo of a little girl",
+    "a photo of people",
+    "a photo of someone's legs",
+]
+things = [
+    "a photo of a dog",
+    "a photo of a cat",
+    "a photo of an animal",
+    "a photo of a toy",
+    "a photo of a stuffed animal",
+    "a fuzzy stuffed animal",
+    "a close-up of a soft toy",
+    "a photo of a doll",
+    "a photo of food",
+    "a photo of a cake",
+    "a photo of shoes",
+    "a photo of clothes",
+    "a photo of a flower",
+    "a photo of a tree",
+    "a photo of a house",
+    "a photo of a book",
+    "a photo of a hospital room",
+    "a photo of a TV screen",
+    "a photo of a cartoon on a screen",
+    "a pixelated cartoon face",
+    "a photo of the view out a car window",
+]

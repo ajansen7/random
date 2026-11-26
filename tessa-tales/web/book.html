@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tessa Tales</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Gochi+Hand&family=Nunito:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="/web/book.css">
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true"></div>
+
+<main>
+  <header class="top">
+    <p class="kicker">Let's make a book!</p>
+    <h1 id="title" class="editable" contenteditable="true" spellcheck="false">Coming home</h1>
+    <p class="olaf" id="olaf-line">Olaf is looking at the pictures…</p>
+  </header>
+
+  <div id="moments"></div>
+
+  <section class="pile-link">
+    <button id="open-pile" class="chunky-btn ghost">⛄ Marshmallow's pile</button>
+    <p>Everything Olaf buried. Dig through it if he got one wrong.</p>
+  </section>
+</main>
+
+<nav class="strip" aria-label="Your book">
+  <div class="strip-label">
+    <span class="strip-title" id="strip-title">Coming home</span>
+    <span class="strip-count" id="strip-count">0 pages</span>
+    <span class="saved" id="saved"></span>
+  </div>
+  <ol class="pages" id="pages"></ol>
+  <button class="tell" id="tell">Tell it with Tessa <span aria-hidden="true">❄</span></button>
+</nav>
+
+<dialog id="viewer" aria-label="Picture viewer">
+  <div class="v-top">
+    <span class="v-where" id="v-where"></span>
+    <button class="v-close" id="v-close" aria-label="Close">✕</button>
+  </div>
+  <div class="v-stage">
+    <button class="v-nav prev" id="v-prev" aria-label="Previous picture">‹</button>
+    <img id="v-img" alt="">
+    <button class="v-nav next" id="v-next" aria-label="Next picture">›</button>
+  </div>
+  <div class="v-why" id="v-why"></div>
+  <div class="v-actions">
+    <button class="chunky-btn" id="v-add">Put this picture in the book</button>
+    <button class="chunky-btn alt" id="v-flip">Put in the whole flip-book</button>
+    <button class="chunky-btn ghost" id="v-play">▶ flip it</button>
+  </div>
+  <ol class="v-film" id="v-film"></ol>
+</dialog>
+
+<dialog id="pile" aria-label="Marshmallow's pile">
+  <div class="v-top">
+    <span class="v-where">⛄ Marshmallow's pile</span>
+    <button class="v-close" id="pile-close" aria-label="Close">✕</button>
+  </div>
+  <p class="pile-note">Tap one to look closer. You can rescue anything into the book.</p>
+  <div class="pile-grid" id="pile-grid"></div>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/web/book.js"></script>
+</body>
+</html>
