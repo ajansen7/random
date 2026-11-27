@@ -1,6 +1,6 @@
 """Tessa Tales.
 
-  uv run tessa.py                    open the book-making page for the latest card
+  uv run tessa.py                    open the shelf (plug in the camera card any time: the shelf notices it)
   uv run tessa.py import [SOURCE]    copy new pictures off the SD card (found automatically), let Olaf sort them, open the page
   uv run tessa.py sieve [IMPORT_ID]  let Olaf sort again after tuning config.toml (books you've made are kept)
 """
@@ -9,7 +9,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from tessa_tales import sieve
+from tessa_tales import sieve, stories
 from tessa_tales.config import load_config
 from tessa_tales.library import Library
 from tessa_tales.server import serve
@@ -31,6 +31,9 @@ def sort_pictures(lib: Library, cfg: dict, import_id: str) -> None:
     sv = man["sieve"]
     print(f"  {len(man['photos'])} pictures → {sv['counts']['treasure']} warm hugs in {len(sv['moments'])} moments, "
           f"{sv['photo_counts']['snowdrift']} buried in Marshmallow's pile")
+    made = stories.ensure_day_stories(lib, import_id)
+    if made:
+        print(f"  new stories on the shelf: {', '.join(made)}")
 
 
 def main() -> None:
@@ -59,15 +62,14 @@ def main() -> None:
             return
         sort_pictures(lib, cfg, import_id)
         if not args.no_open:
-            serve(lib, args.port, f"/book/{import_id}", cfg.get("voice"))
+            serve(lib, cfg, args.port, "/")
     elif args.cmd == "sieve":
         import_id = args.import_id or lib.latest_import()
         if not import_id:
             sys.exit("Nothing imported yet. Try: uv run tessa.py import")
         sort_pictures(lib, cfg, import_id)
     else:
-        import_id = lib.latest_import()
-        serve(lib, args.port, None if args.no_open_top else (f"/book/{import_id}" if import_id else "/"), cfg.get("voice"))
+        serve(lib, cfg, args.port, None if args.no_open_top else "/")
 
 
 if __name__ == "__main__":

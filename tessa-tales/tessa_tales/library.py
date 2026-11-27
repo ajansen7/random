@@ -23,6 +23,46 @@ class Library:
         for d in (self.originals, self.thumbs, self.feats, self.imports, self.sheets):
             d.mkdir(parents=True, exist_ok=True)
         self.seen_path = self.home / "seen.json"
+        self.quick_path = self.home / "seen_quick.json"  # name|size|mtime of everything copied, for fast card checks
+
+    # ---- fast "anything new on this card?" check ----------------------------
+    @staticmethod
+    def _quick_key(name: str, st) -> str:
+        return f"{name}|{st.st_size}|{int(st.st_mtime)}"
+
+    def _load_quick(self) -> set[str]:
+        if self.quick_path.exists():
+            return set(json.loads(self.quick_path.read_text()))
+        # first run: rebuild from the copies we already have (copy2 kept size and time)
+        quick = {self._quick_key(f.name.split("/")[-1], f.stat()) for f in self.originals.glob("*/*") if f.is_file()}
+        self.quick_path.write_text(json.dumps(sorted(quick)))
+        return quick
+
+    def card_files(self, source: Path) -> list[Path]:
+        """Pictures on a card. Cameras keep them in DCIM; never wander into the hidden system
+        folders macOS adds to cards (.Spotlight-V100, .fseventsd), which can block for minutes."""
+        root = source / "DCIM" if (source / "DCIM").is_dir() else source
+        found = []
+        stack = [root]
+        while stack:
+            d = stack.pop()
+            try:
+                entries = list(d.iterdir())
+            except OSError:
+                continue
+            for e in entries:
+                if e.name.startswith("."):
+                    continue
+                if e.is_dir():
+                    stack.append(e)
+                elif is_photo(e):
+                    found.append(e)
+        return sorted(found, key=lambda p: natural_key(str(p.relative_to(source))))
+
+    def count_new(self, source: Path) -> int:
+        quick = self._load_quick()
+        return sum(1 for p in self.card_files(source)
+                   if self._quick_key("_".join(p.relative_to(source).parts), p.stat()) not in quick)
 
     # ---- bookkeeping -------------------------------------------------
     def _load_seen(self) -> dict:
@@ -52,19 +92,23 @@ class Library:
         return import_id
 
     # ---- copying off the card ----------------------------------------
-    def import_card(self, source: Path, log=print) -> str | None:
+    def import_card(self, source: Path, log=print, progress=None) -> str | None:
         """Copy every new photo from source into originals/<import-id>/. Never touches the card."""
-        files = sorted((p for p in source.rglob("*") if is_photo(p)), key=lambda p: natural_key(str(p.relative_to(source))))
+        files = self.card_files(source)
         seen = self._load_seen()
+        quick = self._load_quick()
         import_id = self._new_import_id()
         dest = self.originals / import_id
         photos, skipped = [], 0
         for i, p in enumerate(files, 1):
+            if progress:
+                progress(i, len(files))
+            name = "_".join(p.relative_to(source).parts)
+            quick.add(self._quick_key(name, p.stat()))
             digest = sha1_file(p)
             if digest in seen:
                 skipped += 1
                 continue
-            name = "_".join(p.relative_to(source).parts)
             dest.mkdir(parents=True, exist_ok=True)
             shutil.copy2(p, dest / name)
             rel = f"{import_id}/{name}"
@@ -72,6 +116,7 @@ class Library:
             photos.append({"sha1": digest, "file": rel, "name": p.name, "mtime": p.stat().st_mtime})
             if i % 50 == 0:
                 log(f"  copied {i}/{len(files)}")
+        self.quick_path.write_text(json.dumps(sorted(quick)))
         if not photos:
             log(f"Nothing new on {source} ({skipped} pictures were already imported).")
             return None

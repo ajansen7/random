@@ -12,7 +12,7 @@
 <div class="aurora" aria-hidden="true"></div>
 
 <header class="bar">
-  <a class="round ghost" id="back" title="Back to the book" aria-label="Back to the book">📖</a>
+  <a class="round ghost" id="back" href="/" title="Back to the shelf" aria-label="Back to the shelf">🏰</a>
   <ol class="dots" id="dots" aria-label="Pages"></ol>
   <button class="round play" id="story" title="Story time: watch the whole book" aria-label="Story time">▶</button>
 </header>
@@ -47,10 +47,12 @@
   <img id="s-img-a" class="s-pic on" alt="">
   <img id="s-img-b" class="s-pic" alt="">
   <div class="s-title" id="s-title"></div>
+  <div class="s-bridge" id="s-bridge"></div>
   <div class="s-words" id="s-words"></div>
   <button class="round ghost s-close" id="s-close" aria-label="Stop story time">✕</button>
 </div>
 
+<button class="start" id="start" hidden aria-label="Play the story"><span>▶</span></button>
 <div class="note" id="note" role="status"></div>
 <audio id="player"></audio>
 

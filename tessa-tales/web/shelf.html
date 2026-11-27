@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tessa Tales</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Gochi+Hand&family=Nunito:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="/web/shelf.css">
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true"></div>
+
+<header class="top">
+  <h1 aria-label="Tessa Tales"><span>T</span><span>e</span><span>s</span><span>s</span><span>a</span> <span>T</span><span>a</span><span>l</span><span>e</span><span>s</span></h1>
+</header>
+
+<section class="card-bar" id="card-bar" hidden>
+  <button class="olaf-btn" id="card-go" aria-label="Bring in the new pictures">
+    <span class="olaf" aria-hidden="true">☃️</span>
+    <span class="cam" aria-hidden="true">📷</span>
+    <span class="n" id="card-n"></span>
+  </button>
+  <div class="progress" id="progress" hidden>
+    <span class="olaf working" aria-hidden="true">☃️</span>
+    <div class="bar"><i id="bar"></i></div>
+    <span class="phase" id="phase"></span>
+  </div>
+  <button class="round ghost" id="eject" title="Eject the camera card" aria-label="Eject the camera card" hidden>⏏</button>
+</section>
+
+<main class="shelf" id="shelf" aria-label="Stories"></main>
+<p class="empty" id="empty" hidden>☃️ 📷 ➡️ 💻</p>
+
+<script src="/web/common.js"></script>
+<script src="/web/shelf.js"></script>
+</body>
+</html>

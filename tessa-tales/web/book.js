@@ -1,7 +1,7 @@
 /* Tessa Tales: make-the-book page. Three stickers do everything:
    ❤️ love it → in the book   ⭐ the best! → in the book as a big page   👎 nope → Marshmallow's pile */
 (() => {
-  const importId = location.pathname.split('/').filter(Boolean)[1];
+  const storyId = location.pathname.split('/').filter(Boolean)[1];
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const thumb = (h) => `/thumb/${h}.jpg`;
@@ -15,13 +15,17 @@
     { r: 'nope', icon: '👎', label: "Nope: send it to Marshmallow's pile" },
   ];
 
-  let imp, book, stacks = {}, stackOfPhoto = {}, nope = new Set();
+  let imp, book, stacks = {}, stackOfPhoto = {}, nope = new Set(), talk = {};
 
   // ---------- loading & saving ----------
   async function load() {
-    const [a, b] = await Promise.all([fetch(`/api/import/${importId}`), fetch(`/api/book/${importId}`)]);
-    if (!a.ok || !b.ok) { $('moments').innerHTML = '<p class="m-name">⛄❓</p>'; return; }
-    imp = await a.json(); book = await b.json();
+    const [a, t] = await Promise.all([fetch(`/api/story/${storyId}`), fetch('/api/talk')]);
+    if (!a.ok) { $('moments').innerHTML = '<p class="m-name">⛄❓</p>'; return; }
+    takeView(await a.json()); talk = await t.json();
+    renderAll();
+  }
+  function takeView(v) {
+    imp = { total: v.total, sieve: v.sieve }; book = v.story; stacks = {}; stackOfPhoto = {};
     for (const st of imp.sieve.stacks) { stacks[st.id] = st; for (const h of st.members) stackOfPhoto[h] = st; }
     book.nope = book.nope || [];
     nope = new Set(book.nope);
@@ -30,7 +34,12 @@
       const st = stackOfPhoto[p.photo];
       if (p.type === 'flipbook' && st && st.highlights && p.frames.length > st.highlights.length) p.frames = st.highlights.slice();
     }
-    renderAll();
+  }
+  // what Tessa said about a stack (her talk is kept per picture)
+  function saidFor(st, h) {
+    const keys = h ? [h, st.cover, ...st.members] : [st.cover, ...st.members];
+    for (const k of keys) if (talk[k]) return talk[k];
+    return null;
   }
 
   let saveTimer = null;
@@ -40,7 +49,7 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
       try {
-        const r = await fetch(`/api/book/${importId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(book) });
+        const r = await fetch(`/api/story/${storyId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(book) });
         if (!r.ok) throw new Error(r.status);
         $('saved').textContent = '✓';
         setTimeout(() => { if ($('saved').textContent === '✓') $('saved').textContent = ''; }, 1500);
@@ -181,7 +190,7 @@
       .map((h, i) => `<img class="behind b${i}" src="${thumb(h)}" alt="" loading="lazy">`).join('');
     const count = st.members.length > 1 ? `<span class="count">${st.flipbook ? '🎞️ ' : '×'}${st.flipbook ? st.highlights.length : st.members.length}</span>` : '';
     return `<div class="card ${cur || ''}" data-card="${st.id}">
-      <button class="pola" data-open="${st.id}" aria-label="Look closer">${behind}<img class="cover" src="${thumb(shown)}" alt="" loading="lazy">${st.gold ? '<span class="flake" title="Elsa\'s snowflake: she meant this one" aria-hidden="true">❄</span>' : ''}${count}<span class="sticker" aria-hidden="true">${cur === 'star' ? '⭐' : '❤️'}</span></button>
+      <button class="pola" data-open="${st.id}" aria-label="Look closer">${behind}<img class="cover" src="${thumb(shown)}" alt="" loading="lazy">${st.gold ? '<span class="flake" title="Elsa\'s snowflake: she meant this one" aria-hidden="true">❄</span>' : ''}${count}${saidFor(st) ? `<span class="said" title="${esc(saidFor(st).words || 'Tessa talked about this one')}">💬</span>` : ''}<span class="sticker" aria-hidden="true">${cur === 'star' ? '⭐' : '❤️'}</span></button>
       ${reactHTML(st)}
     </div>`;
   }
@@ -212,7 +221,7 @@
     ol.innerHTML = book.pages.map((p, i) => `<li class="page${p.star ? ' star' : ''}" draggable="true" data-page="${p.id}">
       <span class="num">${i + 1}</span>
       <img src="${thumb(p.photo)}" alt="page ${i + 1}" data-open-page="${p.id}">
-      <span class="badge" aria-hidden="true">${p.star ? '⭐' : ''}${p.type === 'flipbook' ? '🎞️' : ''}</span>
+      <span class="badge" aria-hidden="true">${p.star ? '⭐' : ''}${p.type === 'flipbook' ? '🎞️' : ''}${p.bridge ? '📜' : ''}</span>
       <button class="x" data-remove="${p.id}" aria-label="Take page ${i + 1} out">✕</button>
     </li>`).join('');
   }
@@ -326,7 +335,23 @@
     // in the viewer, the heart/star lights up only for the picture that's on the page
     if (page && page.type === 'photo' && page.photo !== h) $('v-react').querySelectorAll('.on').forEach((b) => b.classList.remove('on'));
     $('v-flip').classList.toggle('on', !!page && page.type === 'flipbook');
+    // grown-up bits: what she said about it, and the narrator line before it
+    const said = saidFor(st, h);
+    $('v-said').hidden = !said;
+    $('v-said-words').textContent = said ? (said.words || '♪') : '';
+    $('v-bridge').hidden = !page;
+    if (page && document.activeElement !== $('v-bridge')) $('v-bridge').value = page.bridge || '';
   }
+  $('v-said-play').onclick = () => {
+    const said = vSt && saidFor(vSt, vSt.members[vIdx]);
+    if (said) { const a = new Audio(`/audio/talk/${said.audio}`); a.play().catch(() => {}); }
+  };
+  $('v-bridge').addEventListener('input', () => {
+    const page = vSt && pageFor(vSt);
+    if (!page) return;
+    page.bridge = $('v-bridge').value.trim().slice(0, 140) || null;
+    renderStrip(); save();
+  });
   function step(d) { if (!vSt) return; vIdx = (vIdx + d + vSt.members.length) % vSt.members.length; showFrame(true); }
   function stopPlay() { clearInterval(playTimer); playTimer = null; $('v-play').textContent = '▶'; }
   $('v-prev').onclick = () => { stopPlay(); step(-1); };
@@ -379,10 +404,38 @@
     });
   }
 
+  // ---------- ✨ weave: Claude turns her picture talk into the book ----------
+  function openWeave() {
+    $('w-hint').value = book.hint || '';
+    $('w-note').textContent = book.weave_note || '';
+    $('w-error').textContent = '';
+    $('w-busy').hidden = true; $('w-go').disabled = false;
+    const talked = imp.sieve.stacks.filter((s) => s.pile !== 'snowdrift' && saidFor(s)).length;
+    $('w-count').textContent = talked;
+    $('weave').showModal();
+  }
+  $('open-weave').onclick = openWeave;
+  $('w-close').onclick = () => $('weave').close();
+  $('w-go').onclick = async () => {
+    $('w-go').disabled = true; $('w-busy').hidden = false; $('w-error').textContent = '';
+    try {
+      const r = await fetch(`/api/story/${storyId}/weave`, { method: 'POST', body: JSON.stringify({ hint: $('w-hint').value }) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || r.status);
+      takeView(data); renderAll();
+      $('w-note').textContent = book.weave_note || '';
+      chime('star'); burst($('w-go'), '✨', 14);
+    } catch (e) {
+      $('w-error').textContent = String(e.message || e);
+    }
+    $('w-go').disabled = false; $('w-busy').hidden = true;
+  };
+  $('to-story').href = `/tell/${storyId}#play`;
+
   $('tell').onclick = () => {
     if (!book.pages.length) { $('pages').classList.add('wobble'); setTimeout(() => $('pages').classList.remove('wobble'), 450); return chime('nope'); }
     chime('tell'); burst($('tell'), '❄', 12);
-    setTimeout(() => { location.href = `/tell/${importId}`; }, reduce ? 0 : 500);
+    setTimeout(() => { location.href = `/tell/${storyId}`; }, reduce ? 0 : 500);
   };
 
   // ---------- falling snow ----------

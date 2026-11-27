@@ -38,6 +38,12 @@ too_flat = 6                  # pixel spread; a thumb over the lens is very flat
 model = "mlx-community/whisper-large-v3-turbo"
 prompt = "A three-year-old girl tells a story to her dad in short, simple toddler sentences."
 
+[weave]
+# How Tessa's picture talk becomes a story (pages, order, title, narrator bridges).
+engine = "local"                                       # "local" = free, on the Mac (MLX) | "claude" = API, needs billing
+local_model = "mlx-community/Qwen2.5-7B-Instruct-4bit" # ~4 GB, downloaded once
+claude_model = "claude-opus-5-5"
+
 [prompts]
 # CLIP compares every photo with these little descriptions.
 # Tuned on her first real card (2026-11-26): a vague catch-all like "a blurry photo of nothing"

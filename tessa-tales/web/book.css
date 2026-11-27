@@ -180,3 +180,31 @@ dialog::backdrop { background: rgba(10, 14, 40, .86); backdrop-filter: blur(4px)
   .pola, .react button, .card, .sticker, .v-img { transition: none; }
   .burst, .wobble { animation: none; display: none; }
 }
+
+/* header buttons as links too */
+.corner { display: flex; gap: .6rem; }
+a.round { text-decoration: none; color: inherit; }
+/* 💬 Tessa talked about this picture */
+.said { position: absolute; z-index: 5; bottom: 14px; right: 14px; font-size: 1.8rem; filter: drop-shadow(0 2px 2px var(--shadow)); }
+/* grown-up bits in the viewer */
+.v-grown { display: grid; gap: .5rem; justify-items: center; }
+.v-said { margin: 0; display: flex; align-items: center; gap: .6rem; font-family: var(--hand); font-size: 1.5rem; }
+.v-said[hidden] { display: none; }
+.round.small { width: 42px; height: 42px; font-size: 1.2rem; }
+.v-bridge { width: min(640px, 90%); font-family: var(--hand); font-size: 1.25rem; padding: .45rem .9rem; border-radius: 12px; border: 2px dashed var(--soft); background: var(--paper); color: var(--ink); }
+.v-bridge[hidden] { display: none; }
+/* the weave dialog */
+#weave[open] { width: min(620px, 94vw); background: var(--card); border-radius: 28px; padding: 1.4rem 1.6rem; box-shadow: 0 30px 80px rgba(0, 0, 0, .5); }
+.w-body { display: grid; gap: .8rem; }
+.w-head { font-size: 2.4rem; text-align: center; }
+.w-explain { margin: 0; color: var(--soft); line-height: 1.45; }
+.w-label { font-weight: 800; }
+#w-hint { font: inherit; font-size: 1.05rem; padding: .6rem .8rem; border-radius: 12px; border: 2px solid var(--ice); background: var(--paper); color: var(--ink); resize: vertical; }
+.chunky { justify-self: center; font-family: var(--chunky); font-weight: 800; font-size: 1.35rem; color: #fff; cursor: pointer; border: 3px solid var(--ink); border-radius: 22px; padding: .7rem 1.4rem; box-shadow: 0 5px 0 var(--ink); background: linear-gradient(135deg, var(--elsa), #8a6ff0 55%, var(--anna)); }
+.chunky:disabled { opacity: .5; cursor: wait; }
+.w-busy { margin: 0; text-align: center; font-family: var(--hand); font-size: 1.4rem; }
+.w-busy[hidden] { display: none; }
+.olaf-spin { display: inline-block; animation: wobble .6s infinite; }
+.w-error { margin: 0; color: var(--anna); font-weight: 700; text-align: center; }
+.w-error:empty, .w-note:empty { display: none; }
+.w-note { margin: 0; font-family: var(--hand); font-size: 1.3rem; text-align: center; color: var(--elsa); }

@@ -1,0 +1,80 @@
+/* The ice palace shelf: one snow globe per story. Night sky, aurora, glass globes on a frosty shelf. */
+:root {
+  --night: #0d1238; --night2: #1f2470; --ink: #eef3ff; --soft: #a9b6dc;
+  --elsa: #7cc6f5; --frost: #d9f1ff; --anna: #ff6fa3; --gold: #ffd23f; --olaf: #ff9f43;
+  --chunky: "Sniglet", "Arial Rounded MT Bold", "Chalkboard SE", system-ui, sans-serif;
+  --hand: "Gochi Hand", "Chalkboard SE", "Comic Sans MS", cursive;
+  --body: "Nunito", -apple-system, system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: radial-gradient(ellipse at 50% 0%, var(--night2), var(--night) 70%) fixed; color: var(--ink); font-family: var(--body);
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 4rem max(16px, env(safe-area-inset-left, 0px));
+}
+#snow { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.aurora { position: fixed; top: -80px; left: -10%; right: -10%; height: 340px; z-index: 0; pointer-events: none; filter: blur(30px); opacity: .45;
+  background: linear-gradient(100deg, #26c6da, #7e57c2 45%, #ec407a); mask-image: linear-gradient(to bottom, #000, transparent); -webkit-mask-image: linear-gradient(to bottom, #000, transparent); }
+.top, .card-bar, .shelf, .empty { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+button { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--elsa); outline-offset: 5px; }
+
+.top { padding: 2.2rem 0 1rem; text-align: center; }
+h1 { font-family: var(--chunky); font-weight: 800; font-size: clamp(3rem, 10vw, 6rem); margin: 0; line-height: 1; }
+h1 span { display: inline-block; }
+h1 span:nth-child(5n+1) { color: var(--elsa); transform: rotate(-6deg); }
+h1 span:nth-child(5n+2) { color: var(--anna); transform: translateY(4px) rotate(4deg); }
+h1 span:nth-child(5n+3) { color: var(--gold); transform: rotate(-3deg); }
+h1 span:nth-child(5n+4) { color: #7fe0c4; transform: rotate(5deg); }
+h1 span:nth-child(5n+5) { color: #b9a4ff; transform: translateY(3px) rotate(-5deg); }
+
+/* the camera card has new pictures */
+.card-bar { display: flex; justify-content: center; align-items: center; gap: 1.2rem; padding: .5rem 0 1rem; }
+.card-bar[hidden] { display: none; }
+.olaf-btn { position: relative; display: flex; align-items: center; gap: .3rem; border: 4px solid #fff; border-radius: 999px; background: var(--olaf); padding: .5rem 1.6rem .5rem 1.1rem; cursor: pointer; box-shadow: 0 6px 0 rgba(0, 0, 0, .35); animation: bounce 1.6s ease-in-out infinite; }
+.olaf-btn .olaf { font-size: 2.8rem; }
+.olaf-btn .cam { font-size: 2.2rem; }
+.olaf-btn .n { position: absolute; top: -12px; right: -10px; background: var(--anna); color: #fff; font-family: var(--chunky); font-weight: 800; border: 3px solid #fff; border-radius: 999px; padding: 0 .55rem; font-size: 1.1rem; }
+.olaf-btn[hidden] { display: none; }
+@keyframes bounce { 50% { transform: translateY(-8px) rotate(-2deg); } }
+.progress { display: flex; align-items: center; gap: 1rem; min-width: min(560px, 90vw); }
+.progress[hidden] { display: none; }
+.progress .olaf { font-size: 3rem; }
+.olaf.working { animation: waddle .6s ease-in-out infinite; display: inline-block; }
+@keyframes waddle { 50% { transform: rotate(10deg) translateY(-4px); } }
+.bar { flex: 1; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, .12); border: 3px solid var(--frost); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--elsa), #fff); transition: width .3s; }
+.phase { font-size: 1.8rem; min-width: 2em; }
+.round { width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--frost); background: rgba(255, 255, 255, .12); cursor: pointer; font-size: 1.5rem; display: grid; place-items: center; padding: 0; }
+.round[hidden] { display: none; }
+
+/* the shelf of snow globes */
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 3rem 2rem; padding: 2rem 0; }
+.globe { position: relative; display: grid; justify-items: center; gap: .6rem; }
+.glass {
+  all: unset; cursor: pointer; position: relative; width: 210px; max-width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, .35), inset -18px -24px 40px rgba(0, 0, 0, .35), 0 0 40px rgba(124, 198, 245, .35);
+  background: #223; transition: transform .2s;
+}
+.glass img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.glass::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 30%); pointer-events: none; }
+.glass .flakes { position: absolute; inset: 0; background-image: radial-gradient(circle, #fff 2px, transparent 2.5px), radial-gradient(circle, #fff 1.3px, transparent 1.8px); background-size: 34px 34px, 21px 21px; opacity: .55; }
+.glass:hover { transform: scale(1.05) rotate(-2deg); }
+.glass.shake { animation: shake .6s; }
+.glass.shake .flakes { animation: swirl .9s linear; opacity: .95; }
+@keyframes shake { 20% { transform: rotate(-9deg); } 40% { transform: rotate(8deg); } 60% { transform: rotate(-6deg); } 80% { transform: rotate(4deg); } }
+@keyframes swirl { to { background-position: 40px 120px, -30px 90px; } }
+.base { width: 170px; height: 30px; margin-top: -26px; border-radius: 10px 10px 26px 26px; background: linear-gradient(#5b3a8f, #2c1f5e); box-shadow: 0 6px 0 rgba(0, 0, 0, .35); position: relative; z-index: -1; }
+.g-title { font-family: var(--hand); font-size: 1.6rem; text-align: center; line-height: 1.1; }
+.g-told { letter-spacing: .15em; color: var(--elsa); font-size: 1rem; min-height: 1.2em; text-align: center; }
+.g-told .dim { color: rgba(255, 255, 255, .25); }
+.new { position: absolute; top: 4px; left: calc(50% - 115px); font-size: 2rem; animation: twinkle 1.4s infinite; }
+@keyframes twinkle { 50% { transform: scale(1.3) rotate(20deg); } }
+.edit { position: absolute; top: 6px; right: calc(50% - 115px); width: 44px; height: 44px; font-size: 1.2rem; opacity: .7; text-decoration: none; }
+.edit:hover { opacity: 1; }
+.empty { text-align: center; font-size: 3rem; padding: 3rem 0; }
+.empty[hidden] { display: none; }
+.burst { position: fixed; z-index: 100; pointer-events: none; font-size: 2rem; animation: burst .95s ease-out forwards; }
+@keyframes burst { from { transform: translate(0, 0) scale(.6); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(var(--rot)); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .olaf-btn, .olaf.working, .new, .glass.shake, .glass.shake .flakes { animation: none; } .burst { display: none; } }

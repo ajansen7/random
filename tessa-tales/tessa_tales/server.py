@@ -1,6 +1,6 @@
-"""A tiny local web server: the book-making page, Tessa's turn, her pictures and voice, saving.
+"""A tiny local web server: the shelf, each story's page, Tessa's turn, her pictures and voice.
 
-Listens on 127.0.0.1 only. No accounts, nothing leaves the Mac.
+Listens on 127.0.0.1 only. No accounts. Nothing leaves the Mac (unless [weave] engine is set to claude).
 """
 
 import json
@@ -9,18 +9,32 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from . import book as books
+from . import stories
+from .card import Importer
 from .library import Library
 from .photos import open_small
-from .voice import Voice
+from .voice import STORY_ID, Voice
+from .weave import WeaveError, weave
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 LARGE_SIDE = 1600
 SHA = re.compile(r"^[0-9a-f]{40}$")
-IMPORT_ID = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}(-[0-9]+)?$")
+AUDIO_TYPES = {"webm": "audio/webm", "m4a": "audio/mp4", "ogg": "audio/ogg", "wav": "audio/wav", "mp3": "audio/mpeg"}
 
 
-def make_handler(lib: Library, voice: Voice):
+def shelf(lib: Library, voice: Voice) -> list[dict]:
+    talk = voice.load("talk")
+    out = []
+    for s in stories.list_all(lib):
+        pages = s.get("pages", [])
+        told = sum(1 for p in pages if any(h in talk for h in [p["photo"], *p.get("frames", [])]))
+        cover = pages[0]["photo"] if pages else (s["pool"][0] if s["pool"] else None)
+        out.append({"id": s["id"], "title": s["title"], "cover": cover, "pages": len(pages), "told": told,
+                    "new": s.get("new", False), "woven": bool(s.get("woven_at")), "import": s["import"]})
+    return out
+
+
+def make_handler(lib: Library, voice: Voice, importer: Importer):
     photo_by_sha = {}
 
     def original_for(sha: str) -> Path | None:
@@ -44,8 +58,11 @@ def make_handler(lib: Library, voice: Voice):
             self.end_headers()
             self.wfile.write(body)
 
-        def _file(self, path: Path, ctype: str, cache: bool = False):
-            if not path.is_file():
+        def _oops(self, msg, status=HTTPStatus.BAD_REQUEST):
+            return self._json({"error": str(msg)}, status)
+
+        def _file(self, path: Path | None, ctype: str, cache: bool = False):
+            if not path or not path.is_file():
                 return self.send_error(HTTPStatus.NOT_FOUND)
             data = path.read_bytes()
             self.send_response(HTTPStatus.OK)
@@ -55,35 +72,49 @@ def make_handler(lib: Library, voice: Voice):
             self.end_headers()
             self.wfile.write(data)
 
-        # -- routes ----------------------------------------------------------------
+        def _redirect(self, where):
+            self.send_response(HTTPStatus.FOUND)
+            self.send_header("Location", where)
+            self.end_headers()
+
+        def _body(self, limit):
+            length = int(self.headers.get("Content-Length", "0"))
+            if length > limit:
+                raise ValueError("too big")
+            return self.rfile.read(length)
+
+        def _json_body(self, limit=2_000_000) -> dict:
+            data = json.loads(self._body(limit) or b"{}")
+            if not isinstance(data, dict):
+                raise ValueError("expected an object")
+            return data
+
+        def _story_ok(self, sid):
+            return STORY_ID.match(sid) and stories.exists(lib, sid)
+
+        # -- GET -------------------------------------------------------------------
         def do_GET(self):
             parts = [p for p in self.path.split("?")[0].split("/") if p]
+            html = "text/html; charset=utf-8"
             if not parts:
-                latest = lib.latest_import()
-                self.send_response(HTTPStatus.FOUND)
-                self.send_header("Location", f"/book/{latest}" if latest else "/web/empty.html")
-                return self.end_headers()
-            if parts[0] in ("book", "tell") and len(parts) == 2 and IMPORT_ID.match(parts[1]):
-                return self._file(WEB / f"{parts[0]}.html", "text/html; charset=utf-8")
-            if parts[0] == "audio" and len(parts) == 3 and IMPORT_ID.match(parts[1]):
-                path = voice.audio_path(parts[1], parts[2])
-                if not path:
-                    return self.send_error(HTTPStatus.NOT_FOUND)
-                ctype = {"webm": "audio/webm", "m4a": "audio/mp4", "ogg": "audio/ogg", "wav": "audio/wav", "mp3": "audio/mpeg"}
-                return self._file(path, ctype[parts[2].rsplit(".", 1)[1]], cache=True)
+                return self._file(WEB / "shelf.html", html)
+            if parts[0] == "book":
+                return self._redirect("/")  # old links from the one-book-per-card days
+            if parts[0] in ("story", "tell") and len(parts) == 2 and self._story_ok(parts[1]):
+                return self._file(WEB / ("book.html" if parts[0] == "story" else "tell.html"), html)
             if parts[0] == "web" and len(parts) == 2 and re.match(r"^[a-z0-9_-]+\.(html|js|css)$", parts[1]):
                 ctype = {"html": "text/html", "js": "text/javascript", "css": "text/css"}[parts[1].rsplit(".", 1)[1]]
                 return self._file(WEB / parts[1], ctype + "; charset=utf-8")
-            if parts[0] == "api" and len(parts) == 3 and IMPORT_ID.match(parts[2]):
-                if not lib.manifest_path(parts[2]).exists():
+            if parts[0] == "audio":
+                if len(parts) == 3 and parts[1] == "talk":
+                    path = voice.audio_path("talk", None, parts[2])
+                elif len(parts) == 4 and parts[1] == "story" and self._story_ok(parts[2]):
+                    path = voice.audio_path("story", parts[2], parts[3])
+                else:
+                    path = None
+                if not path:
                     return self.send_error(HTTPStatus.NOT_FOUND)
-                if parts[1] == "import":
-                    man = lib.load_manifest(parts[2])
-                    return self._json({"id": man["id"], "total": len(man["photos"]), "sieve": man["sieve"]})
-                if parts[1] == "book":
-                    return self._json(books.load_or_draft(lib, parts[2]))
-                if parts[1] == "voice":
-                    return self._json(voice.load(parts[2]))
+                return self._file(path, AUDIO_TYPES[path.suffix[1:]], cache=True)
             if parts[0] in ("thumb", "large") and len(parts) == 2 and parts[1].endswith(".jpg"):
                 sha = parts[1][:-4]
                 if not SHA.match(sha):
@@ -98,54 +129,83 @@ def make_handler(lib: Library, voice: Voice):
                     large.parent.mkdir(parents=True, exist_ok=True)
                     open_small(src, LARGE_SIDE)[0].save(large, "JPEG", quality=86)
                 return self._file(large, "image/jpeg", cache=True)
+            if parts[0] == "api":
+                api = parts[1:]
+                if api == ["shelf"]:
+                    return self._json(shelf(lib, voice))
+                if api == ["talk"]:
+                    return self._json(voice.load("talk"))
+                if api == ["card"]:
+                    return self._json({**importer.card_status(), "import": importer.state})
+                if len(api) == 2 and api[0] == "story" and self._story_ok(api[1]):
+                    return self._json(stories.view(lib, stories.load(lib, api[1])))
+                if len(api) == 2 and api[0] == "voice" and self._story_ok(api[1]):
+                    return self._json(voice.load("story", api[1]))
             return self.send_error(HTTPStatus.NOT_FOUND)
 
-        def _body(self, limit):
-            length = int(self.headers.get("Content-Length", "0"))
-            if length > limit:
-                raise ValueError("too big")
-            return self.rfile.read(length)
-
+        # -- POST ------------------------------------------------------------------
         def do_POST(self):
-            parts = [p for p in self.path.split("/") if p]
-            if len(parts) == 4 and parts[:2] == ["api", "voice"] and IMPORT_ID.match(parts[2]):
-                try:
-                    entry = voice.save_clip(parts[2], parts[3], self._body(50_000_000), self.headers.get("Content-Type", ""))
-                except ValueError as e:
-                    return self._json({"error": str(e)}, HTTPStatus.BAD_REQUEST)
-                return self._json(entry)
+            api = [p for p in self.path.split("/") if p][1:]
+            try:
+                ctype = self.headers.get("Content-Type", "")
+                if len(api) == 2 and api[0] == "talk":
+                    return self._json(voice.save_clip("talk", None, api[1], self._body(50_000_000), ctype))
+                if len(api) == 3 and api[0] == "voice" and self._story_ok(api[1]):
+                    return self._json(voice.save_clip("story", api[1], api[2], self._body(50_000_000), ctype))
+                if len(api) == 3 and api[0] == "story" and api[2] == "weave" and self._story_ok(api[1]):
+                    hint = str(self._json_body(10_000).get("hint", ""))[:300]
+                    st = stories.load(lib, api[1])
+                    st["hint"] = hint
+                    stories.save(lib, st)
+                    try:
+                        weave(lib, api[1], voice.load("talk"), voice.load("story", api[1]), importer.cfg.get("weave", {}))
+                    except WeaveError as e:
+                        return self._oops(e, HTTPStatus.UNPROCESSABLE_ENTITY)
+                    return self._json(stories.view(lib, stories.load(lib, api[1])))
+                if api == ["import"]:
+                    return self._json(importer.start(str(self._json_body(10_000).get("card", ""))))
+                if api == ["eject"]:
+                    importer.eject(str(self._json_body(10_000).get("card", "")))
+                    return self._json({"ejected": True})
+            except (ValueError, json.JSONDecodeError) as e:
+                return self._oops(e)
             return self.send_error(HTTPStatus.NOT_FOUND)
 
+        # -- PUT -------------------------------------------------------------------
         def do_PUT(self):
-            parts = [p for p in self.path.split("/") if p]
-            if len(parts) == 5 and parts[:2] == ["api", "voice"] and parts[4] == "words" and IMPORT_ID.match(parts[2]):
-                try:
-                    entry = voice.set_words(parts[2], parts[3], str(json.loads(self._body(10_000)).get("words", "")))
-                except (ValueError, json.JSONDecodeError) as e:
-                    return self._json({"error": str(e)}, HTTPStatus.BAD_REQUEST)
-                return self._json(entry)
-            if len(parts) != 3 or parts[:2] != ["api", "book"] or not IMPORT_ID.match(parts[2]):
-                return self.send_error(HTTPStatus.NOT_FOUND)
+            api = [p for p in self.path.split("/") if p][1:]
             try:
-                length = int(self.headers.get("Content-Length", "0"))
-                data = json.loads(self.rfile.read(min(length, 2_000_000)))
-                if data.get("id") != parts[2] or not isinstance(data.get("pages"), list):
-                    raise ValueError("book doesn't match")
-                if not all(isinstance(h, str) and SHA.match(h) for h in data.get("nope", [])):
-                    raise ValueError("bad picture id")
-                for page in data["pages"]:
-                    if not all(SHA.match(h) for h in [page.get("photo", "")] + list(page.get("frames", []))):
+                if len(api) == 3 and api[0] == "talk" and api[2] == "words":
+                    return self._json(voice.set_words("talk", None, api[1], str(self._json_body(10_000).get("words", ""))))
+                if len(api) == 4 and api[0] == "voice" and api[3] == "words" and self._story_ok(api[1]):
+                    return self._json(voice.set_words("story", api[1], api[2], str(self._json_body(10_000).get("words", ""))))
+                if len(api) == 2 and api[0] == "story" and self._story_ok(api[1]):
+                    data = self._json_body()
+                    if not isinstance(data.get("pages"), list):
+                        raise ValueError("no pages")
+                    if not all(isinstance(h, str) and SHA.match(h) for h in data.get("nope", [])):
                         raise ValueError("bad picture id")
-                books.save(lib, data)
+                    for page in data["pages"]:
+                        if not all(isinstance(h, str) and SHA.match(h) for h in [page.get("photo", "")] + list(page.get("frames", []))):
+                            raise ValueError("bad picture id")
+                        if page.get("bridge") is not None and not isinstance(page["bridge"], str):
+                            raise ValueError("bad bridge")
+                    story = stories.save_from_page(lib, api[1], data)
+                    return self._json({"saved": True, "updated": story["updated"]})
             except (ValueError, json.JSONDecodeError) as e:
-                return self._json({"error": str(e)}, HTTPStatus.BAD_REQUEST)
-            return self._json({"saved": True, "updated": data["updated"]})
+                return self._oops(e)
+            return self.send_error(HTTPStatus.NOT_FOUND)
 
     return Handler
 
 
-def serve(lib: Library, port: int, open_path: str | None = None, voice_cfg: dict | None = None) -> None:
-    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(lib, Voice(lib, voice_cfg or {})))
+def serve(lib: Library, cfg: dict, port: int, open_path: str | None = None) -> None:
+    stories.migrate_old_books(lib)
+    for p in sorted(lib.imports.glob("*.json")):
+        if "sieve" in json.loads(p.read_text()):
+            stories.ensure_day_stories(lib, p.stem)
+    handler = make_handler(lib, Voice(lib, cfg.get("voice", {})), Importer(lib, cfg))
+    server = ThreadingHTTPServer(("127.0.0.1", port), handler)
     url = f"http://localhost:{port}{open_path or '/'}"
     print(f"Tessa Tales is open at {url}  (Ctrl-C to stop)")
     if open_path is not None:
