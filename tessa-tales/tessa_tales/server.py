@@ -100,8 +100,10 @@ def make_handler(lib: Library, voice: Voice, importer: Importer):
                 return self._file(WEB / "shelf.html", html)
             if parts[0] == "book":
                 return self._redirect("/")  # old links from the one-book-per-card days
-            if parts[0] in ("story", "tell") and len(parts) == 2 and self._story_ok(parts[1]):
-                return self._file(WEB / ("book.html" if parts[0] == "story" else "tell.html"), html)
+            if parts[0] == "story" and len(parts) == 2 and self._story_ok(parts[1]):
+                return self._file(WEB / "story.html", html)
+            if parts[0] == "tell" and len(parts) == 2 and self._story_ok(parts[1]):
+                return self._redirect(f"/story/{parts[1]}")  # Tessa's turn and the story page are one screen now
             if parts[0] == "web" and len(parts) == 2 and re.match(r"^[a-z0-9_-]+\.(html|js|css)$", parts[1]):
                 ctype = {"html": "text/html", "js": "text/javascript", "css": "text/css"}[parts[1].rsplit(".", 1)[1]]
                 return self._file(WEB / parts[1], ctype + "; charset=utf-8")

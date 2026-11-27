@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tessa Tales</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Gochi+Hand&family=Nunito:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="/web/story.css">
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true"></div>
+
+<header class="bar">
+  <a class="round ghost" id="back" href="/" title="Back to the shelf" aria-label="Back to the shelf">🏰</a>
+  <ol class="dots" id="dots" aria-label="Pictures"></ol>
+  <div class="tools">
+    <button class="round ghost" id="open-grid" title="All the pictures, and the book's page order" aria-label="All the pictures">⊞</button>
+    <button class="round ghost" id="open-weave" title="Weave: turn what Tessa said into the story" aria-label="Weave the story">✨</button>
+    <button class="round play" id="story" title="Story time: watch the whole book" aria-label="Story time">▶</button>
+  </div>
+</header>
+
+<main class="stage">
+  <button class="arrow prev" id="prev" aria-label="Previous picture">‹</button>
+  <figure class="page" id="page">
+    <div class="pola" id="pola">
+      <img id="img-a" class="pic on" alt="">
+      <img id="img-b" class="pic" alt="">
+      <span class="in-book" aria-hidden="true">❤️</span>
+      <span class="frames" id="frames" hidden>
+        <button id="frame-prev" aria-label="Previous picture in this stack">‹</button>
+        <span id="frame-n"></span>
+        <button id="frame-next" aria-label="Next picture in this stack">›</button>
+      </span>
+      <div class="cover-title" id="cover-title" spellcheck="false" title="Tap to rename the story (grown-ups)"></div>
+      <div class="the-end" id="the-end">The End<span>❄</span></div>
+    </div>
+    <figcaption class="under">
+      <div class="words">
+        <span class="words-text" id="words" spellcheck="false"></span>
+        <button class="tiny" id="edit" title="Fix the words (grown-ups)" aria-label="Fix the words">✏️</button>
+      </div>
+      <input class="bridge" id="bridge" maxlength="140" placeholder="📜 narrator line before her words (grown-ups, optional)" aria-label="Narrator line before this page" hidden>
+    </figcaption>
+  </figure>
+  <button class="arrow next" id="next" aria-label="Next picture">›</button>
+</main>
+
+<footer class="mic-row">
+  <button class="round hear" id="hear" title="Hear it again" aria-label="Hear it again" hidden>🔈</button>
+  <button class="react heart" id="heart" aria-label="Love it: put it in the book" title="Love it: in the book">❤️</button>
+  <button class="mic" id="mic" aria-label="Talk! Tap once, then talk">
+    <span class="ring r1"></span><span class="ring r2"></span>
+    <span class="flake">❄</span>
+  </button>
+  <button class="react nope" id="nope" aria-label="Nope: send it to Marshmallow's pile" title="Nope: to Marshmallow's pile">👎</button>
+  <span class="key" title="Grown-ups: the space bar starts and stops talking too">⎵</span>
+</footer>
+
+<!-- everything at once: jump to any picture, rescue from the pile, reorder the book -->
+<dialog id="grid" aria-label="All the pictures">
+  <button class="round ghost close" id="grid-close" aria-label="Close">✕</button>
+  <div class="grid-body" id="grid-body"></div>
+  <div class="grid-strip">
+    <span class="strip-icon" aria-hidden="true">📖</span>
+    <ol class="pages" id="pages"></ol>
+  </div>
+</dialog>
+
+<dialog id="weave" aria-label="Weave the story">
+  <button class="round ghost close" id="w-close" aria-label="Close">✕</button>
+  <div class="w-body">
+    <div class="w-head" aria-hidden="true">💬 ➡️ ✨ ➡️ 📖</div>
+    <p class="w-explain">Olaf reads what Tessa said about <b id="w-count">0</b> pictures and turns it into the story: which pictures, in what order, a title, and a few short narrator lines (📜) between her words. Her words are never changed. It all happens on this Mac and takes about half a minute.</p>
+    <label class="w-label" for="w-hint">What happened? (optional, helps a lot)</label>
+    <textarea id="w-hint" rows="2" maxlength="300" placeholder="e.g. We brought her baby brother home from the hospital."></textarea>
+    <button class="chunky" id="w-go">✨ Weave it</button>
+    <p class="w-busy" id="w-busy" hidden><span class="olaf-spin">☃️</span> weaving…</p>
+    <p class="w-error" id="w-error" role="alert"></p>
+    <p class="w-note" id="w-note"></p>
+  </div>
+</dialog>
+
+<div class="story" id="story-layer" hidden>
+  <img id="s-img-a" class="s-pic on" alt="">
+  <img id="s-img-b" class="s-pic" alt="">
+  <div class="s-title" id="s-title"></div>
+  <div class="s-bridge" id="s-bridge"></div>
+  <div class="s-words" id="s-words"></div>
+  <button class="round ghost s-close" id="s-close" aria-label="Stop story time">✕</button>
+</div>
+
+<div class="start" id="start" hidden><button id="start-btn" aria-label="Play the story">▶</button></div>
+<div class="undo" id="undo" role="status"><span aria-hidden="true">👎</span><button class="round" id="undo-btn" aria-label="Undo">↩️</button></div>
+<div class="note" id="note" role="status"></div>
+<audio id="player"></audio>
+
+<script src="/web/common.js"></script>
+<script src="/web/story.js"></script>
+</body>
+</html>

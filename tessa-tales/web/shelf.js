@@ -26,7 +26,7 @@
     if (!g) return;
     g.classList.add('shake'); chime('tell'); burst(g, '❄', 12, 140);
     await sleep(TT.reduce ? 0 : 650);
-    location.href = `/tell/${g.dataset.play}#play`;
+    location.href = `/story/${g.dataset.play}#play`;
   });
 
   // ---------- the camera card ----------

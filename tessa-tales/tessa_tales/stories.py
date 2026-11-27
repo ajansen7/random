@@ -4,7 +4,7 @@ A story owns a pool of pictures (by sha1, so re-sorting never breaks it) and its
   ~/TessaTales/stories/<id>/story.json
   { id, title, import, kind: "day"|"little"|"all", day, pool: [sha], pages: [page],
     hint, moment_names, woven_at, weave_note, new, created, updated }
-  page: { id, type: "photo"|"flipbook", photo, frames, from_stack, star, bridge }
+  page: { id, type: "photo"|"flipbook", photo, frames, from_stack, bridge }
 Thumbs-down is global (junk is junk in every story): ~/TessaTales/nope.json
 """
 
@@ -78,7 +78,6 @@ def page_from_stack(st: dict, photo: str | None = None, flip: bool | None = None
         "photo": photo or st["cover"],
         "frames": (st.get("highlights") or st["members"]) if flip else [photo or st["cover"]],
         "from_stack": st["id"],
-        "star": False,
         "bridge": None,
     }
 
@@ -159,7 +158,6 @@ def migrate_old_books(lib: Library) -> None:
             pages = old.get("pages", [])
             for pg in pages:
                 pg.setdefault("bridge", None)
-                pg.setdefault("star", False)
             st["pages"] = pages
             st["moment_names"] = old.get("moment_names", {})
             st["pool"] = list(dict.fromkeys(st["pool"] + [h for pg in pages for h in pg.get("frames", [])]))

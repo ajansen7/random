@@ -20,7 +20,7 @@ SYSTEM = """You help a parent turn their three-year-old daughter Tessa's chatter
 Each page of the book is one of her photos, played with her own recording of what she said about it. Her words are the heart of the book: never change, correct, finish or invent words for her. You do not write her lines; they play as her real voice.
 
 Your job:
-- Choose the pictures (usually 4 to 12) that tell the clearest little story. A picture she talked about should almost always be in the book. Strongly prefer pictures a grown-up starred or hearted. Leave out near-duplicates.
+- Choose the pictures (usually 4 to 12) that tell the clearest little story. A picture she talked about should almost always be in the book. Strongly prefer pictures a grown-up hearted. Leave out near-duplicates.
 - Put them in an order that flows. Usually that is time order, unless her words clearly tell the story another way.
 - Write a few optional "bridges": a short narrator line (at most 12 words) that plays BEFORE her recording, so someone listening can follow the story. A bridge sets up the page; it never says what she is about to say.
   Rules for bridges:
@@ -134,9 +134,7 @@ def _candidates(lib: Library, story: dict, talk: dict, cover_words: str | None):
         n = len(numbered)
         bits = [f"#{n}", f"time {_when(s['start'])}", f"moment: {moment_of.get(s['id'], '')}",
                 f"rough guess: {s['scores']['label']}", f"frames: {len(s.get('highlights') or [s['cover']])}"]
-        if page and page.get("star"):
-            bits.append("grown-up STARRED it")
-        elif page:
+        if page:
             bits.append("grown-up hearted it")
         if s.get("gold"):
             bits.append("she took this one on purpose")
@@ -195,7 +193,6 @@ def weave(lib: Library, sid: str, talk: dict, story_voice: dict, cfg: dict | Non
         old = old_by_stack.get(st["id"])
         flip = bool(st.get("flipbook")) and len(st.get("highlights") or []) >= 3
         page = stories.page_from_stack(st, photo=old["photo"] if old and not flip else None, flip=flip)
-        page["star"] = bool(old and old.get("star"))
         bridge = (wp.get("bridge") or "").strip()[:140]
         if bridge and (_echoes(bridge, said_by_stack[st["id"]]) or bridge.lower().startswith(("i ", "me ", "my "))
                        or not _grounded(bridge, known)):
