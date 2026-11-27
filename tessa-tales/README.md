@@ -22,6 +22,17 @@ On the page, three stickers do everything, so Tessa can do it too:
 
 Tap a sticker again to undo it. Tap a picture to see it big. ▶ plays a stack slowly through its different pictures, and 🎞️ makes it a flip-book page. Drag pages in the 📖 strip to reorder them. The book's name and the moment names are for grown-ups: tap them to rename. Everything saves on its own, to `~/TessaTales/stories/<import>/story.json`. 🔊 turns the chimes off.
 
+## Tessa's turn
+
+Press **🎤 Tell it!** on the book page. One page at a time (★ the cover, each picture, ♥ the end):
+- She looks at the picture and tells you about it. Hold the **space bar** while she talks, or let her tap the giant ❄ to start and again to stop. The snowflake grows with her voice.
+- When she stops, snow bursts out and she hears herself right away. 🔈 plays it again. Recording again replaces it, and older takes stay on disk.
+- Whisper writes down her words a second or two later. ✏️ (for grown-ups) fixes a mishearing. Her recording is the real thing.
+- The big orange arrows turn pages, and the ❄ dots at the top light up as pages get told.
+- ▶ is **story time**: the whole book full screen, in her voice, with her words floating in.
+
+Recordings live in `~/TessaTales/stories/<import>/audio/`, and her words in `voice.json` next to the book. Whisper (`large-v3-turbo` via mlx-whisper) runs on the Mac. The first recording downloads it, about 1.6 GB.
+
 To come back to it later:
 
 ```bash

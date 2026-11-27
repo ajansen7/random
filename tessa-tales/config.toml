@@ -33,6 +33,11 @@ too_dark = 18                 # mean brightness out of 255
 too_bright = 245
 too_flat = 6                  # pixel spread; a thumb over the lens is very flat
 
+[voice]
+# Whisper runs on the Mac's GPU (mlx-whisper). Her recording is the real thing; the words are a helper.
+model = "mlx-community/whisper-large-v3-turbo"
+prompt = "A three-year-old girl tells a story to her dad in short, simple toddler sentences."
+
 [prompts]
 # CLIP compares every photo with these little descriptions.
 # Tuned on her first real card (2026-11-26): a vague catch-all like "a blurry photo of nothing"

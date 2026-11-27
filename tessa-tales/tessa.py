@@ -59,7 +59,7 @@ def main() -> None:
             return
         sort_pictures(lib, cfg, import_id)
         if not args.no_open:
-            serve(lib, args.port, f"/book/{import_id}")
+            serve(lib, args.port, f"/book/{import_id}", cfg.get("voice"))
     elif args.cmd == "sieve":
         import_id = args.import_id or lib.latest_import()
         if not import_id:
@@ -67,7 +67,7 @@ def main() -> None:
         sort_pictures(lib, cfg, import_id)
     else:
         import_id = lib.latest_import()
-        serve(lib, args.port, None if args.no_open_top else (f"/book/{import_id}" if import_id else "/"))
+        serve(lib, args.port, None if args.no_open_top else (f"/book/{import_id}" if import_id else "/"), cfg.get("voice"))
 
 
 if __name__ == "__main__":

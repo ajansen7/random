@@ -1,4 +1,4 @@
-"""A tiny local web server: the book-making page, her pictures, and saving the book.
+"""A tiny local web server: the book-making page, Tessa's turn, her pictures and voice, saving.
 
 Listens on 127.0.0.1 only. No accounts, nothing leaves the Mac.
 """
@@ -12,6 +12,7 @@ from pathlib import Path
 from . import book as books
 from .library import Library
 from .photos import open_small
+from .voice import Voice
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 LARGE_SIDE = 1600
@@ -19,7 +20,7 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 IMPORT_ID = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}(-[0-9]+)?$")
 
 
-def make_handler(lib: Library):
+def make_handler(lib: Library, voice: Voice):
     photo_by_sha = {}
 
     def original_for(sha: str) -> Path | None:
@@ -62,8 +63,14 @@ def make_handler(lib: Library):
                 self.send_response(HTTPStatus.FOUND)
                 self.send_header("Location", f"/book/{latest}" if latest else "/web/empty.html")
                 return self.end_headers()
-            if parts[0] == "book" and len(parts) == 2 and IMPORT_ID.match(parts[1]):
-                return self._file(WEB / "book.html", "text/html; charset=utf-8")
+            if parts[0] in ("book", "tell") and len(parts) == 2 and IMPORT_ID.match(parts[1]):
+                return self._file(WEB / f"{parts[0]}.html", "text/html; charset=utf-8")
+            if parts[0] == "audio" and len(parts) == 3 and IMPORT_ID.match(parts[1]):
+                path = voice.audio_path(parts[1], parts[2])
+                if not path:
+                    return self.send_error(HTTPStatus.NOT_FOUND)
+                ctype = {"webm": "audio/webm", "m4a": "audio/mp4", "ogg": "audio/ogg", "wav": "audio/wav", "mp3": "audio/mpeg"}
+                return self._file(path, ctype[parts[2].rsplit(".", 1)[1]], cache=True)
             if parts[0] == "web" and len(parts) == 2 and re.match(r"^[a-z0-9_-]+\.(html|js|css)$", parts[1]):
                 ctype = {"html": "text/html", "js": "text/javascript", "css": "text/css"}[parts[1].rsplit(".", 1)[1]]
                 return self._file(WEB / parts[1], ctype + "; charset=utf-8")
@@ -75,6 +82,8 @@ def make_handler(lib: Library):
                     return self._json({"id": man["id"], "total": len(man["photos"]), "sieve": man["sieve"]})
                 if parts[1] == "book":
                     return self._json(books.load_or_draft(lib, parts[2]))
+                if parts[1] == "voice":
+                    return self._json(voice.load(parts[2]))
             if parts[0] in ("thumb", "large") and len(parts) == 2 and parts[1].endswith(".jpg"):
                 sha = parts[1][:-4]
                 if not SHA.match(sha):
@@ -91,8 +100,30 @@ def make_handler(lib: Library):
                 return self._file(large, "image/jpeg", cache=True)
             return self.send_error(HTTPStatus.NOT_FOUND)
 
+        def _body(self, limit):
+            length = int(self.headers.get("Content-Length", "0"))
+            if length > limit:
+                raise ValueError("too big")
+            return self.rfile.read(length)
+
+        def do_POST(self):
+            parts = [p for p in self.path.split("/") if p]
+            if len(parts) == 4 and parts[:2] == ["api", "voice"] and IMPORT_ID.match(parts[2]):
+                try:
+                    entry = voice.save_clip(parts[2], parts[3], self._body(50_000_000), self.headers.get("Content-Type", ""))
+                except ValueError as e:
+                    return self._json({"error": str(e)}, HTTPStatus.BAD_REQUEST)
+                return self._json(entry)
+            return self.send_error(HTTPStatus.NOT_FOUND)
+
         def do_PUT(self):
             parts = [p for p in self.path.split("/") if p]
+            if len(parts) == 5 and parts[:2] == ["api", "voice"] and parts[4] == "words" and IMPORT_ID.match(parts[2]):
+                try:
+                    entry = voice.set_words(parts[2], parts[3], str(json.loads(self._body(10_000)).get("words", "")))
+                except (ValueError, json.JSONDecodeError) as e:
+                    return self._json({"error": str(e)}, HTTPStatus.BAD_REQUEST)
+                return self._json(entry)
             if len(parts) != 3 or parts[:2] != ["api", "book"] or not IMPORT_ID.match(parts[2]):
                 return self.send_error(HTTPStatus.NOT_FOUND)
             try:
@@ -113,8 +144,8 @@ def make_handler(lib: Library):
     return Handler
 
 
-def serve(lib: Library, port: int, open_path: str | None = None) -> None:
-    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(lib))
+def serve(lib: Library, port: int, open_path: str | None = None, voice_cfg: dict | None = None) -> None:
+    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(lib, Voice(lib, voice_cfg or {})))
     url = f"http://localhost:{port}{open_path or '/'}"
     print(f"Tessa Tales is open at {url}  (Ctrl-C to stop)")
     if open_path is not None:

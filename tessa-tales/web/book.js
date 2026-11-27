@@ -382,7 +382,7 @@
   $('tell').onclick = () => {
     if (!book.pages.length) { $('pages').classList.add('wobble'); setTimeout(() => $('pages').classList.remove('wobble'), 450); return chime('nope'); }
     chime('tell'); burst($('tell'), '❄', 12);
-    $('tell').title = "Tessa's turn is the next thing we build!";
+    setTimeout(() => { location.href = `/tell/${importId}`; }, reduce ? 0 : 500);
   };
 
   // ---------- falling snow ----------

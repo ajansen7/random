@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tessa's turn</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Gochi+Hand&family=Nunito:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="/web/tell.css">
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true"></div>
+
+<header class="bar">
+  <a class="round ghost" id="back" title="Back to the book" aria-label="Back to the book">📖</a>
+  <ol class="dots" id="dots" aria-label="Pages"></ol>
+  <button class="round play" id="story" title="Story time: watch the whole book" aria-label="Story time">▶</button>
+</header>
+
+<main class="stage">
+  <button class="arrow prev" id="prev" aria-label="Previous page">‹</button>
+  <figure class="page" id="page">
+    <div class="pola" id="pola">
+      <img id="img-a" class="pic on" alt="">
+      <img id="img-b" class="pic" alt="">
+      <div class="cover-title" id="cover-title"></div>
+      <div class="the-end" id="the-end">The End<span>❄</span></div>
+    </div>
+    <figcaption class="words" id="words-row">
+      <span class="words-text" id="words" spellcheck="false"></span>
+      <button class="tiny" id="edit" title="Fix the words (grown-ups)" aria-label="Fix the words">✏️</button>
+    </figcaption>
+  </figure>
+  <button class="arrow next" id="next" aria-label="Next page">›</button>
+</main>
+
+<footer class="mic-row">
+  <button class="round hear" id="hear" title="Hear it again" aria-label="Hear it again" hidden>🔈</button>
+  <button class="mic" id="mic" aria-label="Talk! Hold space or tap">
+    <span class="ring r1"></span><span class="ring r2"></span>
+    <span class="flake">❄</span>
+  </button>
+  <span class="key" title="Grown-ups: hold the space bar while she talks">⎵</span>
+</footer>
+
+<div class="story" id="story-layer" hidden>
+  <img id="s-img-a" class="s-pic on" alt="">
+  <img id="s-img-b" class="s-pic" alt="">
+  <div class="s-title" id="s-title"></div>
+  <div class="s-words" id="s-words"></div>
+  <button class="round ghost s-close" id="s-close" aria-label="Stop story time">✕</button>
+</div>
+
+<div class="note" id="note" role="status"></div>
+<audio id="player"></audio>
+
+<script src="/web/common.js"></script>
+<script src="/web/tell.js"></script>
+</body>
+</html>
