@@ -175,6 +175,20 @@ def run(lib: Library, cfg: dict, import_id: str, clip=None, log=print) -> dict:
     def cover_of(members):
         return max(members, key=lambda h: (score[h]["blank"] is None, score[h]["sharpness"] * (1.2 - score[h]["junk"])))
 
+    def highlights_of(members):
+        """The different-looking pictures in a stack, sharpest of each look, in order."""
+        same, most = s.get("highlight_same", 0.93), s.get("highlight_max", 10)
+        runs: list[list[str]] = []
+        for h in members:
+            if runs and float(emb[runs[-1][0]] @ emb[h]) >= same:
+                runs[-1].append(h)
+            else:
+                runs.append([h])
+        picks = [max(r, key=lambda h: score[h]["sharpness"] * (1.2 - score[h]["junk"])) for r in runs]
+        if len(picks) > most:
+            picks = [picks[round(i * (len(picks) - 1) / (most - 1))] for i in range(most)]
+        return picks
+
     out = []
     for n, members in enumerate(stacks):
         cover = cover_of(members)
@@ -188,12 +202,13 @@ def run(lib: Library, cfg: dict, import_id: str, clip=None, log=print) -> dict:
             reasons.append(sc["blank"])
         treasure = (is_gold and not sc["blank"] and sc["junk"] < sv["junk_high"]) or \
             sc["junk"] <= sv["junk_low"] or sc["people"] >= sv["person_protect"]
-        flip = len(members) >= b["flipbook_min_photos"]
+        hl = highlights_of(members)
+        flip = len(members) >= b["flipbook_min_photos"] and len(hl) >= 3
         if flip:
             reasons.append(f"{len(members)} in a row: flip-book!")
         out.append({
             "id": f"s{n + 1}", "pile": "treasure" if treasure else "maybe", "gold": is_gold, "flipbook": flip,
-            "cover": cover, "members": members,
+            "cover": cover, "members": members, "highlights": hl,
             "start": taken[members[0]].isoformat(), "end": taken[members[-1]].isoformat(),
             "reasons": reasons, "scores": sc,
         })

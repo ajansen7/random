@@ -100,6 +100,8 @@ def make_handler(lib: Library):
                 data = json.loads(self.rfile.read(min(length, 2_000_000)))
                 if data.get("id") != parts[2] or not isinstance(data.get("pages"), list):
                     raise ValueError("book doesn't match")
+                if not all(isinstance(h, str) and SHA.match(h) for h in data.get("nope", [])):
+                    raise ValueError("bad picture id")
                 for page in data["pages"]:
                     if not all(SHA.match(h) for h in [page.get("photo", "")] + list(page.get("frames", []))):
                         raise ValueError("bad picture id")

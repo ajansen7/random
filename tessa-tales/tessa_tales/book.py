@@ -24,8 +24,9 @@ def page_from_stack(st: dict, photo: str | None = None, as_flipbook: bool | None
         "id": f"p-{st['id']}-{datetime.now().strftime('%H%M%S%f')}",
         "type": "flipbook" if flip else "photo",
         "photo": photo or st["cover"],
-        "frames": st["members"] if flip else [photo or st["cover"]],
+        "frames": (st.get("highlights") or st["members"]) if flip else [photo or st["cover"]],
         "from_stack": st["id"],
+        "star": False,
     }
 
 
@@ -47,6 +48,7 @@ def draft(man: dict) -> dict:
         "import": man["id"],
         "title": "Coming home",
         "moment_names": {},
+        "nope": [],
         "pages": [page_from_stack(s) for s in picks],
         "created": datetime.now().isoformat(timespec="seconds"),
         "updated": datetime.now().isoformat(timespec="seconds"),

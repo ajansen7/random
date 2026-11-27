@@ -15,11 +15,12 @@ uv run tessa.py import
 3. The pictures are split into **moments**: ten minutes with nothing worth keeping starts a new one.
 4. Olaf drafts a book, and the make-the-book page opens at http://localhost:4747.
 
-On the page:
-- **＋** puts a picture in the book, **✓** takes it out.
-- Tap a picture to see it big. Arrows and the filmstrip walk through its stack, and you can choose which picture goes on the page or put the whole stack in as a flip-book.
-- Drag pages in the strip at the bottom to reorder them. Tap the title or a moment's name to rename it.
-- Everything saves on its own, to `~/TessaTales/stories/<import>/story.json`.
+On the page, three stickers do everything, so Tessa can do it too:
+- ❤️ love it: the picture goes in the book
+- ⭐ the best!: it goes in as a big, special page
+- 👎 nope: it slides into Marshmallow's pile (↩️ brings it back)
+
+Tap a sticker again to undo it. Tap a picture to see it big. ▶ plays a stack slowly through its different pictures, and 🎞️ makes it a flip-book page. Drag pages in the 📖 strip to reorder them. The book's name and the moment names are for grown-ups: tap them to rename. Everything saves on its own, to `~/TessaTales/stories/<import>/story.json`. 🔊 turns the chimes off.
 
 To come back to it later:
 

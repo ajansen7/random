@@ -13,10 +13,12 @@ flipbook_min_photos = 8       # stacks this big can become a flip-book page
 [stacks]
 # Junk frames are buried before stacking, so gaps here skip over them.
 stack_gap_seconds = 90        # kept pictures this close together can stack
-same_scene = 0.82             # CLIP similarity needed to keep stacking
-same_look_bits = 10           # or a perceptual-hash distance this small (out of 64)
+same_scene = 0.80             # CLIP similarity needed to keep stacking
+same_look_bits = 0            # perceptual-hash shortcut; 0 = off (every blurry picture "looks the same")
 merge_gap_seconds = 240       # neighbouring stacks this close...
-merge_scene = 0.72            # ...that look this alike become one stack
+merge_scene = 0.88            # ...that look this alike become one stack
+highlight_same = 0.93         # pictures this alike count as one look in a flip-book
+highlight_max = 10            # a flip-book page shows at most this many different pictures
 
 [moments]
 gap_minutes = 10              # this long with nothing worth keeping starts a new moment

@@ -11,60 +11,55 @@
 <canvas id="snow" aria-hidden="true"></canvas>
 <div class="aurora" aria-hidden="true"></div>
 
+<header class="top">
+  <h1 id="title" class="editable" contenteditable="true" spellcheck="false" title="Tap to rename the book">Coming home</h1>
+  <div class="corner">
+    <button class="round ghost" id="sound" title="Sound on/off" aria-label="Sound on or off">🔊</button>
+  </div>
+</header>
+
 <main>
-  <header class="top">
-    <p class="kicker">Let's make a book!</p>
-    <h1 id="title" class="editable" contenteditable="true" spellcheck="false">Coming home</h1>
-    <p class="olaf" id="olaf-line">Olaf is looking at the pictures…</p>
-  </header>
-
   <div id="moments"></div>
-
   <section class="pile-link">
-    <button id="open-pile" class="chunky-btn ghost">⛄ Marshmallow's pile</button>
-    <p>Everything Olaf buried. Dig through it if he got one wrong.</p>
+    <button id="open-pile" class="pile-btn" title="Marshmallow's pile: everything Olaf buried" aria-label="Open Marshmallow's pile">
+      <span class="big">⛄</span><span class="n" id="pile-n"></span>
+    </button>
   </section>
 </main>
 
 <nav class="strip" aria-label="Your book">
-  <div class="strip-label">
-    <span class="strip-title" id="strip-title">Coming home</span>
-    <span class="strip-count" id="strip-count">0 pages</span>
-    <span class="saved" id="saved"></span>
-  </div>
+  <div class="book-icon" aria-hidden="true">📖</div>
   <ol class="pages" id="pages"></ol>
-  <button class="tell" id="tell">Tell it with Tessa <span aria-hidden="true">❄</span></button>
+  <span class="saved" id="saved" aria-live="polite"></span>
+  <button class="tell" id="tell" title="Tell it with Tessa">🎤 Tell it!</button>
 </nav>
 
 <dialog id="viewer" aria-label="Picture viewer">
-  <div class="v-top">
-    <span class="v-where" id="v-where"></span>
-    <button class="v-close" id="v-close" aria-label="Close">✕</button>
-  </div>
+  <button class="round ghost v-close" id="v-close" aria-label="Close">✕</button>
   <div class="v-stage">
+    <img id="v-img-a" class="v-img on" alt="">
+    <img id="v-img-b" class="v-img" alt="">
     <button class="v-nav prev" id="v-prev" aria-label="Previous picture">‹</button>
-    <img id="v-img" alt="">
     <button class="v-nav next" id="v-next" aria-label="Next picture">›</button>
+    <span class="v-count" id="v-count"></span>
   </div>
-  <div class="v-why" id="v-why"></div>
-  <div class="v-actions">
-    <button class="chunky-btn" id="v-add">Put this picture in the book</button>
-    <button class="chunky-btn alt" id="v-flip">Put in the whole flip-book</button>
-    <button class="chunky-btn ghost" id="v-play">▶ flip it</button>
+  <div class="v-bar">
+    <div class="react big" id="v-react"></div>
+    <div class="v-tools">
+      <button class="round" id="v-play" title="Play it slowly" aria-label="Play">▶</button>
+      <button class="round" id="v-flip" title="Make this page a flip-book" aria-label="Flip-book page">🎞️</button>
+    </div>
   </div>
   <ol class="v-film" id="v-film"></ol>
 </dialog>
 
 <dialog id="pile" aria-label="Marshmallow's pile">
-  <div class="v-top">
-    <span class="v-where">⛄ Marshmallow's pile</span>
-    <button class="v-close" id="pile-close" aria-label="Close">✕</button>
-  </div>
-  <p class="pile-note">Tap one to look closer. You can rescue anything into the book.</p>
+  <button class="round ghost v-close" id="pile-close" aria-label="Close">✕</button>
+  <div class="pile-head" aria-hidden="true">⛄</div>
   <div class="pile-grid" id="pile-grid"></div>
 </dialog>
 
-<div class="toast" id="toast" role="status"></div>
+<div class="undo" id="undo" role="status"><span id="undo-icon">👎</span><button class="round" id="undo-btn" aria-label="Undo">↩️</button></div>
 
 <script src="/web/book.js"></script>
 </body>
