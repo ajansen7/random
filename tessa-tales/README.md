@@ -1,52 +1,34 @@
 # Tessa Tales ❄
 
-Turns Tessa's kids-camera pictures into storybooks told in her own voice. Runs only on this Mac.
-
-## Make a book
-
-Plug in the camera's SD card, then:
-
-```bash
-uv run tessa.py import
-```
-
-1. Every new picture is copied into `~/TessaTales/originals/`. The card is never changed, and pictures already imported are skipped.
-2. **Olaf sorts them.** Black, blank and junk frames get buried in **Marshmallow's pile**. What's left gets stacked (bursts of the same thing become one stack, even with black frames in between), and a lone click with quiet before and after gets **Elsa's snowflake**.
-3. The pictures are split into **moments**: ten minutes with nothing worth keeping starts a new one.
-4. Olaf drafts a book, and the make-the-book page opens at http://localhost:4747.
-
-On the page, three stickers do everything, so Tessa can do it too:
-- ❤️ love it: the picture goes in the book
-- ⭐ the best!: it goes in as a big, special page
-- 👎 nope: it slides into Marshmallow's pile (↩️ brings it back)
-
-Tap a sticker again to undo it. Tap a picture to see it big. ▶ plays a stack slowly through its different pictures, and 🎞️ makes it a flip-book page. Drag pages in the 📖 strip to reorder them. The book's name and the moment names are for grown-ups: tap them to rename. Everything saves on its own, to `~/TessaTales/stories/<import>/story.json`. 🔊 turns the chimes off.
-
-## Tessa's turn
-
-Press **🎤 Tell it!** on the book page. One page at a time (★ the cover, each picture, ♥ the end):
-- She looks at the picture and tells you about it. Hold the **space bar** while she talks, or let her tap the giant ❄ to start and again to stop. The snowflake grows with her voice.
-- When she stops, snow bursts out and she hears herself right away. 🔈 plays it again. Recording again replaces it, and older takes stay on disk.
-- Whisper writes down her words a second or two later. ✏️ (for grown-ups) fixes a mishearing. Her recording is the real thing.
-- The big orange arrows turn pages, and the ❄ dots at the top light up as pages get told.
-- ▶ is **story time**: the whole book full screen, in her voice, with her words floating in.
-
-Recordings live in `~/TessaTales/stories/<import>/audio/`, and her words in `voice.json` next to the book. Whisper (`large-v3-turbo` via mlx-whisper) runs on the Mac. The first recording downloads it, about 1.6 GB.
-
-To come back to it later:
+Turns Tessa's kids-camera pictures into storybooks told in her own voice. Runs only on this Mac, for free.
 
 ```bash
 uv run tessa.py
 ```
 
-## Tuning
+That opens **the shelf** at http://localhost:4747: one snow globe per story.
+- **Tap a globe**: it shakes, and story time plays (one big ▶ first, because browsers need a tap before sound).
+- **✏️ on a globe**: the grown-up page for that story.
+- **Plug in the camera card**: Olaf bounces onto the shelf with 📷 and the number of new pictures. Tap him and he copies and sorts them, and the new day stories appear with ✨. ⏏ ejects the card. The card is never changed, and pictures already copied are skipped.
 
-All the knobs are in `config.toml`: the descriptions Olaf compares pictures against, the junk thresholds, stacking and moment gaps. Sort the latest card again without re-copying:
+## How a story gets made
 
-```bash
-uv run tessa.py sieve
-```
+1. **Olaf sorts the card.** Junk (black, blank, pockets, ceilings) goes into Marshmallow's pile. Bursts stack up, even with black frames in between, and a lone deliberate click gets Elsa's snowflake.
+2. **One story per day.** Days with fewer than 4 good pictures fold into "Little things". If the camera clock is unset, the whole card is one story.
+3. **Tessa talks about her pictures** (🎤 Tell it!). One picture at a time, she taps the snowflake and says whatever she likes ("look like a dino neck!"). It stops by itself when she goes quiet. Whisper writes down her words on the Mac. Her talk belongs to the picture, so it follows it into any story.
+4. **✨ Weave.** A small language model on the Mac reads what she said and picks the pictures, puts them in order, suggests a title and adds a few short narrator lines (📜). It never changes or invents her words. Bridges that repeat her or make things up are thrown away, and day changes get a true one ("The next morning."). Add an optional hint ("we brought her baby brother home") for better results.
+5. **Story time.** Each page plays the narrator line (read aloud by the Mac), then her own recording.
 
-Books you've already made are kept. Pages remember their own pictures.
+On the story page, three stickers let you (or her) adjust: ❤️ in the book, ⭐ a big special page, 👎 to Marshmallow's pile (everywhere, ↩️ brings it back). Tap a picture to see it big, hear what she said 💬, and edit its narrator line 📜.
 
-Olaf uses Apple's MobileCLIP2 model running locally on the Mac's GPU. Nothing leaves the Mac.
+## Where things live
+
+`~/TessaTales/`: `originals/` (copied off the card), `stories/<id>/story.json`, `talk.json` + `talk/` (her picture talk), `nope.json` (thumbs-down), `cache/`.
+
+## Tuning (`config.toml`)
+
+- `[sieve]`, `[prompts]`, `[stacks]`, `[moments]`: how Olaf sorts. Re-sort the latest card with `uv run tessa.py sieve`.
+- `[voice]`: the Whisper model.
+- `[weave]`: `engine = "local"` (free, default; `local_model` can be a bigger MLX model for richer bridges) or `"claude"` (better writing, needs Claude API billing).
+
+The first run downloads the models once: MobileCLIP2 (sorting), Whisper large-v3-turbo (about 1.6 GB) and Qwen2.5 7B (about 4 GB, weaving).
