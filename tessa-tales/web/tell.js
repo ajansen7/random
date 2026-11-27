@@ -54,6 +54,7 @@
   }
 
   function show(i, sound = true) {
+    if (sound) $('start').hidden = true;
     at = Math.max(0, Math.min(items.length - 1, i));
     const it = items[at];
     clearInterval(flipTimer);
@@ -145,6 +146,7 @@
 
   async function startRec() {
     if (rec || $('edit').dataset.editing) return;
+    $('start').hidden = true;
     if (!(await ensureMic())) return;
     player.pause();
     const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
@@ -185,7 +187,8 @@
 
   $('mic').onclick = () => (rec ? stopRec() : startRec());
   document.addEventListener('keydown', (e) => {
-    if (e.target.isContentEditable || !$('story-layer').hidden || !$('start').hidden) return;
+    if (e.key === 'Escape') $('start').hidden = true;
+    if (e.target.isContentEditable || !$('story-layer').hidden) return;
     if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) (rec ? stopRec() : startRec()); }
     if (e.key === 'ArrowRight' && !rec) show(at + 1);
     if (e.key === 'ArrowLeft' && !rec) show(at - 1);
@@ -313,7 +316,7 @@
     show(at, false);
   }
   $('story').onclick = () => { chime('tell'); storyTime(); };
-  $('start').onclick = () => { $('start').hidden = true; chime('tell'); storyTime(); };
+  $('start-btn').onclick = () => { $('start').hidden = true; chime('tell'); storyTime(); };
   $('s-close').onclick = closeStory;
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('story-layer').hidden) closeStory(); });
 

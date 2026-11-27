@@ -118,8 +118,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--elsa); outline-
 .s-bridge { position: absolute; z-index: 2; left: 6%; right: 6%; top: 6%; text-align: center; font-family: var(--hand); color: var(--frost); font-size: clamp(1.4rem, 3.4vw, 2.6rem); line-height: 1.2; text-shadow: 0 2px 12px rgba(0, 0, 0, .9); opacity: 0; transition: opacity .6s; font-style: italic; }
 .s-bridge.show { opacity: 1; }
 /* one big play button when arriving from the shelf (browsers need a tap before sound) */
-.start { position: fixed; z-index: 35; inset: 0; border: 0; background: rgba(8, 10, 40, .7); cursor: pointer; display: grid; place-items: center; }
+/* the big ▶ floats over the picture but doesn't block anything else on the page */
+.start { position: fixed; z-index: 35; inset: 0; display: grid; place-items: center; pointer-events: none; }
 .start[hidden] { display: none; }
-.start span { width: 200px; height: 200px; border-radius: 50%; border: 6px solid #fff; background: var(--anna); color: #fff; font-size: 6rem; display: grid; place-items: center; padding-left: 14px; box-shadow: 0 0 60px rgba(255, 111, 163, .7); animation: breathe-btn 1.6s ease-in-out infinite; }
+.start button { pointer-events: auto; cursor: pointer; width: 180px; height: 180px; border-radius: 50%; border: 6px solid #fff; background: var(--anna); color: #fff; font-size: 5.5rem; line-height: 1; display: grid; place-items: center; padding: 0 0 0 14px; box-shadow: 0 0 0 9999px rgba(8, 10, 40, .25), 0 0 60px rgba(255, 111, 163, .7); animation: breathe-btn 1.6s ease-in-out infinite; }
 @keyframes breathe-btn { 50% { transform: scale(1.08); } }
-@media (prefers-reduced-motion: reduce) { .start span { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .start button { animation: none; } }
