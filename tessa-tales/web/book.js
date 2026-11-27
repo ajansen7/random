@@ -404,7 +404,7 @@
     });
   }
 
-  // ---------- ✨ weave: Claude turns her picture talk into the book ----------
+  // ---------- ✨ weave: a model on the Mac turns her picture talk into the book ----------
   function openWeave() {
     $('w-hint').value = book.hint || '';
     $('w-note').textContent = book.weave_note || '';

@@ -40,9 +40,8 @@ prompt = "A three-year-old girl tells a story to her dad in short, simple toddle
 
 [weave]
 # How Tessa's picture talk becomes a story (pages, order, title, narrator bridges).
-engine = "local"                                       # "local" = free, on the Mac (MLX) | "claude" = API, needs billing
+# Runs free on the Mac with MLX. A bigger MLX model (e.g. a 14B) writes richer bridges, slower.
 local_model = "mlx-community/Qwen2.5-7B-Instruct-4bit" # ~4 GB, downloaded once
-claude_model = "claude-opus-5-5"
 
 [prompts]
 # CLIP compares every photo with these little descriptions.

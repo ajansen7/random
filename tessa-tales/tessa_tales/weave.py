@@ -3,10 +3,7 @@
 Her recordings are the pages. The weaver picks which pictures, puts them in order, suggests a
 title, and writes short narrator "bridges" so a listener can follow. It never writes words for her.
 
-Two engines ([weave] in config.toml):
-  local   (default, free) a small open model running on the Mac with MLX. Nothing leaves the Mac.
-  claude  Claude through the API (needs API billing). Only text is sent: her transcribed words,
-          Olaf's rough guesses, times and the grown-up's hint. No photos.
+It runs free on the Mac: a small open model through Apple's MLX. Nothing leaves the Mac.
 """
 
 import json
@@ -38,30 +35,6 @@ Your job:
 - Add one short note for the grown-up: what you chose, or which picture would be worth asking her about.
 - "flipbook": true only for pictures whose "frames" count is more than 2."""
 
-SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["title", "pages", "note_for_grownup"],
-    "properties": {
-        "title": {"type": "string"},
-        "note_for_grownup": {"type": "string"},
-        "pages": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "additionalProperties": False,
-                "required": ["picture", "bridge", "flipbook"],
-                "properties": {
-                    "picture": {"type": "integer", "description": "the picture's number from the list"},
-                    "bridge": {"type": "string", "description": "narrator line before her recording, or empty"},
-                    "flipbook": {"type": "boolean"},
-                },
-            },
-        },
-    },
-}
-
-
 JSON_RULES = """
 
 Reply with only a JSON object and nothing else, shaped like this:
@@ -84,36 +57,6 @@ def _ask_local(prompt: str, repo: str) -> str:
         return generate(model, tok, prompt=text, max_tokens=1500, sampler=make_sampler(temp=0.3, top_p=0.9))
 
 
-def _ask_claude(prompt: str, model: str) -> str:
-    import anthropic
-    try:
-        client = anthropic.Anthropic()
-        response = client.beta.messages.create(
-            model=model,
-            max_tokens=16000,
-            system=SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
-            output_config={"effort": "medium", "format": {"type": "json_schema", "schema": SCHEMA}},
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",
-        )
-    except anthropic.AuthenticationError:
-        raise WeaveError("Claude needs an API key with billing. Or set engine = \"local\" in config.toml (free).")
-    except anthropic.RateLimitError:
-        raise WeaveError("Claude is busy right now. Try again in a minute.")
-    except anthropic.APIStatusError as e:
-        raise WeaveError(f"Claude said no ({e.status_code}). Billing may not be set up; engine = \"local\" is free.")
-    except anthropic.APIConnectionError:
-        raise WeaveError("Couldn't reach Claude. Is the internet on?")
-    except anthropic.AnthropicError as e:  # e.g. no credentials found at all
-        raise WeaveError(f"Claude isn't set up: {e}. Or set engine = \"local\" in config.toml (free).")
-    if response.stop_reason == "refusal":
-        raise WeaveError("Claude wouldn't weave this one. Try changing the hint.")
-    if response.stop_reason == "max_tokens":
-        raise WeaveError("Claude ran out of room. Try again.")
-    return next((b.text for b in response.content if b.type == "text"), "")
-
-
 def _parse(text: str) -> dict | None:
     start, end = text.find("{"), text.rfind("}")
     if start < 0 or end <= start:
@@ -126,12 +69,8 @@ def _parse(text: str) -> dict | None:
 
 
 def ask(prompt: str, cfg: dict) -> dict:
-    engine = cfg.get("engine", "local")
     for _ in range(2):  # small local models occasionally fumble the JSON; one retry
-        if engine == "claude":
-            text = _ask_claude(prompt, cfg.get("claude_model", "claude-opus-5-5"))
-        else:
-            text = _ask_local(prompt, cfg.get("local_model", "mlx-community/Qwen2.5-7B-Instruct-4bit"))
+        text = _ask_local(prompt, cfg.get("local_model", "mlx-community/Qwen2.5-7B-Instruct-4bit"))
         woven = _parse(text)
         if woven:
             return woven
@@ -270,7 +209,7 @@ def weave(lib: Library, sid: str, talk: dict, story_voice: dict, cfg: dict | Non
         page["bridge"] = bridge or None
         pages.append(page)
     if not pages:
-        raise WeaveError("Claude didn't pick any pictures. Try again.")
+        raise WeaveError("The weaver didn't pick any pictures. Try again.")
 
     story["previous_pages"] = story["pages"]  # one step of undo
     story["pages"] = pages

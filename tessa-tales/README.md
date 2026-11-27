@@ -29,6 +29,6 @@ On the story page, three stickers let you (or her) adjust: ❤️ in the book, �
 
 - `[sieve]`, `[prompts]`, `[stacks]`, `[moments]`: how Olaf sorts. Re-sort the latest card with `uv run tessa.py sieve`.
 - `[voice]`: the Whisper model.
-- `[weave]`: `engine = "local"` (free, default; `local_model` can be a bigger MLX model for richer bridges) or `"claude"` (better writing, needs Claude API billing).
+- `[weave]`: `local_model`, the MLX model that weaves. A bigger one writes richer bridges, more slowly.
 
 The first run downloads the models once: MobileCLIP2 (sorting), Whisper large-v3-turbo (about 1.6 GB) and Qwen2.5 7B (about 4 GB, weaving).

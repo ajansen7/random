@@ -1,6 +1,6 @@
 """A tiny local web server: the shelf, each story's page, Tessa's turn, her pictures and voice.
 
-Listens on 127.0.0.1 only. No accounts. Nothing leaves the Mac (unless [weave] engine is set to claude).
+Listens on 127.0.0.1 only. No accounts. Nothing leaves the Mac.
 """
 
 import json
