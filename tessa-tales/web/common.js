@@ -60,8 +60,65 @@ window.TT = (() => {
     if (reduce) draw(false); else (function loop() { draw(true); requestAnimationFrame(loop); })();
   }
 
+  // ---------- a music box: an original little waltz, synthesized, no files ----------
+  // 16 bars of 3/4: [note, beats]. Quiet under everything; ducks when someone speaks.
+  const WALTZ = [
+    ['E5', 1], ['G5', 1], ['C6', 1], ['B5', 2], ['G5', 1], ['A5', 1], ['F5', 1], ['D5', 1], ['G5', 3],
+    ['C5', 1], ['E5', 1], ['G5', 1], ['A5', 2], ['E5', 1], ['F5', 1], ['D5', 1], ['B4', 1], ['C5', 3],
+    ['E5', 1], ['F5', 1], ['G5', 1], ['C6', 2], ['A5', 1], ['G5', 1], ['E5', 1], ['C5', 1], ['D5', 3],
+    ['E5', 1], ['G5', 1], ['F5', 1], ['E5', 1], ['D5', 1], ['B4', 1], ['C5', 3], [null, 3],
+  ];
+  const ROOTS = ['C3', 'E3', 'F3', 'G2', 'C3', 'A2', 'F3', 'C3', 'C3', 'F3', 'C3', 'G2', 'C3', 'G2', 'C3', 'C3'];
+  const BEAT = 0.42;
+  const hz = (n) => {
+    const i = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[n[0]];
+    return 440 * Math.pow(2, (i + 12 * (+n.slice(1) + 1) - 69) / 12);
+  };
+  const music = (() => {
+    let master = null, timer = null, next = 0, step = 0, beatInBar = 0, bar = 0;
+    function bell(f, t, vol, decay) {
+      [[1, vol], [2, vol * 0.25], [3.01, vol * 0.08]].forEach(([mult, v]) => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.type = 'sine'; o.frequency.value = f * mult;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + decay / mult);
+        o.connect(g).connect(master); o.start(t); o.stop(t + decay + 0.1);
+      });
+    }
+    function tick() {
+      while (next < audio.currentTime + 0.25) {
+        if (beatInBar === 0) bell(hz(ROOTS[bar % ROOTS.length]), next, 0.35, 2.2);
+        const [note, beats] = WALTZ[step];
+        if (note) bell(hz(note), next, 0.5, 1.4);
+        next += beats * BEAT;
+        beatInBar += beats;
+        if (beatInBar >= 3) { beatInBar = 0; bar++; }
+        step = (step + 1) % WALTZ.length;
+      }
+    }
+    return {
+      start() {
+        if (!soundOn || timer) return;
+        try {
+          audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+          master = audio.createGain(); master.gain.value = 0.0001; master.connect(audio.destination);
+          master.gain.setTargetAtTime(0.06, audio.currentTime, 0.8);
+          next = audio.currentTime + 0.1; step = 0; beatInBar = 0; bar = 0;
+          timer = setInterval(tick, 40);
+        } catch (e) {}
+      },
+      duck(on) { if (master) master.gain.setTargetAtTime(on ? 0.015 : 0.06, audio.currentTime, 0.25); },
+      stop() {
+        if (!timer) return;
+        clearInterval(timer); timer = null;
+        const m = master; master = null;
+        m.gain.setTargetAtTime(0.0001, audio.currentTime, 0.4);
+        setTimeout(() => m.disconnect(), 2500);
+      },
+    };
+  })();
+
   return {
-    reduce, chime, burst, snow, setSound, get soundOn() { return soundOn; },
+    reduce, chime, burst, snow, setSound, music, get soundOn() { return soundOn; },
     thumb: (h) => `/thumb/${h}.jpg`,
     large: (h) => `/large/${h}.jpg`,
     esc: (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),

@@ -78,16 +78,21 @@
     <button class="chunky" id="w-go">✨ Weave it</button>
     <p class="w-busy" id="w-busy" hidden><span class="olaf-spin">☃️</span> weaving…</p>
     <p class="w-error" id="w-error" role="alert"></p>
+    <div class="w-summary" id="w-summary" hidden></div>
     <p class="w-note" id="w-note"></p>
   </div>
 </dialog>
 
 <div class="story" id="story-layer" hidden>
+  <div class="s-aurora" aria-hidden="true"></div>
   <img id="s-img-a" class="s-pic on" alt="">
   <img id="s-img-b" class="s-pic" alt="">
+  <canvas id="s-snow" aria-hidden="true"></canvas>
+  <div class="s-ice" aria-hidden="true"><span>❄</span><span>❄</span><span>❄</span><span>❄</span></div>
   <div class="s-title" id="s-title"></div>
   <div class="s-bridge" id="s-bridge"></div>
   <div class="s-words" id="s-words"></div>
+  <span class="s-snowman" id="s-snowman" aria-hidden="true">☃️</span>
   <button class="round ghost s-close" id="s-close" aria-label="Stop story time">✕</button>
 </div>
 

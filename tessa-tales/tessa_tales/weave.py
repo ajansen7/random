@@ -88,8 +88,17 @@ def _words(s: str) -> set[str]:
 
 def _echoes(bridge: str, said: str) -> bool:
     """True when a bridge mostly repeats what she said (the bridge would steal her line)."""
-    b, s = _words(bridge), _words(said)
-    return bool(b) and bool(s) and len(b & s) / len(b) >= 0.4
+    flat = lambda t: " ".join("".join(c.lower() if c.isalnum() else " " for c in t).split())
+    if said and flat(bridge) and flat(bridge) in flat(said):
+        return True  # word for word inside her line
+    b = {w for w in _words(bridge) if w not in GLUE}
+    s = _words(said)
+    # a restatement: most of the bridge's meaningful words are her words on this page
+    return bool(b) and bool(s) and len(b & s) / len(b) >= 0.75
+
+
+def _speaks_as_her(bridge: str) -> bool:
+    return bool({"i", "me", "my", "mine", "myself"} & set("".join(c.lower() if c.isalnum() else " " for c in bridge).split()))
 
 
 GLUE = set("""then next and so one day days morning afternoon evening night later after before time it was is are
@@ -194,7 +203,7 @@ def weave(lib: Library, sid: str, talk: dict, story_voice: dict, cfg: dict | Non
         flip = bool(st.get("flipbook")) and len(st.get("highlights") or []) >= 3
         page = stories.page_from_stack(st, photo=old["photo"] if old and not flip else None, flip=flip)
         bridge = (wp.get("bridge") or "").strip()[:140]
-        if bridge and (_echoes(bridge, said_by_stack[st["id"]]) or bridge.lower().startswith(("i ", "me ", "my "))
+        if bridge and (_echoes(bridge, said_by_stack[st["id"]]) or _speaks_as_her(bridge)
                        or not _grounded(bridge, known)):
             bridge = ""  # it repeated her, spoke as her, or made something up
         day = st["start"][:10]

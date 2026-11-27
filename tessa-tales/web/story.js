@@ -438,10 +438,37 @@
     $('w-note').textContent = story.weave_note || '';
     $('w-error').textContent = '';
     $('w-busy').hidden = true; $('w-go').disabled = false;
+    $('w-summary').hidden = true;
     $('w-count').textContent = items.filter((it) => it.kind === 'pic' && entryOf(it)).length;
     $('weave').showModal();
   };
   $('w-close').onclick = () => $('weave').close();
+
+  // what the weave changed, so it's never a mystery
+  function renderWeaveSummary() {
+    const before = (story.previous_pages || []).map((p) => p.photo), after = story.pages.map((p) => p.photo);
+    const stackKey = (h) => (stackOf[h] ? stackOf[h].id : h);
+    const b = new Set(before.map(stackKey)), a = new Set(after.map(stackKey));
+    const added = after.filter((h) => !b.has(stackKey(h))), dropped = before.filter((h) => !a.has(stackKey(h)));
+    const kept = after.filter((h) => b.has(stackKey(h))).map(stackKey);
+    const keptBefore = before.map(stackKey).filter((k) => a.has(k));
+    const reordered = kept.some((k, i) => k !== keptBefore[i]);
+    const bridges = story.pages.filter((p) => p.bridge).length;
+    const thumbs = (hs) => hs.slice(0, 12).map((h) => `<img src="${thumb(h)}" alt="">`).join('') + (hs.length > 12 ? ` +${hs.length - 12}` : '');
+    const rows = [`<p class="w-row"><b>📖 ${before.length} → ${after.length} pages</b>${reordered ? ' · reordered' : ' · same order'}</p>`];
+    if (added.length) rows.push(`<p class="w-row">➕ added ${added.length}<span class="w-thumbs">${thumbs(added)}</span></p>`);
+    if (dropped.length) rows.push(`<p class="w-row">➖ left out ${dropped.length}<span class="w-thumbs">${thumbs(dropped)}</span></p>`);
+    rows.push(`<p class="w-row">📜 ${bridges} narrator line${bridges === 1 ? '' : 's'}${bridges ? `: <i>${esc(story.pages.find((p) => p.bridge).bridge)}</i>${bridges > 1 ? ' …' : ''}` : ''}</p>`);
+    if (story.suggested_title && story.suggested_title.toLowerCase() !== story.title.toLowerCase()) {
+      rows.push(`<p class="w-row">🏷️ title idea: <button class="w-title" id="w-use-title">${esc(story.suggested_title)}</button></p>`);
+    }
+    rows.push('<button class="chunky w-watch" id="w-watch">▶ Watch it</button>');
+    $('w-summary').innerHTML = rows.join('');
+    $('w-summary').hidden = false;
+    const use = $('w-use-title');
+    if (use) use.onclick = () => { story.title = story.suggested_title; save(); show(at, false); use.closest('.w-row').remove(); chime('heart'); };
+    $('w-watch').onclick = () => { $('weave').close(); $('start').hidden = true; chime('tell'); storyTime(); };
+  }
   $('w-go').onclick = async () => {
     $('w-go').disabled = true; $('w-busy').hidden = false; $('w-error').textContent = '';
     try {
@@ -450,39 +477,61 @@
       if (!r.ok) throw new Error(data.error || r.status);
       take(data); buildItems(); show(at, false);
       $('w-note').textContent = story.weave_note || '';
+      renderWeaveSummary();
       chime('star'); burst($('w-go'), '✨', 14);
     } catch (e) { $('w-error').textContent = String(e.message || e); }
     $('w-go').disabled = false; $('w-busy').hidden = true;
   };
 
-  // ---------- ▶ story time: the book, a narrator line then her voice ----------
-  let storyRun = 0, sLayer = 'a';
+  // ---------- ▶ story time: a frosty storybook, a narrator line then her voice ----------
+  const OPENING = 'Once upon a time, in a land of snow and sparkles, there was a girl named Tessa.';
+  let storyRun = 0, sLayer = 'a', sSnow = false;
   function sPic(src) {
     const cur = $(`s-img-${sLayer}`), next = $(`s-img-${sLayer === 'a' ? 'b' : 'a'}`);
     if (!src) { cur.classList.remove('on'); next.classList.remove('on'); return; }
     next.onload = () => { next.classList.add('on'); cur.classList.remove('on'); sLayer = sLayer === 'a' ? 'b' : 'a'; };
     next.src = src;
   }
-  function frost() {
+  // frost blooms from a corner, and a swirl of magic sweeps across
+  function freeze() {
     if (reduce) return;
-    const f = document.createElement('div'); f.className = 'frost'; document.body.appendChild(f);
-    setTimeout(() => f.remove(), 1150);
+    const f = document.createElement('div'); f.className = 'freeze';
+    f.style.setProperty('--fx', Math.random() < .5 ? '0%' : '100%'); f.style.setProperty('--fy', Math.random() < .5 ? '0%' : '100%');
+    document.body.appendChild(f); setTimeout(() => f.remove(), 1200);
+    const w = innerWidth, h = innerHeight, y0 = h * (0.3 + Math.random() * 0.4), ltr = Math.random() < .5;
+    for (let i = 0; i < 16; i++) {
+      const s = document.createElement('span'); s.className = 'magic'; s.textContent = i % 3 ? '✨' : '❄';
+      document.body.appendChild(s);
+      const path = Array.from({ length: 6 }, (_, k) => {
+        const x = (ltr ? k / 5 : 1 - k / 5) * (w + 100) - 50, y = y0 + Math.sin(k * 1.4 + i * 0.4) * h * 0.12;
+        return { transform: `translate(${x}px, ${y}px) rotate(${k * 60}deg) scale(${1 - k * 0.1})`, opacity: k === 5 ? 0 : 1 };
+      });
+      s.animate(path, { duration: 1300, delay: i * 45, easing: 'ease-in-out', fill: 'both' }).onfinish = () => s.remove();
+    }
+  }
+  function iceLetters(el, text) {
+    el.innerHTML = [...text].map((ch, i) => `<span class="ch" style="animation-delay:${i * 70}ms">${esc(ch)}</span>`).join('');
+  }
+  function glitterWords(el, text) {
+    el.innerHTML = text.split(/(\s+)/).map((w, i) => `<span class="w" style="animation-delay:${i * 90}ms">${esc(w)}</span>`).join('');
   }
   let narrator = null;
   function pickNarrator() {
     const voices = speechSynthesis.getVoices().filter((v) => v.lang.startsWith('en'));
-    narrator = ['Samantha', 'Karen', 'Moira', 'Tessa', 'Google US English'].map((n) => voices.find((v) => v.name.includes(n))).find(Boolean) || voices[0] || null;
+    narrator = ['Kate', 'Serena', 'Moira', 'Samantha', 'Karen', 'Google UK English Female', 'Google US English'].map((n) => voices.find((v) => v.name.includes(n))).find(Boolean) || voices[0] || null;
   }
   if ('speechSynthesis' in window) { pickNarrator(); speechSynthesis.onvoiceschanged = pickNarrator; }
   function speak(text) {
     if (!('speechSynthesis' in window) || !TT.soundOn) return sleep(Math.min(6000, 1200 + text.length * 60));
+    TT.music.duck(true);
     return new Promise((res) => {
+      const done = () => { TT.music.duck(false); res(); };
       const u = new SpeechSynthesisUtterance(text);
       if (narrator) u.voice = narrator;
-      u.rate = 0.88; u.pitch = 1.05;
-      u.onend = res; u.onerror = res;
+      u.rate = 0.85; u.pitch = 1.08;
+      u.onend = done; u.onerror = done;
       speechSynthesis.speak(u);
-      setTimeout(res, 15000);
+      setTimeout(done, 15000);
     });
   }
   function storyPages() {
@@ -493,27 +542,38 @@
       return { box: 'talk', entry: key ? talk[key] : null, photo: p.photo, frames: p.type === 'flipbook' ? p.frames : [p.photo], bridge: p.bridge };
     });
     return [
-      { box: 'story', entry: own.cover, title: story.title, photo: firstPhoto, frames: [] },
+      { kind: 'cover', box: 'story', entry: own.cover, title: story.title, photo: firstPhoto, frames: [], bridge: OPENING },
       ...pages,
-      { box: 'story', entry: own.end, title: 'The End ❄', photo: null, frames: [] },
+      { kind: 'end', box: 'story', entry: own.end, title: 'The End', photo: story.pages.length ? story.pages[story.pages.length - 1].photo : null, frames: [], bridge: own.end ? null : 'The end.' },
     ];
   }
   function playEntry(p) {
     if (!p.entry) return Promise.resolve();
+    TT.music.duck(true);
     player.src = p.box === 'talk' ? `/audio/talk/${p.entry.audio}` : `/audio/story/${storyId}/${p.entry.audio}`;
-    return new Promise((res) => { player.onended = res; player.onerror = res; player.play().catch(res); });
+    return new Promise((res) => {
+      const done = () => { TT.music.duck(false); res(); };
+      player.onended = done; player.onerror = done; player.play().catch(done);
+    });
   }
   async function storyTime() {
     const run = ++storyRun, alive = () => run === storyRun;
     clearInterval(flipTimer);
     $('story-layer').hidden = false;
+    if (!sSnow) { TT.snow($('s-snow'), '--frost', .85); sSnow = true; }
+    TT.music.start();
     for (const p of storyPages()) {
       if (!alive()) return;
-      frost(); await sleep(reduce ? 0 : 450); if (!alive()) return;
-      $('s-title').textContent = p.title || '';
+      freeze(); await sleep(reduce ? 0 : 520); if (!alive()) return;
+      const big = p.kind === 'cover' || p.kind === 'end';
+      $('story-layer').classList.toggle('big', big);
+      $('s-snowman').classList.remove('in');
+      $('s-title').innerHTML = '';
       $('s-words').classList.remove('show'); $('s-bridge').classList.remove('show');
       sPic(p.photo ? large(p.photo) : null);
-      await sleep(700); if (!alive()) return;
+      if (p.title) iceLetters($('s-title'), p.title);
+      if (p.kind === 'end' && !reduce) { $('s-snowman').classList.add('in'); }
+      await sleep(big ? 1400 : 700); if (!alive()) return;
       let k = 0, t = null;
       if (p.frames.length > 1) t = setInterval(() => { k = (k + 1) % p.frames.length; sPic(large(p.frames[k])); }, DWELL_MS);
       const started = performance.now();
@@ -522,24 +582,25 @@
         await speak(p.bridge); if (!alive()) { clearInterval(t); return; }
         await sleep(400);
       }
-      if (p.entry && p.entry.words && !p.title) { $('s-words').textContent = p.entry.words; $('s-words').classList.add('show'); }
+      if (p.entry && p.entry.words && !big) { glitterWords($('s-words'), p.entry.words); $('s-words').classList.add('show'); }
       await playEntry(p);
       const minimum = Math.max(p.entry || p.bridge ? 0 : 3500, p.frames.length > 1 ? p.frames.length * DWELL_MS : 0);
       const left = minimum - (performance.now() - started);
       if (left > 0) await sleep(left);
       clearInterval(t);
       if (!alive()) return;
-      await sleep(800);
+      await sleep(900);
     }
     if (!alive()) return;
-    chime('done'); burst($('s-title'), '❄', 18, 260);
-    await sleep(2800);
+    chime('done'); burst($('s-title'), '❄', 24, 320);
+    await sleep(3200);
     if (alive()) closeStory();
   }
   function closeStory() {
-    storyRun++; player.pause();
+    storyRun++; player.pause(); TT.music.stop();
     if ('speechSynthesis' in window) speechSynthesis.cancel();
-    $('story-layer').hidden = true; $('s-words').classList.remove('show'); $('s-bridge').classList.remove('show');
+    $('story-layer').hidden = true; $('story-layer').classList.remove('big');
+    $('s-words').classList.remove('show'); $('s-bridge').classList.remove('show'); $('s-snowman').classList.remove('in');
     if (location.hash === '#play') { location.href = '/'; return; }
     show(at, false);
   }
