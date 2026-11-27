@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tessa Tales</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Gochi+Hand&family=Nunito:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Gochi+Hand&family=Nunito:wght@400;700;800&family=Fredericka+the+Great&display=swap">
 <link rel="stylesheet" href="/web/story.css">
 </head>
 <body>
@@ -83,17 +83,29 @@
   </div>
 </dialog>
 
+<!-- story time: an open storybook -->
 <div class="story" id="story-layer" hidden>
   <div class="s-aurora" aria-hidden="true"></div>
-  <img id="s-img-a" class="s-pic on" alt="">
-  <img id="s-img-b" class="s-pic" alt="">
   <canvas id="s-snow" aria-hidden="true"></canvas>
-  <div class="s-ice" aria-hidden="true"><span>❄</span><span>❄</span><span>❄</span><span>❄</span></div>
-  <div class="s-title" id="s-title"></div>
-  <div class="s-bridge" id="s-bridge"></div>
-  <div class="s-words" id="s-words"></div>
-  <span class="s-snowman" id="s-snowman" aria-hidden="true">☃️</span>
-  <button class="round ghost s-close" id="s-close" aria-label="Stop story time">✕</button>
+  <div class="b-stage" id="b-stage">
+    <div class="book" id="book">
+      <div class="b-page b-left" id="b-left"></div>
+      <div class="b-page b-right" id="b-right"></div>
+      <div class="b-page b-single" id="b-single"></div>
+      <div class="b-spine" aria-hidden="true"></div>
+    </div>
+    <div class="b-cover" id="b-cover">
+      <div class="c-emblem" aria-hidden="true">❄</div>
+      <div class="c-title" id="c-title"></div>
+      <div class="c-by">by Tessa</div>
+    </div>
+  </div>
+  <div class="b-controls">
+    <button class="round ghost" id="s-prev" aria-label="Previous page">‹</button>
+    <button class="round ghost" id="s-pause" aria-label="Pause turning pages">⏸</button>
+    <button class="round ghost" id="s-next" aria-label="Next page">›</button>
+  </div>
+  <button class="round ghost s-close" id="s-close" aria-label="Close the book">✕</button>
 </div>
 
 <div class="start" id="start" hidden><button id="start-btn" aria-label="Play the story">▶</button></div>

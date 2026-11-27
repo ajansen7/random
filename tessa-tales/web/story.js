@@ -483,56 +483,135 @@
     $('w-go').disabled = false; $('w-busy').hidden = true;
   };
 
-  // ---------- ▶ story time: a frosty storybook, a narrator line then her voice ----------
-  const OPENING = TT.OPENING || 'Once upon a time, in a land of snow and sparkles, there was a girl named Tessa.';
-  let storyRun = 0, sLayer = 'a', sSnow = false;
-  function sPic(src) {
-    const cur = $(`s-img-${sLayer}`), next = $(`s-img-${sLayer === 'a' ? 'b' : 'a'}`);
-    if (!src) { cur.classList.remove('on'); next.classList.remove('on'); return; }
-    next.onload = () => { next.classList.add('on'); cur.classList.remove('on'); sLayer = sLayer === 'a' ? 'b' : 'a'; };
-    next.src = src;
+  // ---------- ▶ story time: an open storybook ----------
+  // The cover (title + her title recording) opens straight into page 1. Each page: her picture on
+  // the left, her words printed on the right. Pages turn by themselves (⏸ to linger), or by hand.
+  const sb = { pages: [], i: -1, token: 0, auto: true, busy: false, flip: null, open: false };
+  const isSpread = () => innerWidth >= 900 && innerWidth / innerHeight > 1.15;
+
+  function bookPages() {
+    const pages = story.pages.map((p) => {
+      const s = stackOf[p.photo];
+      const key = [p.photo, ...(p.frames || []), ...(s ? s.members : [])].find((h) => talk[h]);
+      const entry = key ? talk[key] : null;
+      return { kind: 'page', box: 'talk', entry, words: entry && entry.words, photo: p.photo,
+        frames: p.type === 'flipbook' ? p.frames : [p.photo], bridge: p.bridge };
+    });
+    pages.push({ kind: 'end', box: 'story', entry: own.end || null, words: own.end && own.end.words, frames: [] });
+    return pages;
   }
-  // frost blooms from a corner, and a swirl of magic sweeps across
-  function freeze() {
-    if (reduce) return;
-    const f = document.createElement('div'); f.className = 'freeze';
-    f.style.setProperty('--fx', Math.random() < .5 ? '0%' : '100%'); f.style.setProperty('--fy', Math.random() < .5 ? '0%' : '100%');
-    document.body.appendChild(f); setTimeout(() => f.remove(), 1200);
-    const w = innerWidth, h = innerHeight, y0 = h * (0.3 + Math.random() * 0.4), ltr = Math.random() < .5;
-    for (let i = 0; i < 16; i++) {
-      const s = document.createElement('span'); s.className = 'magic'; s.textContent = i % 3 ? '✨' : '❄';
+  const tilt = (n) => `${((n * 37) % 7) - 3}deg`;
+  function leftHTML(p, n) {
+    if (p.kind === 'end') return '<div class="inner"><div class="b-snowman">☃️</div></div>';
+    return `<div class="inner"><div class="b-photo" style="--tilt:${tilt(n)}"><img src="${large(p.photo)}" alt="">
+      <span class="k tl">❄</span><span class="k tr">❄</span><span class="k bl">❄</span><span class="k br">❄</span></div></div>`;
+  }
+  function wordsHTML(text) {
+    const t = text.trim();
+    return `<span class="cap">${esc(t[0])}</span>${esc(t.slice(1))}`;
+  }
+  function rightHTML(p, n) {
+    if (p.kind === 'end') {
+      return `<div class="inner"><div class="b-end"><h2>The End</h2>${p.words ? `<p class="b-words">${esc(p.words)}</p>` : ''}</div></div>`;
+    }
+    const body = p.words ? `<p class="b-words">${wordsHTML(p.words)}</p>` : `<div class="b-orn">${p.entry ? '♪' : '❄'}</div>`;
+    return `<div class="inner"><div class="b-text">${p.bridge ? `<p class="b-bridge">${esc(p.bridge)}</p>` : ''}${body}</div></div>
+      <div class="b-flourish">❄ ❄ ❄</div><div class="b-num">${n + 1}</div>`;
+  }
+  const singleHTML = (p, n) => `<div class="inner">${leftHTML(p, n).replace(/^<div class="inner">|<\/div>$/g, '')}</div>${rightHTML(p, n)}`;
+
+  function layout() { $('book').classList.toggle('single', !isSpread()); }
+  function paint(i) {
+    layout();  // the window may have changed shape, even mid-turn
+    const p = sb.pages[i];
+    if (isSpread()) { $('b-left').innerHTML = leftHTML(p, i); $('b-right').innerHTML = rightHTML(p, i); }
+    else $('b-single').innerHTML = singleHTML(p, i);
+  }
+
+  // a page turns over the spine: front = what's there now, back = what's coming
+  function turn(dir, fromI, toI) {
+    const ms = reduce ? 0 : 900 + Math.random() * 450;
+    const lift = (Math.random() * 6 - 3).toFixed(1);
+    if (!ms) { paint(toI); return Promise.resolve(); }
+    TT.swish(ms * 0.8);
+    whimsy();
+    const spread = isSpread();
+    const book = $('book'), rect = book.getBoundingClientRect();
+    const leaf = document.createElement('div');
+    leaf.className = 'b-leaf';
+    const half = spread ? rect.width / 2 : rect.width;
+    leaf.style.width = `${half}px`;
+    const from = sb.pages[fromI], to = sb.pages[toI];
+    let front, back, start, end, origin;
+    if (spread && dir > 0) {        // right page lifts and lands on the left
+      leaf.style.left = `${half}px`; origin = 'left center';
+      front = `<div class="face front b-page b-right">${rightHTML(from, fromI)}</div>`;
+      back = `<div class="face back b-page b-left">${leftHTML(to, toI)}</div>`;
+      $('b-right').innerHTML = rightHTML(to, toI);
+      start = 0; end = -180;
+    } else if (spread) {            // left page lifts and lands on the right
+      leaf.style.left = '0px'; origin = 'right center';
+      front = `<div class="face front b-page b-left">${leftHTML(from, fromI)}</div>`;
+      back = `<div class="face back b-page b-right">${rightHTML(to, toI)}</div>`;
+      $('b-left').innerHTML = leftHTML(to, toI);
+      start = 0; end = 180;
+    } else if (dir > 0) {           // one page: it flips away to reveal the next
+      leaf.style.left = '0px'; origin = 'left center';
+      front = `<div class="face front b-page b-single" style="display:grid;grid-template-rows:1.25fr 1fr">${singleHTML(from, fromI)}</div>`;
+      back = '<div class="face back b-page b-single" style="display:block"></div>';
+      $('b-single').innerHTML = singleHTML(to, toI);
+      start = 0; end = -180;
+    } else {                        // one page: the previous one flips back over
+      leaf.style.left = '0px'; origin = 'left center';
+      front = `<div class="face front b-page b-single" style="display:grid;grid-template-rows:1.25fr 1fr">${singleHTML(to, toI)}</div>`;
+      back = '<div class="face back b-page b-single" style="display:block"></div>';
+      start = -180; end = 0;
+    }
+    leaf.style.transformOrigin = origin;
+    leaf.innerHTML = front + back + '<div class="shade"></div>';
+    book.appendChild(leaf);
+    const anim = leaf.animate([
+      { transform: `rotateY(${start}deg) rotateX(0deg)` },
+      { transform: `rotateY(${(start + end) / 2}deg) rotateX(${lift}deg) translateZ(40px)`, offset: 0.5 },
+      { transform: `rotateY(${end}deg) rotateX(0deg)` },
+    ], { duration: ms, easing: 'cubic-bezier(.45, .05, .35, 1)', fill: 'forwards' });
+    return anim.finished.then(() => { paint(toI); leaf.remove(); });
+  }
+
+  // a little surprise on every turn
+  function fly(icons, n, from, to, dur = 1500) {
+    for (let k = 0; k < n; k++) {
+      const s = document.createElement('span'); s.className = 'whim';
+      s.textContent = icons[k % icons.length];
+      s.style.fontSize = `${1.4 + Math.random() * 1.8}rem`;
       document.body.appendChild(s);
-      const path = Array.from({ length: 6 }, (_, k) => {
-        const x = (ltr ? k / 5 : 1 - k / 5) * (w + 100) - 50, y = y0 + Math.sin(k * 1.4 + i * 0.4) * h * 0.12;
-        return { transform: `translate(${x}px, ${y}px) rotate(${k * 60}deg) scale(${1 - k * 0.1})`, opacity: k === 5 ? 0 : 1 };
-      });
-      s.animate(path, { duration: 1300, delay: i * 45, easing: 'ease-in-out', fill: 'both' }).onfinish = () => s.remove();
+      const a = from(k), b = to(k);
+      s.animate([{ transform: `translate(${a[0]}px, ${a[1]}px) rotate(0deg)`, opacity: 1 },
+        { transform: `translate(${b[0]}px, ${b[1]}px) rotate(${(Math.random() - .5) * 720}deg)`, opacity: 0 }],
+      { duration: dur * (0.7 + Math.random() * 0.6), delay: k * 40, easing: 'cubic-bezier(.3, .2, .4, 1)', fill: 'both' }).onfinish = () => s.remove();
     }
   }
-  function iceLetters(el, text) {
-    el.innerHTML = [...text].map((ch, i) => `<span class="ch" style="animation-delay:${i * 70}ms">${esc(ch)}</span>`).join('');
+  const W = () => innerWidth, H = () => innerHeight, rnd = (a, b) => a + Math.random() * (b - a);
+  const WHIMSY = [
+    () => fly(['❄', '✨', '❄'], 18, () => [rnd(0, W()), -40], () => [rnd(0, W()), H() + 40], 2200),                       // a flurry
+    () => fly(['🥕', '❄', '⛄'], 10, () => [rnd(0, W()), -50], () => [rnd(0, W()), H() + 60], 2000),                      // Olaf's nose tumbles by
+    () => fly(['💙', '🤍', '💜'], 12, () => [rnd(W() * .2, W() * .8), H() + 30], () => [rnd(0, W()), rnd(-60, H() * .3)], 2200), // hearts float up
+    () => fly(['❄', '·', '❄', '💨'], 22, () => [-60, rnd(0, H())], () => [W() + 80, rnd(0, H())], 1300),                  // a wind gust
+    () => fly(['⭐', '✨', '🌟'], 14, () => [W() / 2, H() / 2], () => [rnd(-50, W() + 50), rnd(-50, H() + 50)], 1300),    // a star pop
+    () => fly(['✨'], 16, (k) => [k * W() / 16, H() * .5 + Math.sin(k) * 80], (k) => [k * W() / 16 + 60, H() * .5 + Math.sin(k + 2) * 120 - 140], 1100), // a sparkle wave
+  ];
+  let lastWhim = -1;
+  function whimsy() {
+    if (reduce) return;
+    let k; do { k = Math.floor(Math.random() * WHIMSY.length); } while (k === lastWhim && WHIMSY.length > 1);
+    lastWhim = k; WHIMSY[k]();
   }
-  function glitterWords(el, text) {
-    el.innerHTML = text.split(/(\s+)/).map((w, i) => `<span class="w" style="animation-delay:${i * 90}ms">${esc(w)}</span>`).join('');
-  }
+
   async function speak(text) {
     if (!('speechSynthesis' in window) || !TT.soundOn) return sleep(Math.min(6000, 1200 + text.length * 60));
     TT.music.duck(true);
     await TT.narrator.say(text);  // the voice chosen on the shelf (🗣️)
     TT.music.duck(false);
-  }
-  function storyPages() {
-    const firstPhoto = story.pages[0] && story.pages[0].photo;
-    const pages = story.pages.map((p) => {
-      const s = stackOf[p.photo];
-      const key = [p.photo, ...(p.frames || []), ...(s ? s.members : [])].find((h) => talk[h]);
-      return { box: 'talk', entry: key ? talk[key] : null, photo: p.photo, frames: p.type === 'flipbook' ? p.frames : [p.photo], bridge: p.bridge };
-    });
-    return [
-      { kind: 'cover', box: 'story', entry: own.cover, title: story.title, photo: firstPhoto, frames: [], bridge: OPENING },
-      ...pages,
-      { kind: 'end', box: 'story', entry: own.end, title: 'The End', photo: story.pages.length ? story.pages[story.pages.length - 1].photo : null, frames: [], bridge: own.end ? null : 'The end.' },
-    ];
   }
   function playEntry(p) {
     if (!p.entry) return Promise.resolve();
@@ -543,58 +622,115 @@
       player.onended = done; player.onerror = done; player.play().catch(done);
     });
   }
-  async function storyTime() {
-    const run = ++storyRun, alive = () => run === storyRun;
-    clearInterval(flipTimer);
-    $('story-layer').hidden = false;
-    if (!sSnow) { TT.snow($('s-snow'), '--frost', .85); sSnow = true; }
-    TT.music.start();
-    for (const p of storyPages()) {
-      if (!alive()) return;
-      freeze(); await sleep(reduce ? 0 : 520); if (!alive()) return;
-      const big = p.kind === 'cover' || p.kind === 'end';
-      $('story-layer').classList.toggle('big', big);
-      $('s-snowman').classList.remove('in');
-      $('s-title').innerHTML = '';
-      $('s-words').classList.remove('show'); $('s-bridge').classList.remove('show');
-      sPic(p.photo ? large(p.photo) : null);
-      if (p.title) iceLetters($('s-title'), p.title);
-      if (p.kind === 'end' && !reduce) { $('s-snowman').classList.add('in'); }
-      await sleep(big ? 1400 : 700); if (!alive()) return;
-      let k = 0, t = null;
-      if (p.frames.length > 1) t = setInterval(() => { k = (k + 1) % p.frames.length; sPic(large(p.frames[k])); }, DWELL_MS);
-      const started = performance.now();
-      if (p.bridge) {
-        $('s-bridge').textContent = p.bridge; $('s-bridge').classList.add('show');
-        await speak(p.bridge); if (!alive()) { clearInterval(t); return; }
-        await sleep(400);
-      }
-      if (p.entry && p.entry.words && !big) { glitterWords($('s-words'), p.entry.words); $('s-words').classList.add('show'); }
-      await playEntry(p);
-      const minimum = Math.max(p.entry || p.bridge ? 0 : 3500, p.frames.length > 1 ? p.frames.length * DWELL_MS : 0);
-      const left = minimum - (performance.now() - started);
-      if (left > 0) await sleep(left);
-      clearInterval(t);
-      if (!alive()) return;
-      await sleep(900);
-    }
-    if (!alive()) return;
-    chime('done'); burst($('s-title'), '❄', 24, 320);
-    await sleep(3200);
-    if (alive()) closeStory();
-  }
-  function closeStory() {
-    storyRun++; player.pause(); TT.music.stop();
+  function hush() {
+    player.pause(); player.onended = null;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
-    $('story-layer').hidden = true; $('story-layer').classList.remove('big');
-    $('s-words').classList.remove('show'); $('s-bridge').classList.remove('show'); $('s-snowman').classList.remove('in');
+    TT.music.duck(false);
+    clearInterval(sb.flip);
+  }
+  function startFlip(p) {
+    clearInterval(sb.flip);
+    if (p.frames.length < 2) return;
+    let k = 0;
+    sb.flip = setInterval(() => {
+      k = (k + 1) % p.frames.length;
+      const img = document.querySelector('#book .b-photo img');
+      if (img) img.src = large(p.frames[k]);
+    }, DWELL_MS);
+  }
+
+  async function playPage(i, token) {
+    const p = sb.pages[i], alive = () => token === sb.token;
+    startFlip(p);
+    const started = performance.now();
+    if (p.bridge) { await speak(p.bridge); if (!alive()) return; await sleep(300); }
+    const words = document.querySelector('#book .b-words');
+    if (words) words.classList.add('reading');
+    await playEntry(p); if (!alive()) return;
+    if (words) words.classList.remove('reading');
+    const minimum = Math.max(p.entry || p.bridge ? 0 : 3500, p.frames.length > 1 ? p.frames.length * DWELL_MS : 0);
+    const left = minimum - (performance.now() - started);
+    if (left > 0) await sleep(left);
+    await sleep(900);
+    if (!alive()) return;
+    if (p.kind === 'end') { chime('done'); burst($('book'), '❄', 24, 320); return; }
+    if (sb.auto) go(i + 1);
+  }
+
+  async function go(to) {
+    if (to < 0 || to >= sb.pages.length || to === sb.i || sb.busy) return;
+    const token = ++sb.token;
+    hush();
+    sb.busy = true;
+    if (sb.i < 0) { paint(to); } else { await turn(to > sb.i ? 1 : -1, sb.i, to); }
+    sb.busy = false;
+    sb.i = to;
+    $('s-prev').disabled = to === 0;
+    $('s-next').disabled = to === sb.pages.length - 1;
+    if (token === sb.token) playPage(to, token);
+  }
+
+  async function storyTime() {
+    const token = ++sb.token;
+    clearInterval(flipTimer);
+    sb.pages = bookPages(); sb.i = -1; sb.auto = true; sb.busy = false;
+    $('s-pause').classList.remove('paused'); $('s-pause').textContent = '⏸';
+    $('story-layer').hidden = false;
+    if (!sbSnow) { TT.snow($('s-snow'), '--frost', .8); sbSnow = true; }
+    layout();
+    $('book').style.visibility = 'hidden';
+    $('b-cover').hidden = false; $('b-cover').classList.remove('open');
+    let n = 0;  // letters freeze in one by one, but words stay whole
+    $('c-title').innerHTML = story.title.split(' ').map((word) =>
+      `<span class="word">${[...word].map((ch) => `<span class="ch" style="animation-delay:${n++ * 70}ms">${esc(ch)}</span>`).join('')}</span>`).join(' ');
+    TT.music.start();
+    await sleep(reduce ? 300 : 1300 + story.title.length * 70); if (token !== sb.token) return;
+    if (own.cover) { await playEntry({ box: 'story', entry: own.cover }); if (token !== sb.token) return; await sleep(400); }
+    paint(0); $('book').style.visibility = 'visible';
+    TT.swish(1000);
+    $('b-cover').classList.add('open');           // the cover swings open, straight into page 1
+    await sleep(reduce ? 0 : 1300); if (token !== sb.token) return;
+    $('b-cover').hidden = true;
+    go(0);
+  }
+  let sbSnow = false;
+
+  function closeStory() {
+    sb.token++; hush(); TT.music.stop();
+    document.querySelectorAll('.b-leaf, .whim').forEach((el) => el.remove());
+    $('story-layer').hidden = true;
     if (location.hash === '#play') { location.href = '/'; return; }
     show(at, false);
   }
+  function nav(d) {
+    if ($('story-layer').hidden || !$('b-cover').hidden) return;
+    go(sb.i + d);
+  }
+  $('s-next').onclick = () => nav(1);
+  $('s-prev').onclick = () => nav(-1);
+  $('s-pause').onclick = () => {
+    sb.auto = !sb.auto;
+    $('s-pause').classList.toggle('paused', !sb.auto);
+    $('s-pause').textContent = sb.auto ? '⏸' : '▶';
+    $('s-pause').setAttribute('aria-label', sb.auto ? 'Pause turning pages' : 'Keep turning pages');
+    if (sb.auto && sb.i >= 0 && !sb.busy) playPage(sb.i, ++sb.token);  // pick up where we are
+  };
+  // tap the left page to go back, the right page to go forward
+  $('book').addEventListener('click', (e) => {
+    const r = $('book').getBoundingClientRect();
+    nav(e.clientX < r.left + r.width / 2 ? -1 : 1);
+  });
+  addEventListener('resize', () => { if (!$('story-layer').hidden && sb.i >= 0 && !sb.busy) { layout(); paint(sb.i); } });
   $('story').onclick = () => { $('start').hidden = true; chime('tell'); storyTime(); };
   $('start-btn').onclick = () => { $('start').hidden = true; chime('tell'); storyTime(); };
   $('s-close').onclick = closeStory;
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('story-layer').hidden) closeStory(); });
+  document.addEventListener('keydown', (e) => {
+    if ($('story-layer').hidden) return;
+    if (e.key === 'Escape') closeStory();
+    if (e.key === 'ArrowRight') { e.preventDefault(); nav(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); nav(-1); }
+    if (e.code === 'Space') { e.preventDefault(); $('s-pause').click(); }
+  });
 
   TT.snow($('snow'), '--frost', .35);
   $('mic').classList.add('idle');

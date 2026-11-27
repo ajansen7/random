@@ -22,6 +22,20 @@ window.TT = (() => {
       });
     } catch (e) {}
   }
+  // a papery page-turn swish: filtered noise sweeping up
+  function swish(ms = 600) {
+    if (!soundOn) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const len = Math.floor(audio.sampleRate * ms / 1000), buf = audio.createBuffer(1, len, audio.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = audio.createBufferSource(), bp = audio.createBiquadFilter(), g = audio.createGain(), t = audio.currentTime;
+      src.buffer = buf; bp.type = 'bandpass'; bp.Q.value = 0.8;
+      bp.frequency.setValueAtTime(700, t); bp.frequency.exponentialRampToValueAtTime(3200, t + ms / 1000);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + ms / 1000);
+      src.connect(bp).connect(g).connect(audio.destination); src.start(t);
+    } catch (e) {}
+  }
   function setSound(on) { soundOn = on; try { localStorage.setItem('tt-sound', on ? 'on' : 'off'); } catch (e) {} }
 
   function burst(el, icon, n = 10, spread = 110) {
@@ -151,7 +165,7 @@ window.TT = (() => {
   };
 
   return {
-    reduce, chime, burst, snow, setSound, music, narrator, get soundOn() { return soundOn; },
+    reduce, chime, burst, snow, setSound, music, narrator, swish, get soundOn() { return soundOn; },
     thumb: (h) => `/thumb/${h}.jpg`,
     large: (h) => `/large/${h}.jpg`,
     esc: (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
