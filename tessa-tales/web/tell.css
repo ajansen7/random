@@ -8,6 +8,7 @@
   --hand: "Gochi Hand", "Chalkboard SE", "Comic Sans MS", cursive;
   --body: "Nunito", -apple-system, system-ui, sans-serif;
   --level: 0;
+  --hush: 0;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -74,6 +75,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--elsa); outline-
 .mic.rec .flake { animation: spin 3s linear infinite; }
 .mic.rec .ring { border-color: var(--anna); animation: ripple 1.4s ease-out infinite; }
 .mic.rec .r2 { animation-delay: .7s; }
+/* as she goes quiet the snowflake winds down, then the recording stops by itself */
+.mic.rec .flake { opacity: calc(1 - var(--hush) * .65); }
+.mic.rec .ring { opacity: calc(.9 - var(--hush) * .9); }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes ripple { from { transform: scale(1); opacity: .9; } to { transform: scale(1.7); opacity: 0; } }
 .key { font-family: var(--chunky); font-size: 1.4rem; color: var(--soft); border: 2px solid var(--soft); border-radius: 8px; padding: 0 .7rem; opacity: .5; }

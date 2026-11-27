@@ -106,13 +106,31 @@
     }
   }
 
+  // Tap once and talk: recording stops by itself once she goes quiet.
+  const QUIET_STOP_MS = 2200;    // this much quiet after talking ends the recording
+  const NOBODY_TALKED_MS = 8000; // nothing said at all: stop and don't keep it
+  const LONGEST_MS = 60000;      // a toddler story page never needs more than a minute
+  let heard = false;
   function levelLoop() {
     const buf = new Uint8Array(analyser.fftSize);
+    let floor = 0.02, lastLoud = performance.now(), calib = [];
+    heard = false;
     const tick = () => {
       analyser.getByteTimeDomainData(buf);
       let sum = 0; for (const x of buf) { const d = (x - 128) / 128; sum += d * d; }
-      const level = Math.min(1, Math.sqrt(sum / buf.length) * 6);
+      const rms = Math.sqrt(sum / buf.length);
+      const now = performance.now(), since = now - recStart;
+      if (since < 350) { calib.push(rms); floor = Math.max(0.01, calib.reduce((a, b) => a + b, 0) / calib.length); }
+      const loud = since >= 350 && rms > Math.max(0.035, floor * 2.8);
+      if (loud) { heard = true; lastLoud = now; }
+      const level = Math.min(1, rms * 6);
+      const quiet = heard ? Math.min(1, (now - lastLoud) / QUIET_STOP_MS) : 0;
       document.documentElement.style.setProperty('--level', level.toFixed(3));
+      document.documentElement.style.setProperty('--hush', quiet.toFixed(3));
+      if ((heard && now - lastLoud > QUIET_STOP_MS) || (!heard && since > NOBODY_TALKED_MS) || since > LONGEST_MS) {
+        stopRec();
+        return;
+      }
       raf = requestAnimationFrame(tick);
     };
     tick();
@@ -135,12 +153,13 @@
 
   function stopRec() {
     if (!rec) return;
-    const r = rec, key = items[at].key, long = performance.now() - recStart;
+    const r = rec, key = items[at].key, long = performance.now() - recStart, talked = heard;
     rec = null;
-    cancelAnimationFrame(raf); document.documentElement.style.setProperty('--level', 0);
+    cancelAnimationFrame(raf);
+    document.documentElement.style.setProperty('--level', 0); document.documentElement.style.setProperty('--hush', 0);
     $('mic').classList.remove('rec'); $('mic').classList.add('idle'); $('pola').classList.remove('rec');
     r.onstop = async () => {
-      if (long < 700) { $('mic').classList.add('wobble'); setTimeout(() => $('mic').classList.remove('wobble'), 450); return; }
+      if (long < 700 || !talked) { $('mic').classList.add('wobble'); setTimeout(() => $('mic').classList.remove('wobble'), 450); return; }
       const blob = new Blob(chunks, { type: r.mimeType || 'audio/webm' });
       burst($('mic'), '❄', 14, 160); chime('done');
       try {
@@ -159,11 +178,10 @@
   $('mic').onclick = () => (rec ? stopRec() : startRec());
   document.addEventListener('keydown', (e) => {
     if (e.target.isContentEditable || !$('story-layer').hidden) return;
-    if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) startRec(); }
+    if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) (rec ? stopRec() : startRec()); }
     if (e.key === 'ArrowRight' && !rec) show(at + 1);
     if (e.key === 'ArrowLeft' && !rec) show(at - 1);
   });
-  document.addEventListener('keyup', (e) => { if (e.code === 'Space' && !e.target.isContentEditable) { e.preventDefault(); stopRec(); } });
 
   // ---------- Whisper writes the words; check back while it listens ----------
   let pollTimer = null;
