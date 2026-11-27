@@ -53,6 +53,9 @@
       if ((imp.new_stories || []).length) { chime('done'); burst($('shelf'), '✨', 16, 260); }
     }
     if (imp.phase === 'error') $('phase').textContent = '⚠️';
+    const bad = imp.damaged || [];
+    $('damaged').hidden = !bad.length;
+    if (bad.length) $('damaged').textContent = `⚠️ ${bad.length} picture${bad.length === 1 ? ' is' : 's are'} damaged on the card, so Olaf skipped ${bad.length === 1 ? 'it' : 'them'}. Copies already on the Mac are fine. Time for a fresh card soon?`;
   }
   $('card-go').onclick = async () => {
     if (!card) return;

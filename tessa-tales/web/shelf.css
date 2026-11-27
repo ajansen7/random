@@ -78,3 +78,5 @@ h1 span:nth-child(5n+5) { color: #b9a4ff; transform: translateY(3px) rotate(-5de
 .burst { position: fixed; z-index: 100; pointer-events: none; font-size: 2rem; animation: burst .95s ease-out forwards; }
 @keyframes burst { from { transform: translate(0, 0) scale(.6); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(var(--rot)); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .olaf-btn, .olaf.working, .new, .glass.shake, .glass.shake .flakes { animation: none; } .burst { display: none; } }
+.damaged { margin: 0; font-size: .95rem; color: var(--frost); background: rgba(255, 111, 163, .18); border: 2px solid var(--anna); border-radius: 14px; padding: .4rem .8rem; max-width: 420px; }
+.damaged[hidden] { display: none; }

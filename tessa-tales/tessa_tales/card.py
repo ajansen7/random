@@ -68,14 +68,15 @@ class Importer:
         try:
             import_id = self.lib.import_card(card, log=lambda *a: None, progress=progress)
             if not import_id:
-                self.state = {"phase": "done", "new_pictures": 0, "new_stories": []}
+                self.state = {"phase": "done", "new_pictures": 0, "new_stories": [], "damaged": self.lib.last_damaged}
                 return
             self.state.update(phase="sorting", import_id=import_id)
             man = sieve.run(self.lib, self.cfg, import_id, log=lambda *a: None)
             self.state.update(phase="stories")
             made = stories.ensure_day_stories(self.lib, import_id)
             self.state = {"phase": "done", "import_id": import_id, "new_pictures": len(man["photos"]),
-                          "buried": man["sieve"]["photo_counts"]["snowdrift"], "new_stories": made}
+                          "buried": man["sieve"]["photo_counts"]["snowdrift"], "new_stories": made,
+                          "damaged": self.lib.last_damaged}
         except Exception as e:
             self.state = {"phase": "error", "error": str(e)}
 

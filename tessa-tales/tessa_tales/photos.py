@@ -24,6 +24,16 @@ def natural_key(name: str):
     return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", name)]
 
 
+def picture_ok(path: Path) -> bool:
+    """False for a picture that won't fully open, like one cut short by a damaged card."""
+    try:
+        with Image.open(path) as im:
+            im.load()
+        return True
+    except Exception:
+        return False
+
+
 def sha1_file(path: Path) -> str:
     h = hashlib.sha1()
     with open(path, "rb") as f:

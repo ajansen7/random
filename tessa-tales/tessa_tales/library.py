@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .photos import is_photo, natural_key, open_small, pixel_features, sha1_file
+from .photos import is_photo, natural_key, open_small, picture_ok, pixel_features, sha1_file
 
 THUMB_SIDE = 384
 
@@ -23,7 +23,8 @@ class Library:
         for d in (self.originals, self.thumbs, self.feats, self.imports, self.sheets):
             d.mkdir(parents=True, exist_ok=True)
         self.seen_path = self.home / "seen.json"
-        self.quick_path = self.home / "seen_quick.json"  # name|size|mtime of everything copied, for fast card checks
+        self.quick_path = self.home / "seen_quick.json"
+        self.last_damaged: list[str] = []  # name|size|mtime of everything copied, for fast card checks
 
     # ---- fast "anything new on this card?" check ----------------------------
     @staticmethod
@@ -37,6 +38,16 @@ class Library:
         quick = {self._quick_key(f.name.split("/")[-1], f.stat()) for f in self.originals.glob("*/*") if f.is_file()}
         self.quick_path.write_text(json.dumps(sorted(quick)))
         return quick
+
+    def _copied_times(self) -> dict[str, int]:
+        """name -> timestamp of every picture already copied (copy2 keeps the camera's time)."""
+        return {f.name: int(f.stat().st_mtime) for f in self.originals.glob("*/*") if f.is_file()}
+
+    def _damaged_copy(self, name: str, p: Path, copied: dict[str, int]) -> bool:
+        """Same name and same moment as a picture we already have, but different bytes:
+        the card's copy got damaged. (A camera reusing a name after a wipe has a new time.)"""
+        t = copied.get(name)
+        return t is not None and abs(t - int(p.stat().st_mtime)) <= 2
 
     def card_files(self, source: Path) -> list[Path]:
         """Pictures on a card. Cameras keep them in DCIM; never wander into the hidden system
@@ -60,9 +71,13 @@ class Library:
         return sorted(found, key=lambda p: natural_key(str(p.relative_to(source))))
 
     def count_new(self, source: Path) -> int:
-        quick = self._load_quick()
-        return sum(1 for p in self.card_files(source)
-                   if self._quick_key("_".join(p.relative_to(source).parts), p.stat()) not in quick)
+        """New pictures on the card that actually open (damaged ones aren't offered)."""
+        quick, copied, n = self._load_quick(), self._copied_times(), 0
+        for p in self.card_files(source):
+            name = "_".join(p.relative_to(source).parts)
+            if self._quick_key(name, p.stat()) not in quick and not self._damaged_copy(name, p, copied) and picture_ok(p):
+                n += 1
+        return n
 
     # ---- bookkeeping -------------------------------------------------
     def _load_seen(self) -> dict:
@@ -97,9 +112,10 @@ class Library:
         files = self.card_files(source)
         seen = self._load_seen()
         quick = self._load_quick()
+        copied = self._copied_times()
         import_id = self._new_import_id()
         dest = self.originals / import_id
-        photos, skipped = [], 0
+        photos, skipped, damaged = [], 0, []
         for i, p in enumerate(files, 1):
             if progress:
                 progress(i, len(files))
@@ -109,6 +125,9 @@ class Library:
             if digest in seen:
                 skipped += 1
                 continue
+            if self._damaged_copy(name, p, copied) or not picture_ok(p):
+                damaged.append(p.name)  # cut short or garbled on the card: never import a broken picture
+                continue
             dest.mkdir(parents=True, exist_ok=True)
             shutil.copy2(p, dest / name)
             rel = f"{import_id}/{name}"
@@ -117,6 +136,9 @@ class Library:
             if i % 50 == 0:
                 log(f"  copied {i}/{len(files)}")
         self.quick_path.write_text(json.dumps(sorted(quick)))
+        self.last_damaged = damaged
+        if damaged:
+            log(f"Skipped {len(damaged)} damaged pictures on the card: {', '.join(damaged[:10])}")
         if not photos:
             log(f"Nothing new on {source} ({skipped} pictures were already imported).")
             return None
