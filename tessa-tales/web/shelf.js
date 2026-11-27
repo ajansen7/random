@@ -93,7 +93,7 @@
   });
   if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => { if ($('voice').open) renderVoices(); };
 
-  TT.snow($('snow'), '--frost', .35);
+  TT.snow($('snow'), '--frost', .9);
   loadShelf();
   checkCard();
   polling = setInterval(checkCard, 2500);

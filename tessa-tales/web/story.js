@@ -486,7 +486,7 @@
   // ---------- ▶ story time: an open storybook ----------
   // The cover (title + her title recording) opens straight into page 1. Each page: her picture on
   // the left, her words printed on the right. Pages turn by themselves (⏸ to linger), or by hand.
-  const sb = { pages: [], i: -1, token: 0, auto: true, busy: false, flip: null, open: false };
+  const sb = { pages: [], i: -1, token: 0, auto: true, busy: false, flip: null, open: false, started: false, done: false };
   const isSpread = () => innerWidth >= 900 && innerWidth / innerHeight > 1.15;
 
   function bookPages() {
@@ -624,7 +624,7 @@
   }
   function hush() {
     player.pause(); player.onended = null;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    if ('speechSynthesis' in window) { if (speechSynthesis.paused) speechSynthesis.resume(); speechSynthesis.cancel(); }
     TT.music.duck(false);
     clearInterval(sb.flip);
   }
@@ -639,20 +639,41 @@
     }, DWELL_MS);
   }
 
+  // waiting that stands still while the book is paused
+  function hold(ms, alive) {
+    return new Promise((res) => {
+      let left = ms;
+      const t = setInterval(() => {
+        if (!alive()) { clearInterval(t); return res(); }
+        if (sb.auto) left -= 100;
+        if (left <= 0) { clearInterval(t); res(); }
+      }, 100);
+    });
+  }
+  const untilPlaying = (alive) => hold(0, alive);
+
   async function playPage(i, token) {
     const p = sb.pages[i], alive = () => token === sb.token;
+    sb.started = true; sb.done = false;
     startFlip(p);
-    const started = performance.now();
-    if (p.bridge) { await speak(p.bridge); if (!alive()) return; await sleep(300); }
+    let waited = 0;
+    if (p.bridge) {
+      await untilPlaying(alive); if (!alive()) return;
+      await speak(p.bridge); if (!alive()) return;
+      await hold(300, alive); if (!alive()) return;
+    }
     const words = document.querySelector('#book .b-words');
+    await untilPlaying(alive); if (!alive()) return;
     if (words) words.classList.add('reading');
+    const t0 = performance.now();
     await playEntry(p); if (!alive()) return;
+    waited = performance.now() - t0;
     if (words) words.classList.remove('reading');
     const minimum = Math.max(p.entry || p.bridge ? 0 : 3500, p.frames.length > 1 ? p.frames.length * DWELL_MS : 0);
-    const left = minimum - (performance.now() - started);
-    if (left > 0) await sleep(left);
-    await sleep(900);
+    if (minimum - waited > 0) await hold(minimum - waited, alive);
+    await hold(900, alive);
     if (!alive()) return;
+    sb.done = true;
     if (p.kind === 'end') { chime('done'); burst($('book'), '❄', 24, 320); return; }
     if (sb.auto) go(i + 1);
   }
@@ -664,10 +685,10 @@
     sb.busy = true;
     if (sb.i < 0) { paint(to); } else { await turn(to > sb.i ? 1 : -1, sb.i, to); }
     sb.busy = false;
-    sb.i = to;
+    sb.i = to; sb.started = false; sb.done = false;
     $('s-prev').disabled = to === 0;
     $('s-next').disabled = to === sb.pages.length - 1;
-    if (token === sb.token) playPage(to, token);
+    if (token === sb.token && sb.auto) playPage(to, token);  // paused: the page waits quietly for ▶
   }
 
   async function storyTime() {
@@ -676,9 +697,9 @@
     sb.pages = bookPages(); sb.i = -1; sb.auto = true; sb.busy = false;
     $('s-pause').classList.remove('paused'); $('s-pause').textContent = '⏸';
     $('story-layer').hidden = false;
-    if (!sbSnow) { TT.snow($('s-snow'), '--frost', .8); sbSnow = true; }
+    if (!sbSnow) { TT.snow($('s-snow'), '--frost', 1); sbSnow = true; }
     layout();
-    $('book').style.visibility = 'hidden';
+    $('tome').style.visibility = 'hidden';
     $('b-cover').hidden = false; $('b-cover').classList.remove('open');
     let n = 0;  // letters freeze in one by one, but words stay whole
     $('c-title').innerHTML = story.title.split(' ').map((word) =>
@@ -686,7 +707,7 @@
     TT.music.start();
     await sleep(reduce ? 300 : 1300 + story.title.length * 70); if (token !== sb.token) return;
     if (own.cover) { await playEntry({ box: 'story', entry: own.cover }); if (token !== sb.token) return; await sleep(400); }
-    paint(0); $('book').style.visibility = 'visible';
+    paint(0); $('tome').style.visibility = 'visible';
     TT.swish(1000);
     $('b-cover').classList.add('open');           // the cover swings open, straight into page 1
     await sleep(reduce ? 0 : 1300); if (token !== sb.token) return;
@@ -708,12 +729,29 @@
   }
   $('s-next').onclick = () => nav(1);
   $('s-prev').onclick = () => nav(-1);
+  // ⏸ stops everything right where it is; ▶ carries on from the same spot
+  function pauseBook() {
+    sb.auto = false;
+    player.pause();
+    if ('speechSynthesis' in window && speechSynthesis.speaking) speechSynthesis.pause();
+    clearInterval(sb.flip);
+    TT.music.hold(true);
+  }
+  function resumeBook() {
+    sb.auto = true;
+    TT.music.hold(false);
+    if (sb.i < 0 || sb.busy) return;
+    if (!sb.started) return playPage(sb.i, ++sb.token);             // turned here while paused
+    if (sb.done) return sb.pages[sb.i].kind === 'end' ? null : go(sb.i + 1);  // this page had finished
+    if ('speechSynthesis' in window && speechSynthesis.paused) speechSynthesis.resume();
+    if (player.src && player.paused && player.currentTime > 0 && !player.ended) player.play().catch(() => {});
+    startFlip(sb.pages[sb.i]);
+  }
   $('s-pause').onclick = () => {
-    sb.auto = !sb.auto;
+    if (sb.auto) pauseBook(); else resumeBook();
     $('s-pause').classList.toggle('paused', !sb.auto);
     $('s-pause').textContent = sb.auto ? '⏸' : '▶';
-    $('s-pause').setAttribute('aria-label', sb.auto ? 'Pause turning pages' : 'Keep turning pages');
-    if (sb.auto && sb.i >= 0 && !sb.busy) playPage(sb.i, ++sb.token);  // pick up where we are
+    $('s-pause').setAttribute('aria-label', sb.auto ? 'Pause' : 'Play');
   };
   // tap the left page to go back, the right page to go forward
   $('book').addEventListener('click', (e) => {
@@ -732,7 +770,7 @@
     if (e.code === 'Space') { e.preventDefault(); $('s-pause').click(); }
   });
 
-  TT.snow($('snow'), '--frost', .35);
+  TT.snow($('snow'), '--frost', .9);
   $('mic').classList.add('idle');
   load();
 })();

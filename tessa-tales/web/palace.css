@@ -1,0 +1,83 @@
+/* The ice palace by day: a pale icy sky, a palace on a snowy hill, fresh snow falling.
+   Loaded after each page's own styles; it relights them for a bright, frosty world. */
+:root {
+  --night: #e9f6ff; --night2: #ffffff;
+  --ink: #1f2a6b; --soft: #52639a;
+  --frost: #ffffff;             /* the snowflakes */
+  --elsa: #2f86d6; --anna: #e0457f; --gold: #e0a400; --olaf: #f08c2a;
+  --glass: rgba(255, 255, 255, .62); --glass-line: rgba(47, 134, 214, .28);
+  color-scheme: light;
+}
+body {
+  color: var(--ink);
+  background:
+    url("/web/palace.svg") center bottom / min(1600px, 140vw) auto no-repeat fixed,
+    radial-gradient(ellipse 60% 40% at 12% 0%, rgba(255, 255, 255, .95), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 88% 0%, rgba(235, 225, 255, .9), transparent 70%),
+    linear-gradient(180deg, #f4fbff 0%, #dcf0fd 45%, #c6e3f8 75%, #e8f5ff 100%) fixed;
+}
+/* frost creeping in from the top corners */
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 22%),
+    radial-gradient(circle at 100% 0, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 22%),
+    repeating-conic-gradient(from 10deg at 0 0, rgba(255, 255, 255, .35) 0 1.5deg, transparent 1.5deg 9deg),
+    repeating-conic-gradient(from 100deg at 100% 0, rgba(255, 255, 255, .35) 0 1.5deg, transparent 1.5deg 9deg);
+  -webkit-mask-image: radial-gradient(circle at 50% 0, transparent 55%, #000 80%); mask-image: radial-gradient(circle at 50% 0, transparent 55%, #000 80%); }
+.aurora { opacity: .18; }
+
+/* buttons and bits that were drawn for the dark */
+.round, .round.ghost { background: var(--glass); border-color: var(--glass-line); color: var(--ink); box-shadow: 0 3px 0 rgba(47, 90, 160, .18); }
+.round.play { background: var(--anna); border-color: #fff; color: #fff; }
+a.round { color: var(--ink); }
+
+/* ---------- the story screen ---------- */
+.dots button { color: rgba(31, 42, 107, .22); }
+.dots button.has { color: var(--elsa); text-shadow: 0 0 8px rgba(47, 134, 214, .45); }
+.dots button.loved { color: #f08ab0; }
+.dots button.loved.has { color: var(--anna); }
+.dots button.here { color: var(--ink); }
+.words-text { color: var(--ink); text-shadow: 0 1px 0 #fff; }
+.words-text.listening { color: var(--elsa); }
+.tiny { color: var(--ink); }
+.key { color: var(--soft); border-color: var(--soft); }
+.bridge { color: var(--ink); background: rgba(255, 255, 255, .5); border-color: rgba(47, 134, 214, .35); }
+.react { background: var(--glass); border-color: #fff; box-shadow: 0 6px 0 rgba(47, 90, 160, .25); }
+.pola { box-shadow: 0 18px 40px rgba(40, 80, 140, .28); }
+.note { background: rgba(31, 42, 107, .85); }
+dialog::backdrop { background: rgba(120, 170, 220, .45); backdrop-filter: blur(6px); }
+#grid[open], #weave[open], dialog#voice { background: linear-gradient(180deg, #ffffff, #eef7ff); color: var(--ink); border: 2px solid #fff; box-shadow: 0 30px 80px rgba(40, 80, 140, .35); }
+.g-moment, .g-pile summary { color: var(--soft); }
+.grid-strip { border-top-color: rgba(47, 134, 214, .2); }
+.w-explain, .v-help { color: var(--soft); }
+#w-hint { background: #fff; color: var(--ink); border-color: rgba(47, 134, 214, .35); }
+.w-summary { background: rgba(47, 134, 214, .07); }
+.w-row i { color: var(--elsa); }
+.chunky { border-color: #fff; }
+
+/* ---------- the shelf ---------- */
+.top h1 span:nth-child(5n+3) { color: #e0a400; }
+.top h1 span:nth-child(5n+4) { color: #22a884; }
+.top h1 span:nth-child(5n+5) { color: #7b5fd4; }
+.top h1 { text-shadow: 0 3px 0 #fff, 0 6px 14px rgba(40, 80, 140, .2); }
+.g-title { color: var(--ink); text-shadow: 0 1px 0 #fff; }
+.g-told { color: var(--elsa); }
+.g-told .dim { color: rgba(31, 42, 107, .18); }
+.glass { box-shadow: inset 0 0 0 6px rgba(255, 255, 255, .6), inset -18px -24px 40px rgba(20, 50, 100, .25), 0 10px 30px rgba(40, 80, 140, .3); }
+.base { background: linear-gradient(#b9dcf7, #7fb4e2); box-shadow: 0 6px 0 rgba(40, 80, 140, .25); }
+.damaged { color: var(--ink); background: rgba(255, 255, 255, .7); }
+.v-name { color: var(--ink); background: rgba(47, 134, 214, .07); }
+.v-name small { color: var(--soft); }
+.empty { color: var(--ink); }
+
+/* ---------- story time: the book sits in the palace too ---------- */
+.story { background:
+    url("/web/palace.svg") center bottom / min(1600px, 150vw) auto no-repeat,
+    linear-gradient(180deg, #f4fbff 0%, #dcf0fd 45%, #c6e3f8 75%, #e8f5ff 100%); }
+.s-aurora { opacity: .12; }
+.b-controls .round { background: var(--glass); border-color: #fff; color: var(--ink); }
+#s-pause.paused { background: var(--anna); color: #fff; }
+.whim { text-shadow: 0 0 10px rgba(47, 134, 214, .5); }
+/* the ♥ "the end" card on the story screen, in ice */
+.the-end { background: radial-gradient(circle at 50% 40%, #ffffff, #d6ecfb 60%, #a9d3f3); color: #2f6fb0; text-shadow: 0 3px 0 #fff, 0 0 18px rgba(124, 198, 245, .7); }
+.the-end span { color: #7cc6f5; }

@@ -104,8 +104,8 @@ def make_handler(lib: Library, voice: Voice, importer: Importer):
                 return self._file(WEB / "story.html", html)
             if parts[0] == "tell" and len(parts) == 2 and self._story_ok(parts[1]):
                 return self._redirect(f"/story/{parts[1]}")  # Tessa's turn and the story page are one screen now
-            if parts[0] == "web" and len(parts) == 2 and re.match(r"^[a-z0-9_-]+\.(html|js|css)$", parts[1]):
-                ctype = {"html": "text/html", "js": "text/javascript", "css": "text/css"}[parts[1].rsplit(".", 1)[1]]
+            if parts[0] == "web" and len(parts) == 2 and re.match(r"^[a-z0-9_-]+\.(html|js|css|svg)$", parts[1]):
+                ctype = {"html": "text/html", "js": "text/javascript", "css": "text/css", "svg": "image/svg+xml"}[parts[1].rsplit(".", 1)[1]]
                 return self._file(WEB / parts[1], ctype + "; charset=utf-8")
             if parts[0] == "audio":
                 if len(parts) == 3 and parts[1] == "talk":

@@ -58,17 +58,27 @@ window.TT = (() => {
   function snow(canvas, colorVar = '--elsa', alpha = .28) {
     const ctx = canvas.getContext('2d');
     let flakes = [];
+    const make = (y) => {
+      const depth = Math.random();  // 0 far … 1 near
+      return { x: Math.random() * innerWidth, y: y ?? Math.random() * innerHeight, r: 1 + depth * depth * 5.5,
+        s: .25 + depth * 1.1, w: Math.random() * 6.3, sway: .2 + depth * .6, a: .45 + depth * .55 };
+    };
     const size = () => {
       canvas.width = innerWidth; canvas.height = innerHeight;
-      flakes = Array.from({ length: Math.round(innerWidth / 18) }, () => ({ x: Math.random() * innerWidth, y: Math.random() * innerHeight, r: 1.4 + Math.random() * 3, s: .25 + Math.random() * .55, w: Math.random() * 6.3 }));
+      flakes = Array.from({ length: Math.round(innerWidth / 9) }, () => make());
     };
     const draw = (move) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(colorVar); ctx.globalAlpha = alpha;
+      const color = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim() || '#fff';
       for (const f of flakes) {
-        if (move) { f.y += f.s; f.w += .01; f.x += Math.sin(f.w) * .35; if (f.y > canvas.height + 6) { f.y = -6; f.x = Math.random() * canvas.width; } }
-        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.283); ctx.fill();
+        if (move) { f.y += f.s; f.w += .012; f.x += Math.sin(f.w) * f.sway; if (f.y > canvas.height + 8) Object.assign(f, make(-8)); }
+        const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+        g.addColorStop(0, color); g.addColorStop(.55, color); g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalAlpha = Math.min(1, alpha * f.a * 1.4);
+        ctx.shadowColor = 'rgba(80, 130, 190, .35)'; ctx.shadowBlur = f.r > 3 ? 3 : 0;
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.283); ctx.fill();
       }
+      ctx.shadowBlur = 0;
     };
     size(); addEventListener('resize', size);
     if (reduce) draw(false); else (function loop() { draw(true); requestAnimationFrame(loop); })();
@@ -89,7 +99,8 @@ window.TT = (() => {
     return 440 * Math.pow(2, (i + 12 * (+n.slice(1) + 1) - 69) / 12);
   };
   const music = (() => {
-    let master = null, timer = null, next = 0, step = 0, beatInBar = 0, bar = 0;
+    let master = null, timer = null, next = 0, step = 0, beatInBar = 0, bar = 0, held = false, ducked = false;
+    const level = () => (held ? 0.0001 : ducked ? 0.015 : 0.06);
     function bell(f, t, vol, decay) {
       [[1, vol], [2, vol * 0.25], [3.01, vol * 0.08]].forEach(([mult, v]) => {
         const o = audio.createOscillator(), g = audio.createGain();
@@ -115,12 +126,14 @@ window.TT = (() => {
         try {
           audio = audio || new (window.AudioContext || window.webkitAudioContext)();
           master = audio.createGain(); master.gain.value = 0.0001; master.connect(audio.destination);
+          held = false; ducked = false;
           master.gain.setTargetAtTime(0.06, audio.currentTime, 0.8);
           next = audio.currentTime + 0.1; step = 0; beatInBar = 0; bar = 0;
           timer = setInterval(tick, 40);
         } catch (e) {}
       },
-      duck(on) { if (master) master.gain.setTargetAtTime(on ? 0.015 : 0.06, audio.currentTime, 0.25); },
+      duck(on) { ducked = on; if (master) master.gain.setTargetAtTime(level(), audio.currentTime, 0.25); },
+      hold(on) { held = on; if (master) master.gain.setTargetAtTime(level(), audio.currentTime, 0.2); },
       stop() {
         if (!timer) return;
         clearInterval(timer); timer = null;

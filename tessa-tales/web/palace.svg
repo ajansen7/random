@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax meet">
+  <!-- An ice palace on a snowy hill, drawn for Tessa Tales. -->
+  <defs>
+    <linearGradient id="ice" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#cdeafc" stop-opacity=".88"/>
+      <stop offset="1" stop-color="#8ec6ee" stop-opacity=".82"/>
+    </linearGradient>
+    <linearGradient id="facet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#a6d4f5" stop-opacity=".15"/>
+    </linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b9def8"/>
+      <stop offset="1" stop-color="#7ab6e6"/>
+    </linearGradient>
+    <linearGradient id="snow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e4f3fd"/>
+    </linearGradient>
+    <linearGradient id="hills" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9f5ff"/>
+      <stop offset="1" stop-color="#cfe7fa"/>
+    </linearGradient>
+  </defs>
+
+  <!-- far snowy mountains -->
+  <path d="M0 470 L170 340 L320 430 L510 280 L690 420 L880 310 L1060 415 L1250 290 L1430 405 L1600 340 L1600 640 L0 640Z" fill="url(#hills)"/>
+  <path d="M510 280 L560 320 L530 330 L500 312Z M1250 290 L1300 330 L1268 338 L1238 318Z M170 340 L210 372 L185 380Z" fill="#fff" opacity=".9"/>
+
+  <!-- the palace -->
+  <g stroke="#ffffff" stroke-width="3" stroke-linejoin="round">
+    <!-- outer towers -->
+    <path d="M470 250 L512 410 L500 410 L500 540 L440 540 L440 410 L428 410Z" fill="url(#ice)"/>
+    <path d="M1130 250 L1172 410 L1160 410 L1160 540 L1100 540 L1100 410 L1088 410Z" fill="url(#ice)"/>
+    <!-- hall with a tall arch -->
+    <path d="M520 545 L520 420 Q800 300 1080 420 L1080 545Z" fill="url(#ice)"/>
+    <!-- inner towers -->
+    <path d="M640 140 L694 365 L678 365 L678 545 L602 545 L602 365 L586 365Z" fill="url(#ice)"/>
+    <path d="M960 140 L1014 365 L998 365 L998 545 L922 545 L922 365 L906 365Z" fill="url(#ice)"/>
+    <!-- the great spire -->
+    <path d="M800 20 L866 300 L846 300 L846 545 L754 545 L754 300 L734 300Z" fill="url(#ice)"/>
+    <!-- door -->
+    <path d="M748 545 L748 468 Q800 412 852 468 L852 545Z" fill="url(#deep)"/>
+    <!-- steps -->
+    <path d="M700 545 L900 545 L955 610 L645 610Z" fill="#eef8ff"/>
+  </g>
+  <!-- facets catching the light -->
+  <path d="M800 20 L734 300 L800 300Z M640 140 L586 365 L640 365Z M960 140 L906 365 L960 365Z M470 250 L428 410 L470 410Z M1130 250 L1088 410 L1130 410Z" fill="url(#facet)"/>
+  <path d="M800 20 L800 545 M640 140 L640 545 M960 140 L960 545" stroke="#ffffff" stroke-opacity=".7" stroke-width="2"/>
+  <!-- windows -->
+  <g fill="#9fd0f2" stroke="#fff" stroke-width="2">
+    <path d="M786 330 Q800 312 814 330 L814 372 L786 372Z"/>
+    <path d="M628 400 Q640 386 652 400 L652 436 L628 436Z"/>
+    <path d="M948 400 Q960 386 972 400 L972 436 L948 436Z"/>
+  </g>
+  <!-- the big snowflake over the door -->
+  <g stroke="#ffffff" stroke-width="4" stroke-linecap="round" transform="translate(800 230)">
+    <path d="M0 -26 L0 26 M-22 -13 L22 13 M-22 13 L22 -13"/>
+    <path d="M0 -26 L-6 -18 M0 -26 L6 -18 M0 26 L-6 18 M0 26 L6 18"/>
+  </g>
+
+  <!-- fresh snow on the ground -->
+  <path d="M0 565 Q180 520 380 562 T780 556 T1180 566 T1600 548 L1600 640 L0 640Z" fill="url(#snow)"/>
+  <path d="M0 600 Q260 575 520 602 T1040 598 T1600 590 L1600 640 L0 640Z" fill="#ffffff"/>
+
+  <!-- glints -->
+  <g fill="#ffffff">
+    <path d="M800 8 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4z"/>
+    <path d="M640 128 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z"/>
+    <path d="M960 128 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z"/>
+    <path d="M470 240 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/>
+    <path d="M1130 240 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/>
+  </g>
+</svg>
