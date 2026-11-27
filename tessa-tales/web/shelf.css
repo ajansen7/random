@@ -80,3 +80,19 @@ h1 span:nth-child(5n+5) { color: #b9a4ff; transform: translateY(3px) rotate(-5de
 @media (prefers-reduced-motion: reduce) { .olaf-btn, .olaf.working, .new, .glass.shake, .glass.shake .flakes { animation: none; } .burst { display: none; } }
 .damaged { margin: 0; font-size: .95rem; color: var(--frost); background: rgba(255, 111, 163, .18); border: 2px solid var(--anna); border-radius: 14px; padding: .4rem .8rem; max-width: 420px; }
 .damaged[hidden] { display: none; }
+
+/* 🗣️ storyteller voice picker (grown-ups) */
+.top { position: relative; }
+.voice-btn { position: absolute; top: 2rem; right: 0; font-size: 1.4rem; }
+dialog#voice { border: 0; padding: 1.4rem 1.6rem; width: min(560px, 94vw); max-height: 86vh; overflow-y: auto; background: #1c2453; color: var(--ink); border-radius: 26px; box-shadow: 0 30px 80px rgba(0, 0, 0, .5); }
+dialog#voice::backdrop { background: rgba(6, 8, 30, .8); }
+.v-close { position: absolute; top: 1rem; right: 1rem; }
+.v-head { font-family: var(--hand); font-weight: 400; font-size: 2rem; margin: 0 0 .4rem; }
+.v-help { margin: 0 0 1rem; color: var(--soft); line-height: 1.4; font-size: .95rem; }
+.v-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.v-list li { display: flex; align-items: center; gap: .7rem; }
+.v-play { width: 44px; height: 44px; font-size: 1.1rem; }
+.v-name { flex: 1; text-align: left; font: inherit; font-weight: 700; color: var(--ink); background: rgba(255, 255, 255, .07); border: 2px solid transparent; border-radius: 12px; padding: .55rem .9rem; cursor: pointer; }
+.v-name small { font-weight: 400; color: var(--soft); margin-left: .4rem; }
+.v-name.on { border-color: var(--elsa); background: rgba(124, 198, 245, .18); }
+.v-name.on::after { content: " ✓"; color: var(--elsa); }

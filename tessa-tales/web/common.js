@@ -117,8 +117,41 @@ window.TT = (() => {
     };
   })();
 
+  // ---------- the narrator's voice (chosen on the shelf, remembered in this browser) ----------
+  const PREFERRED = ['Ava', 'Zoe', 'Samantha', 'Flo (English (US))', 'Shelley (English (US))', 'Allison', 'Susan'];
+  const narrator = {
+    voices() {
+      if (!('speechSynthesis' in window)) return [];
+      const novelty = /Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Wobble|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Zarvox|Albert|Fred|Junior|Ralph|Kathy/;
+      return speechSynthesis.getVoices().filter((v) => v.lang.startsWith('en') && !novelty.test(v.name));
+    },
+    chosen() {
+      let name = null;
+      try { name = localStorage.getItem('tt-voice'); } catch (e) {}
+      const vs = narrator.voices();
+      return vs.find((v) => v.name === name)
+        || PREFERRED.map((p) => vs.find((v) => v.name.startsWith(p) && /premium|enhanced/i.test(v.name))).find(Boolean)
+        || PREFERRED.map((p) => vs.find((v) => v.name.startsWith(p))).find(Boolean)
+        || vs.find((v) => v.lang === 'en-US') || vs[0] || null;
+    },
+    choose(name) { try { localStorage.setItem('tt-voice', name); } catch (e) {} },
+    say(text, voice) {
+      if (!('speechSynthesis' in window)) return Promise.resolve();
+      speechSynthesis.cancel();
+      return new Promise((res) => {
+        const u = new SpeechSynthesisUtterance(text);
+        const v = voice || narrator.chosen();
+        if (v) u.voice = v;
+        u.rate = 0.85; u.pitch = 1.05;
+        u.onend = res; u.onerror = res;
+        speechSynthesis.speak(u);
+        setTimeout(res, 15000);
+      });
+    },
+  };
+
   return {
-    reduce, chime, burst, snow, setSound, music, get soundOn() { return soundOn; },
+    reduce, chime, burst, snow, setSound, music, narrator, get soundOn() { return soundOn; },
     thumb: (h) => `/thumb/${h}.jpg`,
     large: (h) => `/large/${h}.jpg`,
     esc: (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),

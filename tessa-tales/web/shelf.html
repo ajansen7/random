@@ -12,6 +12,7 @@
 <div class="aurora" aria-hidden="true"></div>
 
 <header class="top">
+  <button class="round ghost voice-btn" id="open-voice" title="Choose the storyteller's voice (grown-ups)" aria-label="Choose the storyteller's voice">🗣️</button>
   <h1 aria-label="Tessa Tales"><span>T</span><span>e</span><span>s</span><span>s</span><span>a</span> <span>T</span><span>a</span><span>l</span><span>e</span><span>s</span></h1>
 </header>
 
@@ -32,6 +33,13 @@
 
 <main class="shelf" id="shelf" aria-label="Stories"></main>
 <p class="empty" id="empty" hidden>☃️ 📷 ➡️ 💻</p>
+
+<dialog id="voice" aria-label="Choose the storyteller's voice">
+  <button class="round ghost v-close" id="voice-close" aria-label="Close">✕</button>
+  <h2 class="v-head">🗣️ Who tells the story?</h2>
+  <p class="v-help">Tap ▶ to hear a voice, then tap its name to choose it. For nicer voices, download a Premium or Enhanced one (like Ava or Zoe) in System Settings → Accessibility → Spoken Content → System voice → Manage Voices, then come back here.</p>
+  <ul class="v-list" id="voice-list"></ul>
+</dialog>
 
 <script src="/web/common.js"></script>
 <script src="/web/shelf.js"></script>

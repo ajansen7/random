@@ -71,6 +71,28 @@
     else $('eject').title = (await r.json()).error || "Couldn't eject";
   };
 
+  // ---------- 🗣️ who tells the story ----------
+  const SAMPLE = 'Once upon a time, in a land of snow and sparkles, there was a girl named Tessa.';
+  const ACCENTS = { 'en-US': 'American', 'en-GB': 'British', 'en-IE': 'Irish', 'en-AU': 'Australian', 'en-ZA': 'South African', 'en-IN': 'Indian', 'en-NZ': 'New Zealand', 'en-SC': 'Scottish' };
+  function renderVoices() {
+    const chosen = TT.narrator.chosen();
+    const vs = TT.narrator.voices().sort((a, b) => (a.lang === 'en-US' ? 0 : 1) - (b.lang === 'en-US' ? 0 : 1) || a.name.localeCompare(b.name));
+    $('voice-list').innerHTML = vs.map((v) => `<li>
+      <button class="round ghost v-play" data-hear="${esc(v.name)}" aria-label="Hear ${esc(v.name)}">▶</button>
+      <button class="v-name ${chosen && chosen.name === v.name ? 'on' : ''}" data-pick="${esc(v.name)}">${esc(v.name.replace(/ \(English \(.*\)\)/, ''))}<small>${ACCENTS[v.lang.replace('_', '-')] || v.lang}${/premium|enhanced/i.test(v.name) ? ' · ✨ natural' : ''}</small></button>
+    </li>`).join('') || '<li>No voices found.</li>';
+  }
+  $('open-voice').onclick = () => { renderVoices(); $('voice').showModal(); };
+  $('voice-close').onclick = () => { speechSynthesis.cancel(); $('voice').close(); };
+  $('voice').addEventListener('click', (e) => {
+    const vs = TT.narrator.voices();
+    const hear = e.target.closest('[data-hear]');
+    if (hear) TT.narrator.say(SAMPLE, vs.find((v) => v.name === hear.dataset.hear));
+    const pick = e.target.closest('[data-pick]');
+    if (pick) { TT.narrator.choose(pick.dataset.pick); renderVoices(); chime('heart'); TT.narrator.say('Hello, Tessa!', vs.find((v) => v.name === pick.dataset.pick)); }
+  });
+  if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => { if ($('voice').open) renderVoices(); };
+
   TT.snow($('snow'), '--frost', .35);
   loadShelf();
   checkCard();

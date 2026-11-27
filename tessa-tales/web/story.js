@@ -484,7 +484,7 @@
   };
 
   // ---------- ▶ story time: a frosty storybook, a narrator line then her voice ----------
-  const OPENING = 'Once upon a time, in a land of snow and sparkles, there was a girl named Tessa.';
+  const OPENING = TT.OPENING || 'Once upon a time, in a land of snow and sparkles, there was a girl named Tessa.';
   let storyRun = 0, sLayer = 'a', sSnow = false;
   function sPic(src) {
     const cur = $(`s-img-${sLayer}`), next = $(`s-img-${sLayer === 'a' ? 'b' : 'a'}`);
@@ -515,24 +515,11 @@
   function glitterWords(el, text) {
     el.innerHTML = text.split(/(\s+)/).map((w, i) => `<span class="w" style="animation-delay:${i * 90}ms">${esc(w)}</span>`).join('');
   }
-  let narrator = null;
-  function pickNarrator() {
-    const voices = speechSynthesis.getVoices().filter((v) => v.lang.startsWith('en'));
-    narrator = ['Kate', 'Serena', 'Moira', 'Samantha', 'Karen', 'Google UK English Female', 'Google US English'].map((n) => voices.find((v) => v.name.includes(n))).find(Boolean) || voices[0] || null;
-  }
-  if ('speechSynthesis' in window) { pickNarrator(); speechSynthesis.onvoiceschanged = pickNarrator; }
-  function speak(text) {
+  async function speak(text) {
     if (!('speechSynthesis' in window) || !TT.soundOn) return sleep(Math.min(6000, 1200 + text.length * 60));
     TT.music.duck(true);
-    return new Promise((res) => {
-      const done = () => { TT.music.duck(false); res(); };
-      const u = new SpeechSynthesisUtterance(text);
-      if (narrator) u.voice = narrator;
-      u.rate = 0.85; u.pitch = 1.08;
-      u.onend = done; u.onerror = done;
-      speechSynthesis.speak(u);
-      setTimeout(done, 15000);
-    });
+    await TT.narrator.say(text);  // the voice chosen on the shelf (🗣️)
+    TT.music.duck(false);
   }
   function storyPages() {
     const firstPhoto = story.pages[0] && story.pages[0].photo;
